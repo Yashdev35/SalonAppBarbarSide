@@ -53,55 +53,38 @@ data class ServiceType(
 
 @Composable
 fun ServiceCheckbox(
-    service: Service,
-    onServiceSelectedChange: (Service) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        Checkbox(
-            checked = service.isServiceSelected,
-            onCheckedChange = {
-                onServiceSelectedChange(service.copy(isServiceSelected = it))
-            },
-            modifier = Modifier
-                .padding(end = 8.dp)
-                .align(CenterVertically)
-        )
-        Text(
-            text = service.serviceName,
-            modifier = Modifier
-                .align(CenterVertically)
-                .clickable {
-                    onServiceSelectedChange(service.copy(isServiceSelected = !service.isServiceSelected))
-                }
-        )
-    }
-}
-
-@Composable
-fun ServiceCategory(
     serviceType: ServiceType,
-    selectedServices: MutableState<MutableList<Service>>,
+    selectedServices: List<Service>,
     onServiceSelectedChange: (Service, Boolean) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = serviceType.serviceTypeHeading,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        serviceType.services.forEach { service ->
-            ServiceCheckbox(
-                service = service,
-                onServiceSelectedChange = { updatedService ->
-                    onServiceSelectedChange(updatedService, updatedService.isServiceSelected)
+    Text(
+        text = serviceType.serviceTypeHeading,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+    serviceType.services.forEach { service ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .clickable {
+                    onServiceSelectedChange(service, !service.isServiceSelected)
+                },
+            verticalAlignment = CenterVertically
+        ) {
+
+            Checkbox(
+                checked = service.isServiceSelected,
+                onCheckedChange = {
+                    onServiceSelectedChange(service, it)
+                    service.isServiceSelected = it
                 }
+            )
+            Text(
+                text = service.serviceName,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -142,7 +125,17 @@ fun ServicesScreen() {
                 .fillMaxWidth()
         ) {
             items(serviceTypes) { serviceType ->
-
+                ServiceCheckbox(
+                    serviceType = serviceType,
+                    selectedServices = selectedServices,
+                    onServiceSelectedChange = { service, isSelected ->
+                        if (isSelected) {
+                            selectedServices = (selectedServices + service).toMutableList()
+                        } else {
+                            selectedServices = (selectedServices - service).toMutableList()
+                        }
+                    }
+                )
             }
         }
 
@@ -154,9 +147,6 @@ fun ServicesScreen() {
         )
     }
 }
-
-
-
 
 @Preview(showBackground = true)
 @Composable
