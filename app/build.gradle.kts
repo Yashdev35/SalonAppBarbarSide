@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    namespace = "com.practicecoding.sallonapp"
+    namespace = "com.example.sallonappbarbar"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.practicecoding.sallonapp"
-        minSdk = 26
+        applicationId = "com.example.sallonappbarbar"
+        minSdk = 25
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"

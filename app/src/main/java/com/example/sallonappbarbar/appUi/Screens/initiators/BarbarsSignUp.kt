@@ -46,20 +46,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.ui.theme.purple_200
+import com.example.sallonappbarbar.ui.theme.sallonColor
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdvancedSignUpScreen() {
+fun AdvancedSignUpScreen(
+    phoneNumber: String? = null,
+) {
+    val phone = phoneNumber ?: "1234567890"
     // State variables
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -104,6 +112,40 @@ fun AdvancedSignUpScreen() {
                     fontFamily = FontFamily.Cursive)
                 ,
                 color = Color.Black
+            )
+            androidx.compose.material3.OutlinedTextField(
+                value = phone,
+                enabled = false,
+                onValueChange = { },
+                label = { androidx.compose.material3.Text("Phone Number") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Color(
+                        sallonColor.toArgb()
+                    ).copy(alpha = 0.6f),
+                    unfocusedBorderColor = Color(
+                        purple_200.toArgb()
+                    ).copy(alpha = 0.3f),
+                    focusedTextColor = Color.Black,
+                    cursorColor = Color(
+                        sallonColor.toArgb()
+                    ),
+                    focusedLabelColor = Color(
+                        sallonColor.toArgb()
+                    ),
+                    unfocusedTextColor = Color.Black,
+
+                    ),
+                leadingIcon = {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(id = R.drawable.icons8_phone_50),
+                        contentDescription = "Name",
+                        Modifier.size(16.dp),
+                        tint = Color.Black
+
+                    )
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
             OutlinedTextField(

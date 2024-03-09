@@ -9,4 +9,5 @@ sealed class Screenes(
     object PhoneNumberScreen : Screenes("phoneNumberScreen")
     object OTPVerification : Screenes("otpVerification")
     object BarbarsSignUp : Screenes("barbarsSignUp")
+    object SelecterScr : Screenes("selectServices")
 }
