@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "851324752737",
-    "project_id": "saloon-app-admin-b82ae",
-    "storage_bucket": "saloon-app-admin-b82ae.appspot.com"
+    "project_number": "62927274401",
+    "project_id": "sallon-app-6139e",
+    "storage_bucket": "sallon-app-6139e.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:851324752737:android:7fdad1a2e616b5c171eb20",
+        "mobilesdk_app_id": "1:62927274401:android:718471be02b37a67858be0",
         "android_client_info": {
           "package_name": "com.example.sallonappbarbar"
         }
@@ -15,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBtPcdrYV4NbnI8KoPAGgY76GvRU1vwh2o"
+          "current_key": "AIzaSyA3GSPxhju-ncPaBX2CHfql4DI1vFjPJpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:62927274401:android:56b1b9e0351edd0e858be0",
+        "android_client_info": {
+          "package_name": "com.practicecoding.sallonapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3GSPxhju-ncPaBX2CHfql4DI1vFjPJpI"
         }
       ],
       "services": {
