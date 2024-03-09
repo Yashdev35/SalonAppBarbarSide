@@ -2,10 +2,16 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
+      <entry key="AdvancedSignUpScreenPreview">
+        <State />
+      </entry>
       <entry key="OnBoardingScreenPreview">
         <State />
       </entry>
       <entry key="PhoneNumberScreenPreview">
+        <State />
+      </entry>
+      <entry key="ServicesScreenPreview">
         <State />
       </entry>
       <entry key="app">

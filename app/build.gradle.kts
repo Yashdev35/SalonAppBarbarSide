@@ -2,15 +2,17 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
-    namespace = "com.example.sallonappbarbar"
+    namespace = "com.practicecoding.sallonapp"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.sallonappbarbar"
-        minSdk = 25
+        applicationId = "com.practicecoding.sallonapp"
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -50,9 +52,14 @@ android {
     }
 }
 
-dependencies {implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+dependencies {
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.firebase:firebase-firestore:24.10.3")
+    implementation("com.google.firebase:firebase-storage:20.3.0")
+    implementation("androidx.compose.material3:material3-android:1.2.0")
     //this is the code for navigation between screens
-    val nav_version = "2.7.5"
+    val nav_version = "2.7.7"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
@@ -65,6 +72,8 @@ dependencies {implementation("androidx.constraintlayout:constraintlayout-compose
     val composeVersion = "1.6.0-alpha06"
     implementation("androidx.compose.ui:ui:$composeVersion")
     implementation("androidx.compose.material:material:$composeVersion")
+    implementation("androidx.compose.material3:material3:1.2.0")
+
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
 
 
@@ -105,8 +114,40 @@ dependencies {implementation("androidx.constraintlayout:constraintlayout-compose
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
+
+
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+//    lifecycle
+    val lifecycle_version = "2.7.0"
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
+    // ViewModel utilities for Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version")
+    // LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    // Saved state module for ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
+
+
+    //coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+
+    //hilt
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+
+    //dagger-hilt
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-android-compiler:2.48")
+
+    //animation
+    implementation ("com.google.accompanist:accompanist-navigation-animation:0.35.0-alpha")
+
 }
