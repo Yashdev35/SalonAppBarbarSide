@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.sallonappbarbar" />
+                  <option name="mobileSdkAppId" value="1:851324752737:android:7fdad1a2e616b5c171eb20" />
+                  <option name="projectId" value="saloon-app-admin-b82ae" />
+                  <option name="projectNumber" value="851324752737" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
