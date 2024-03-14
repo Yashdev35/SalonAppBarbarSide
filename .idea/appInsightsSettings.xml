@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.sallonappbarbar" />
-                  <option name="mobileSdkAppId" value="1:851324752737:android:7fdad1a2e616b5c171eb20" />
-                  <option name="projectId" value="saloon-app-admin-b82ae" />
-                  <option name="projectNumber" value="851324752737" />
+                  <option name="mobileSdkAppId" value="1:62927274401:android:718471be02b37a67858be0" />
+                  <option name="projectId" value="sallon-app-6139e" />
+                  <option name="projectNumber" value="62927274401" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

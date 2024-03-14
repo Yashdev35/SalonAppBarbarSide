@@ -34,6 +34,7 @@ fun LogoScreen(
     LaunchedEffect(true) {
         delay(logoDurationMillis)
         val updatedCurrentUser = FirebaseAuth.getInstance().currentUser
+        val dummyPhoneNumber = "1234567890"
         if (updatedCurrentUser == null) {
             navController.navigate(Screenes.OnBoardingScreenes.route){
                 popUpTo(Screenes.Logo.route) {
@@ -41,7 +42,7 @@ fun LogoScreen(
                 }
             }
         }else{
-            navController.navigate(Screenes.BarbarsSignUp.route){
+            navController.navigate(Screenes.BarbarsSignUp.route+ "/$dummyPhoneNumber"){
                 popUpTo(Screenes.Logo.route) {
                     inclusive = true
                 }

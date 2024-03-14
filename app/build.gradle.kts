@@ -150,4 +150,7 @@ dependencies {
     //animation
     implementation ("com.google.accompanist:accompanist-navigation-animation:0.35.0-alpha")
 
+    //photo picker
+    implementation("io.coil-kt:coil-compose:2.1.0")
+
 }
