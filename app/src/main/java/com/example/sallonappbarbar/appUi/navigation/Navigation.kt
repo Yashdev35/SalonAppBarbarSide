@@ -2,8 +2,10 @@ package com.example.sallonappbarbar.appUi.navigation
 
 import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
@@ -81,7 +83,8 @@ fun AppNavigation(
                 navController.popBackStack()
             }, body =
             {
-                HeadingText(bodyText = "We've send the code to your phone number $phoneNumber")
+                HeadingText(bodyText = "We've send the code to your phone number $phoneNumber",
+                )
             }
             ) {
                 OtpVerificationScreen(phoneNumber= phoneNumber,activity = context as Activity,
@@ -96,7 +99,7 @@ fun AppNavigation(
             }, body = {
                 HeadingText(bodyText = "Enter your details to access all the feature of barber shop")
             }) {
-                AdvancedSignUpScreen(phoneNumber = phoneNumber)
+                AdvancedSignUpScreen(phoneNumber = phoneNumber,activity =context as Activity)
             }
         }
     }

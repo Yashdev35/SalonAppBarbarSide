@@ -1,17 +1,15 @@
 package com.example.sallonappbarbar.data.model
 
-data class BarberModelResponse(
-    val item : BarberModelItem,
-    val key: String? = ""
-){
-    data class BarberModelItem(
+import android.net.Uri
+
+data class BarberModel(
         val name: String? = "",
         val shopName: String? = "",
         val phoneNumber: String? = "",
         val saloonType: String? = "",
-        val imageUris: List<String?> = emptyList(),
+        var imageUri: String? = "",
         val shopAddress: String? = "",
     )
-}
+
 
 

@@ -5,58 +5,84 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.Dialog
-import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Card
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.ui.theme.Purple40
+import com.example.sallonappbarbar.ui.theme.purple_200
+import com.example.sallonappbarbar.ui.theme.sallonColor
 
 @Composable
 fun CommonDialog() {
-
     Dialog(onDismissRequest = { }) {
-        CircularProgressIndicator()
-    }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.width(60.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 12.dp),
+                    color = Color(sallonColor.toArgb()),
+                    trackColor = Color(purple_200.toArgb()),
+                )
+                Text(
+                    text = "Loading",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .wrapContentSize()
+                        .padding(30.dp),
+
+                    color = Purple40
+                )
+            }
+
+        }    }
 
 }
-@Composable
-fun LaunchPhotoPicker(singlePhotoPickerLauncher:ManagedActivityResultLauncher<PickVisualMediaRequest,Uri?>) {
 
-        singlePhotoPickerLauncher.launch(
-            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-        )
+@Composable
+fun LaunchPhotoPicker(singlePhotoPickerLauncher: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>) {
+
+    singlePhotoPickerLauncher.launch(
+        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+    )
 
 }
 
@@ -103,7 +129,7 @@ fun PasswordFields() {
 }
 
 @Composable
-fun GoogleAndFacebook(){
+fun GoogleAndFacebook() {
     val context = LocalContext.current
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -136,4 +162,8 @@ fun GoogleAndFacebook(){
         )
     }
 }
-
+//@Preview(showBackground = true)
+//@Composable
+//fun AdvancedSignUpScreenPreview() {
+//    CommonDialog()
+//}

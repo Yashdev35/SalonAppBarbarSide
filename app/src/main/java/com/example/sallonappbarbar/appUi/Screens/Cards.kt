@@ -66,10 +66,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnBoardingBottomTextCard(
     navController: NavController,
-    onBoardingTextList : List<OnBoardingPageText>,
+    onBoardingTextList: List<OnBoardingPageText>,
     onNextClick: () -> Unit,
     onBackClick: () -> Unit
-){
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -88,7 +88,7 @@ fun OnBoardingBottomTextCard(
                 )
                 .padding(top = 16.dp, start = 18.dp, end = 18.dp, bottom = 16.dp),
         ) {
-            val pagerState = rememberPagerState(0,0f) {onBoardingTextList.size }
+            val pagerState = rememberPagerState(0, 0f) { onBoardingTextList.size }
             val scope = rememberCoroutineScope()
             HorizontalPager(
                 modifier = Modifier
@@ -97,7 +97,7 @@ fun OnBoardingBottomTextCard(
                     .align(Alignment.TopCenter),
                 state = pagerState,
                 userScrollEnabled = false
-            ) {text ->
+            ) { text ->
                 OnBoardingText(
                     mainHeading = onBoardingTextList[text].mainHeading,
                     bodyText = onBoardingTextList[text].bodyText,
@@ -128,18 +128,19 @@ fun OnBoardingBottomTextCard(
                     color = MaterialTheme.colorScheme.primary
                 ) {
 
-                    IconButton(onClick ={
-                        scope.launch {
-                            if(pagerState.currentPage > 0){
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }else{
-                                /*TODO*/
-                                //open the welcome screen
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                if (pagerState.currentPage > 0) {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                } else {
+                                    /*TODO*/
+                                    //open the welcome screen
+                                }
                             }
-                        }
-                        onBackClick()
-                    },
-                        modifier = Modifier.background(color =  colorResource(id = R.color.sallon_color))
+                            onBackClick()
+                        },
+                        modifier = Modifier.background(color = colorResource(id = R.color.sallon_color))
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
@@ -158,19 +159,20 @@ fun OnBoardingBottomTextCard(
                     color = MaterialTheme.colorScheme.primary
                 ) {
 
-                    IconButton(onClick ={
-                        scope.launch {
-                            if(pagerState.currentPage < 3){
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }else{
-                                /*TODO*/
-                                //open the welcome screen
-                                // navController.navigate("welcome")
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                if (pagerState.currentPage < 3) {
+                                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                } else {
+                                    /*TODO*/
+                                    //open the welcome screen
+                                    // navController.navigate("welcome")
+                                }
                             }
-                        }
-                        onNextClick()
-                    },
-                        modifier = Modifier.background(color =  colorResource(id = R.color.sallon_color))
+                            onNextClick()
+                        },
+                        modifier = Modifier.background(color = colorResource(id = R.color.sallon_color))
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
@@ -200,7 +202,7 @@ fun DotIndicator(selected: Boolean) {
 
 //@Preview(showBackground = true)
 @Composable
-fun OnBoardingBottomTextCardPreview(){
+fun OnBoardingBottomTextCardPreview() {
     val onBoardingTextList = listOf(
         OnBoardingPageText(
             mainHeading = "Heading 1",
@@ -226,12 +228,12 @@ fun OnBoardingBottomTextCardPreview(){
 
 @Composable
 fun DoubleCard(
-    title: String ,
+    title: String,
     onBackClick: () -> Unit,
     body: @Composable () -> Unit,
     navController: NavController = rememberNavController(),
     composable: @Composable () -> Unit
-){
+) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
@@ -254,10 +256,11 @@ fun DoubleCard(
                 color = MaterialTheme.colorScheme.primary
             ) {
 
-                IconButton(onClick ={
-                    onBackClick()
-                },
-                    modifier = Modifier.background(color =  Color.White)
+                IconButton(
+                    onClick = {
+                        onBackClick()
+                    },
+                    modifier = Modifier.background(color = Color.White)
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
@@ -271,8 +274,7 @@ fun DoubleCard(
                 text = title,
                 modifier = Modifier
                     .padding(40.dp, 26.dp)
-                    .align(Alignment.CenterVertically)
-                ,
+                    .align(Alignment.CenterVertically), color = Color.Black,
                 textAlign = TextAlign.Center,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
@@ -308,31 +310,37 @@ fun DoubleCard(
 @Composable
 fun HeadingText(
     bodyText: String
-){
+) {
     Column(
         modifier = Modifier
             .wrapContentSize()
             .padding(16.dp),
     ) {
         Spacer(modifier = Modifier.height(20.dp))
-        Text(text = bodyText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = bodyText,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
         Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DoubleCardPreview(){
-    val navController = rememberNavController()
-    OnBoardingBottomTextCard(
-        navController = navController,
-        onBoardingTextList = listOf(
-            OnBoardingPageText(
-                mainHeading = "Heading 1",
-                bodyText = "Body 1"
-            )
-        ) ,
-        onNextClick = { /*TODO*/ }) {
-
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DoubleCardPreview(){
+//    val navController = rememberNavController()
+//    OnBoardingBottomTextCard(
+//        navController = navController,
+//        onBoardingTextList = listOf(
+//            OnBoardingPageText(
+//                mainHeading = "Heading 1",
+//                bodyText = "Body 1"
+//            )
+//        ) ,
+//        onNextClick = { /*TODO*/ }) {
+//
+//    }
+//}

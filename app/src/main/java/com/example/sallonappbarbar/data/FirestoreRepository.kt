@@ -1,21 +1,16 @@
 package com.example.sallonappbarbar.data
 
 
-import com.example.sallonappbarbar.data.model.BarberModelResponse
+import android.net.Uri
+import com.example.sallonappbarbar.data.model.BarberModel
 import kotlinx.coroutines.flow.Flow
 
 interface FirestoreRepository {
 
-    fun insert(
-        item:BarberModelResponse.BarberModelItem
-    ) : Flow<Resource<String>>
-
-    fun getItems() : Flow<Resource<List<BarberModelResponse>>>
-
-    fun delete(key:String) : Flow<Resource<String>>
-
-    fun update(
-        item:BarberModelResponse
+    suspend  fun addUser(
+        barberModel: BarberModel,
+        imageUri: Uri?
+//        name:String,phoneNumber:String,dateOfBirth:String,gender:String,imageUri:String
     ) : Flow<Resource<String>>
 
 }

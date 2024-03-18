@@ -1,7 +1,12 @@
 package com.example.sallonappbarbar.appUi.Screens.initiators
 
+import android.app.Activity
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,13 +17,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +54,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.Button
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -57,13 +69,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
-import com.example.sallonappbarbar.data.model.BarberModelResponse
+import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
+import com.practicecoding.sallonapp.appui.components.CommonDialog
+import com.practicecoding.sallonapp.appui.components.GeneralButton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -71,6 +93,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AdvancedSignUpScreen(
     phoneNumber: String? = null,
+    activity: Activity,
     viewModel: BarberDataViewModel = hiltViewModel()
 ) {
     val phone = phoneNumber ?: "1234567890"
@@ -79,16 +102,32 @@ fun AdvancedSignUpScreen(
     var dropdownExpanded by remember { mutableStateOf(false) }
     var selectedSalonType by remember { mutableStateOf<SalonType?>(null) }
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
     var shopAddress by remember { mutableStateOf("") }
-    var selectedImagesUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var selectedImageUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+    var isDialog by remember { mutableStateOf(false) }
+
+    var imageUri by remember {
+        mutableStateOf<Uri?>(Uri.parse("android.resource://${context.packageName}/${R.drawable.salon_app_logo}"))
+    }
     val scope = rememberCoroutineScope()
+    val imagePickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+            imageUri = uri
+            selectedImageUri = imageUri
+        }
+    if (isDialog)
+        CommonDialog()
+
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White, shape = RoundedCornerShape(16.dp))
-            .padding(top = 16.dp)
+            .padding(16.dp)
             .clickable( // Dismiss keyboard
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -98,50 +137,58 @@ fun AdvancedSignUpScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.salon_app_logo),
-                contentDescription = "App Logo",
+            Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-            Text(
-                text = "Let's get you started!",
-                style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Cursive)
-                ,
-                color = Color.Black
-            )
-            androidx.compose.material3.OutlinedTextField(
+                    .width(150.dp)
+                    .height(150.dp)
+            ) {
+                // Background image
+                AsyncImage(
+                    model = imageUri,
+
+                    contentDescription = "Avatar Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .aspectRatio(1.0f)
+                        .width(150.dp)
+                        .height(150.dp)
+                        .clip(shape = CircleShape)
+                )
+                // Icon for adding photo
+                Icon(
+                    painter = painterResource(id = R.drawable.camera),
+                    contentDescription = "Add Photo",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {
+//                            singlePhotoPickerLauncher.launch(
+//                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+//                            )
+                            imagePickerLauncher.launch("image/*")
+
+                        }
+                        .align(Alignment.BottomEnd),
+                    tint = Color.Black
+                )
+            }
+            OutlinedTextField(
                 value = phone,
                 enabled = false,
                 onValueChange = { },
-                label = { androidx.compose.material3.Text("Phone Number") },
+                label = { Text("Phone Number") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color(
-                        sallonColor.toArgb()
-                    ).copy(alpha = 0.6f),
-                    unfocusedBorderColor = Color(
-                        purple_200.toArgb()
-                    ).copy(alpha = 0.3f),
-                    focusedTextColor = Color.Black,
-                    cursorColor = Color(
-                        sallonColor.toArgb()
-                    ),
-                    focusedLabelColor = Color(
-                        sallonColor.toArgb()
-                    ),
-                    unfocusedTextColor = Color.Black,
-
-                    ),
+                colors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
                 leadingIcon = {
-                    androidx.compose.material3.Icon(
+                    Icon(
                         painter = painterResource(id = R.drawable.icons8_phone_50),
                         contentDescription = "Name",
                         Modifier.size(16.dp),
@@ -157,13 +204,39 @@ fun AdvancedSignUpScreen(
                 onValueChange = { name = it },
                 label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Red.copy(alpha = 0.6f),
-                    unfocusedBorderColor = Color.Black.copy(alpha = 0.3f),
-                    textColor = Color.Black
+                colors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
                 ),
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.img),
+                        contentDescription = "Name",
+                        Modifier.size(16.dp),
+                        tint = Color.Black
+
+                    )
+                },
+                trailingIcon = {
+                    if (name.isNotEmpty()) {
+                        IconButton(onClick = { name = "" }) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = "Clear",
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.Black,
+
+                                )
+                        }
+                    }
+                },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
+
+
+
+
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,10 +245,9 @@ fun AdvancedSignUpScreen(
                     dropdownExpanded = true
                 },
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = colorResource(id = R.color.white),
-                    contentColor = colorResource(id = R.color.black),
+                    contentColor = Color.White
                 ),
-                border = BorderStroke(0.5.dp, colorResource(id = R.color.black))
+                border = BorderStroke(0.5.dp, colorResource(id = R.color.grey_light))
             ) {
                 Row(
                     modifier = Modifier
@@ -188,16 +260,18 @@ fun AdvancedSignUpScreen(
                         painter = painterResource(id = R.drawable.scissors),
                         contentDescription = "drop down",
                         modifier = Modifier
-                            .size(20.dp)
+                            .size(20.dp),
+                        tint = Color.Black
                     )
                     Spacer(modifier = Modifier.size(20.dp))
                     Text(
-                        text = selectedSalonType?.label ?:"Male salon",
+                        text = selectedSalonType?.label ?: "Male",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(),
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Start,
+                        color = Color.Black
                     )
                     androidx.compose.material3.DropdownMenu(
                         expanded = dropdownExpanded, onDismissRequest = {
@@ -210,8 +284,9 @@ fun AdvancedSignUpScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Male salon", style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center
+                                    text = "Male", style = MaterialTheme.typography.bodySmall,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Black
                                 )
                             },
                             onClick = {
@@ -221,9 +296,10 @@ fun AdvancedSignUpScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Female salon",
+                                    text = "Female",
                                     style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Black
                                 )
                             },
                             onClick = {
@@ -234,9 +310,10 @@ fun AdvancedSignUpScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Hybrid salon",
+                                    text = "Hybrid",
                                     style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Black
                                 )
                             },
                             onClick = {
@@ -249,96 +326,74 @@ fun AdvancedSignUpScreen(
             }
             // out line text field for birth date
             OutlinedTextField(
-                value = shopName.toString(),
+                value = shopName,
                 onValueChange = { shopName = it },
                 label = { Text("Name of your shop") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Red.copy(alpha = 0.6f),
-                    unfocusedBorderColor = Color.Black.copy(alpha = 0.6f),
-
-                    textColor = Color.Black
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
-            OutlinedTextField(value = shopAddress,
-                 onValueChange = {shopAddress = it},
-                    label = { Text("Address of your shop") },
-                    modifier = Modifier.fillMaxWidth(),
+            OutlinedTextField(
+                value = shopAddress,
+                onValueChange = { shopAddress = it },
+                label = { Text("Address of your shop") },
+                modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color.Red.copy(alpha = 0.6f),
-                    unfocusedBorderColor = Color.Black.copy(alpha = 0.6f),
-
-                    textColor = Color.Black
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
                 ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                )
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            )
 
-
-            MultiplePhotoPicker(
-                    selectedImagesUris = mutableStateOf(selectedImagesUris)
-                    )
-        }
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(top = 16.dp)
-                .align(Alignment.BottomCenter),
-            shape = RoundedCornerShape(topStart = 45.dp, topEnd =45.dp),
-            colors = CardColors(
-                containerColor = colorResource(id = R.color.sallon_color),
-                contentColor = colorResource(id = R.color.white),
-                disabledContainerColor = colorResource(id = R.color.sallon_color),
-                disabledContentColor = colorResource(id = R.color.white),
-            ),
-
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(
-                    onClick = {
-                        if (name.isNotBlank() && selectedSalonType != null && shopName.isNotBlank()&&
-                            selectedImagesUris.size > 4 && shopAddress.isNotBlank()
-                        ) {
-                            try {
-                                scope.launch {
-                                    viewModel.insertData(
-                                        item = BarberModelResponse.BarberModelItem(
-                                            name = name,
-                                            shopName = shopName,
-                                            phoneNumber = phone,
-                                            saloonType = selectedSalonType?.label,
-                                            imageUris = selectedImagesUris.map { it.toString() },
-                                            shopAddress = shopAddress
-                                        )
-                                    )
-                                }
-                            }catch (e:Exception){
-                                Toast.makeText(context, "Error occurred", Toast.LENGTH_SHORT).show()
-                            }
-                        }else{
-                            Toast.makeText(context, "Either a field is empty or did not select more than 4 images",
-                                Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.wrapContentSize(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.white))
+            GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
+                if (name.isNotBlank() && selectedSalonType != null && shopName.isNotBlank() && shopAddress.isNotBlank()
                 ) {
-                    Text("Sign Up", color = Color(sallonColor.toArgb())) // Purple
+                    val barberModel = BarberModel(
+                        name,
+                        shopName,
+                        phoneNumber.toString(),
+                        selectedSalonType?.label,
+                        selectedImageUri.toString(),
+                        shopAddress
+                    )
+                    scope.launch(Dispatchers.Main) {
+                        viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
+                            when (it) {
+                                is Resource.Success -> {
+                                    isDialog = false
+                                    activity.showMsg(it.result)
+
+
+                                }
+
+                                is Resource.Failure -> {
+                                    isDialog = false
+                                    activity.showMsg(it.exception.toString())
+                                }
+
+                                Resource.Loading -> {
+                                    isDialog = true
+                                }
+                            }
+                        }
+                    }
+
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Either a field is empty or password and confirm password don't match",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
 }
-
-
 
 
 enum class SalonType(val label: String) {
@@ -347,8 +402,8 @@ enum class SalonType(val label: String) {
     HYBRID("Hybrid salon"),
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AdvancedSignUpScreenPreview() {
-    AdvancedSignUpScreen()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AdvancedSignUpScreenPreview() {
+//    AdvancedSignUpScreen()
+//}
