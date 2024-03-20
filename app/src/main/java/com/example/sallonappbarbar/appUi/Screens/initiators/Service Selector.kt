@@ -43,7 +43,8 @@ import androidx.compose.ui.unit.dp
 data class Service(
     val serviceName: String,
     var isServiceSelected: Boolean,
-    var price: String
+    var price: String,
+    val id: Int
 )
 
 data class ServiceType(
@@ -54,7 +55,6 @@ data class ServiceType(
 @Composable
 fun ServiceCheckbox(
     serviceType: ServiceType,
-    selectedServices: List<Service>,
     onServiceSelectedChange: (Service, Boolean) -> Unit
 ) {
     Text(
@@ -98,17 +98,17 @@ fun ServicesScreen() {
         ServiceType(
             serviceTypeHeading = "Hair Services",
             services = listOf(
-                Service("Haircut", false, "$20"),
-                Service("Hair Coloring", false, "$50"),
-                Service("Hair Styling", false, "$30")
+                Service("Haircut", false, "$20", 1),
+                Service("Hair Coloring", false, "$50", 2),
+                Service("Hair Styling", false, "$30", 3)
             )
         ),
         ServiceType(
             serviceTypeHeading = "Nail Services",
             services = listOf(
-                Service("Manicure", false, "$25"),
-                Service("Pedicure", false, "$30"),
-                Service("Nail Art", false, "$15")
+                Service("Manicure", false, "$25", 4),
+                Service("Pedicure", false, "$30", 5),
+                Service("Nail Art", false, "$15", 6)
             )
         )
         // Add more service types as needed
@@ -127,12 +127,20 @@ fun ServicesScreen() {
             items(serviceTypes) { serviceType ->
                 ServiceCheckbox(
                     serviceType = serviceType,
-                    selectedServices = selectedServices,
                     onServiceSelectedChange = { service, isSelected ->
                         if (isSelected) {
-                            selectedServices = (selectedServices + service).toMutableList()
+                            selectedServices = selectedServices.filter { it.id != service.id }.toMutableList()
+                            service.isServiceSelected = false
                         } else {
-                            selectedServices = (selectedServices - service).toMutableList()
+                            val providedService = selectedServices.find { it.id == service.id }?:Service("unknown", false, "250", 0)
+                            var isExisting = existanceVerifier(selectedServices, providedService)
+                            if (!isExisting) {
+                                selectedServices = (selectedServices + providedService).toMutableList()
+                                service.isServiceSelected = true
+                            }else{
+                                selectedServices = selectedServices.filter { it.id != service.id }.toMutableList()
+                                service.isServiceSelected = false
+                            }
                         }
                     }
                 )
@@ -146,6 +154,13 @@ fun ServicesScreen() {
             style = MaterialTheme.typography.bodyMedium
         )
     }
+}
+
+fun existanceVerifier(
+    selectedServices: List<Service>,
+    service: Service
+): Boolean {
+    return selectedServices.any { it.id == service.id }
 }
 
 @Preview(showBackground = true)

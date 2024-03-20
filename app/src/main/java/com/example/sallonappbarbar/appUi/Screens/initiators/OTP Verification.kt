@@ -328,8 +328,8 @@ fun ClickableTextWithUnderline(text: String, onClick: () -> Unit) {
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun PhoneNumberScreenPreview() {
-  //  OtpVerificationScreen()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PhoneNumberScreenPreview() {
+//  //  OtpVerificationScreen()
+//}

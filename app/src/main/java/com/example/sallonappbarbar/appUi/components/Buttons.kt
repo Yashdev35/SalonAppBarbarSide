@@ -23,7 +23,6 @@ import com.example.sallonappbarbar.ui.theme.sallonColor
 @Composable
 fun GeneralButton(text:String,width:Int,height:Int,modifier: Modifier,onClick:()->Unit){
     Box (
-
         modifier = Modifier
             .width(width.dp)
             .height(80.dp)

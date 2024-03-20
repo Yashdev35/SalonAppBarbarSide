@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +32,14 @@ object FirebaseModule {
     @Singleton
     @Provides
     fun providesFirebaseAuth(): FirebaseAuth = Firebase.auth
+
+    @Singleton
+    @Provides
+    fun providesBarbarData(): CollectionReference = Firebase.firestore.collection("barber")
+
+    @Singleton
+    @Provides
+    fun storageRefrence():FirebaseStorage =FirebaseStorage.getInstance()
 
 
 
