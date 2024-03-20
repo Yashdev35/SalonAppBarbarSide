@@ -71,6 +71,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -105,6 +106,10 @@ fun AdvancedSignUpScreen(
     val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
     var shopAddress by remember { mutableStateOf("") }
+    var streetName by remember { mutableStateOf("") }
+    var area by remember { mutableStateOf("") }
+    var pinCode by remember { mutableStateOf("") }
+    var landmark by remember { mutableStateOf("") }
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -245,7 +250,8 @@ fun AdvancedSignUpScreen(
                     dropdownExpanded = true
                 },
                 colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White
+                    contentColor = Color.Black,
+                    backgroundColor = Color.White
                 ),
                 border = BorderStroke(0.5.dp, colorResource(id = R.color.grey_light))
             ) {
@@ -286,7 +292,7 @@ fun AdvancedSignUpScreen(
                                 Text(
                                     text = "Male", style = MaterialTheme.typography.bodySmall,
                                     textAlign = TextAlign.Center,
-                                    color = Color.Black
+                                    color = Color.White
                                 )
                             },
                             onClick = {
@@ -299,7 +305,7 @@ fun AdvancedSignUpScreen(
                                     text = "Female",
                                     style = MaterialTheme.typography.bodySmall,
                                     textAlign = TextAlign.Center,
-                                    color = Color.Black
+                                    color = Color.White
                                 )
                             },
                             onClick = {
@@ -313,7 +319,7 @@ fun AdvancedSignUpScreen(
                                     text = "Hybrid",
                                     style = MaterialTheme.typography.bodySmall,
                                     textAlign = TextAlign.Center,
-                                    color = Color.Black
+                                    color = Color.White
                                 )
                             },
                             onClick = {
@@ -337,10 +343,23 @@ fun AdvancedSignUpScreen(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
+
             OutlinedTextField(
-                value = shopAddress,
-                onValueChange = { shopAddress = it },
-                label = { Text("Address of your shop") },
+                value = pinCode,
+                onValueChange = { pinCode = it },
+                label = { Text("Enter Pin code") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Number)
+            )
+            OutlinedTextField(
+                value = streetName,
+                onValueChange = { streetName = it },
+                label = { Text("Enter Street name") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Purple80, // Change the outline color when focused
@@ -349,9 +368,40 @@ fun AdvancedSignUpScreen(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
             )
+            OutlinedTextField(
+                value = area,
+                onValueChange = { area = it },
+                label = { Text("Enter Area") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            )
+            OutlinedTextField(
+                value = landmark,
+                onValueChange = { landmark = it },
+                label = { Text("Enter Landmark") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            )
+            if(pinCode.length == 6){
+                shopAddress = "$streetName, $area,$pinCode , $landmark"
+            }else{
+                Toast.makeText(context, "Pin code should be of 6 digits", Toast.LENGTH_SHORT).show()
+            }
 
             GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
-                if (name.isNotBlank() && selectedSalonType != null && shopName.isNotBlank() && shopAddress.isNotBlank()
+                if (name.isNotBlank() && selectedSalonType != null &&
+                    shopName.isNotBlank() && shopAddress != "" &&
+                    selectedImageUri != null && pinCode.length == 6
                 ) {
                     val barberModel = BarberModel(
                         name,
@@ -402,8 +452,9 @@ enum class SalonType(val label: String) {
     HYBRID("Hybrid salon"),
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun AdvancedSignUpScreenPreview() {
-//    AdvancedSignUpScreen()
-//}
+@Preview(showBackground = true)
+@Composable
+fun AdvancedSignUpScreenPreview() {
+    val activity = Activity()
+    AdvancedSignUpScreen( phoneNumber = "1234567890", activity = activity)
+}

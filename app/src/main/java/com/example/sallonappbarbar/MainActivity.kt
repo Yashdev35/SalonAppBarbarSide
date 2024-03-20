@@ -33,3 +33,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+@Preview
+@Composable
+fun AppPreview() {
+    SallonAppbarbarTheme {
+        Surface {
+            Text(text = "Hello, World!")
+        }
+    }
+}
