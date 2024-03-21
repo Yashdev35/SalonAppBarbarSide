@@ -2,13 +2,10 @@ package com.example.sallonappbarbar.appUi.Screens.initiators
 
 import android.app.Activity
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,23 +40,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.ui.unit.sp
 import androidx.compose.material.Button
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,14 +56,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
@@ -83,7 +68,6 @@ import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
-import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
@@ -106,9 +90,10 @@ fun AdvancedSignUpScreen(
     val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
     var shopAddress by remember { mutableStateOf("") }
-    var streetName by remember { mutableStateOf("") }
-    var area by remember { mutableStateOf("") }
+    var streetAddress by remember { mutableStateOf("") }
+    var state by remember { mutableStateOf("") }
     var pinCode by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
     var landmark by remember { mutableStateOf("") }
     var aboutUs by remember { mutableStateOf("") }
     var selectedImageUri by remember {
@@ -359,9 +344,9 @@ fun AdvancedSignUpScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Number)
             )
             OutlinedTextField(
-                value = streetName,
-                onValueChange = { streetName = it },
-                label = { Text("Enter Street name") },
+                value = streetAddress,
+                onValueChange = { streetAddress = it },
+                label = { Text("Enter local street address") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Purple80, // Change the outline color when focused
@@ -371,9 +356,21 @@ fun AdvancedSignUpScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
             )
             OutlinedTextField(
-                value = area,
-                onValueChange = { area = it },
-                label = { Text("Enter Area") },
+                value = state,
+                onValueChange = { state = it },
+                label = { Text("State") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            )
+            OutlinedTextField(
+                value = city,
+                onValueChange = { city = it },
+                label = { Text("City") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Purple80, // Change the outline color when focused
@@ -407,17 +404,12 @@ fun AdvancedSignUpScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 maxLines = 5
             )
-            if(pinCode.length == 6){
-                shopAddress = "$streetName, $area,$pinCode , $landmark"
-            }else{
-                Toast.makeText(context, "Pin code should be of 6 digits", Toast.LENGTH_SHORT).show()
-            }
 
             GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
                 if (name.isNotBlank() && selectedSalonType != null &&
-                    shopName.isNotBlank() && shopAddress != "" &&
-                    selectedImageUri != null && pinCode.length == 6 && aboutUs.isNotBlank()
+                    shopName.isNotBlank() && pinCode != " " && aboutUs.isNotBlank()
                 ) {
+                    shopAddress = "$streetAddress,near $landmark,$city, $state, $pinCode,"
                     val barberModel = BarberModel(
                         name,
                         shopName,
@@ -425,7 +417,9 @@ fun AdvancedSignUpScreen(
                         selectedSalonType?.label,
                         selectedImageUri.toString(),
                         shopAddress,
-                        aboutUs
+                        aboutUs,
+                        noOfReviews = "0",
+                        rating = "Not rated yet"
                     )
                     scope.launch(Dispatchers.Main) {
                         viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
@@ -452,7 +446,7 @@ fun AdvancedSignUpScreen(
                 } else {
                     Toast.makeText(
                         context,
-                        "Either a field is empty or password and confirm password don't match",
+                        "Either a field is empty or an image is not selected",
                         Toast.LENGTH_SHORT
                     ).show()
                 }

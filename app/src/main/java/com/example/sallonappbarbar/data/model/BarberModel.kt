@@ -10,6 +10,8 @@ data class BarberModel(
         var imageUri: String? = "",
         val shopAddress: String? = "",
         var aboutUs: String? = "",
+        var noOfReviews: String? = "",
+        var rating: String? = "",
     )
 
 
