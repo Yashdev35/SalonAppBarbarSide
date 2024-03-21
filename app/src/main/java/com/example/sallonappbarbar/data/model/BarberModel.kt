@@ -9,6 +9,7 @@ data class BarberModel(
         val saloonType: String? = "",
         var imageUri: String? = "",
         val shopAddress: String? = "",
+        var aboutUs: String? = "",
     )
 
 

@@ -110,6 +110,7 @@ fun AdvancedSignUpScreen(
     var area by remember { mutableStateOf("") }
     var pinCode by remember { mutableStateOf("") }
     var landmark by remember { mutableStateOf("") }
+    var aboutUs by remember { mutableStateOf("") }
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
     }
@@ -344,6 +345,7 @@ fun AdvancedSignUpScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
+
             OutlinedTextField(
                 value = pinCode,
                 onValueChange = { pinCode = it },
@@ -392,6 +394,19 @@ fun AdvancedSignUpScreen(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
             )
+            OutlinedTextField(
+                value = aboutUs,
+                onValueChange = { aboutUs = it },
+                label = { Text("About us") },
+                modifier = Modifier.fillMaxWidth().height(100.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = Purple80, // Change the outline color when focused
+                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                    errorBorderColor = purple_200
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                maxLines = 5
+            )
             if(pinCode.length == 6){
                 shopAddress = "$streetName, $area,$pinCode , $landmark"
             }else{
@@ -401,7 +416,7 @@ fun AdvancedSignUpScreen(
             GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
                 if (name.isNotBlank() && selectedSalonType != null &&
                     shopName.isNotBlank() && shopAddress != "" &&
-                    selectedImageUri != null && pinCode.length == 6
+                    selectedImageUri != null && pinCode.length == 6 && aboutUs.isNotBlank()
                 ) {
                     val barberModel = BarberModel(
                         name,
@@ -409,7 +424,8 @@ fun AdvancedSignUpScreen(
                         phoneNumber.toString(),
                         selectedSalonType?.label,
                         selectedImageUri.toString(),
-                        shopAddress
+                        shopAddress,
+                        aboutUs
                     )
                     scope.launch(Dispatchers.Main) {
                         viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
