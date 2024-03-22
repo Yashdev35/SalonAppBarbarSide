@@ -89,12 +89,9 @@ fun AdvancedSignUpScreen(
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
-    var shopAddress by remember { mutableStateOf("") }
     var streetAddress by remember { mutableStateOf("") }
     var state by remember { mutableStateOf("") }
-    var pinCode by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
-    var landmark by remember { mutableStateOf("") }
     var aboutUs by remember { mutableStateOf("") }
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
@@ -329,20 +326,6 @@ fun AdvancedSignUpScreen(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
-
-
-            OutlinedTextField(
-                value = pinCode,
-                onValueChange = { pinCode = it },
-                label = { Text("Enter Pin code") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, keyboardType = KeyboardType.Number)
-            )
             OutlinedTextField(
                 value = streetAddress,
                 onValueChange = { streetAddress = it },
@@ -380,18 +363,6 @@ fun AdvancedSignUpScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
             )
             OutlinedTextField(
-                value = landmark,
-                onValueChange = { landmark = it },
-                label = { Text("Enter Landmark") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-            )
-            OutlinedTextField(
                 value = aboutUs,
                 onValueChange = { aboutUs = it },
                 label = { Text("About us") },
@@ -407,17 +378,18 @@ fun AdvancedSignUpScreen(
 
             GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
                 if (name.isNotBlank() && selectedSalonType != null &&
-                    shopName.isNotBlank() && pinCode != " " && aboutUs.isNotBlank()
+                    shopName.isNotBlank() && aboutUs.isNotBlank()
                 ) {
-                    shopAddress = "$streetAddress,near $landmark,$city, $state, $pinCode,"
                     val barberModel = BarberModel(
-                        name,
-                        shopName,
-                        phoneNumber.toString(),
-                        selectedSalonType?.label,
-                        selectedImageUri.toString(),
-                        shopAddress,
-                        aboutUs,
+                        name = name,
+                        shopName = shopName,
+                        phoneNumber = phoneNumber.toString(),
+                        saloonType = selectedSalonType?.label,
+                        imageUri = selectedImageUri.toString(),
+                        shopStreetAddress = streetAddress,
+                        city = city,
+                        state = state,
+                        aboutUs = aboutUs,
                         noOfReviews = "0",
                         rating = "Not rated yet"
                     )
