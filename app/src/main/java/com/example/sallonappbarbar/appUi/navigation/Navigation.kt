@@ -13,6 +13,7 @@ import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.Screens.DoubleCard
 import com.example.sallonappbarbar.appUi.Screens.HeadingText
 import com.example.sallonappbarbar.appUi.Screens.initiators.AdvancedSignUpScreen
+import com.example.sallonappbarbar.appUi.Screens.initiators.ServiceSelectorScreen
 import com.practicecoding.sallonapp.screens.initiatorScreens.LogoScreen
 import com.practicecoding.sallonapp.screens.initiatorScreens.OnBoardingPageText
 import com.practicecoding.sallonapp.screens.initiatorScreens.OnBoardingScreen
@@ -28,7 +29,8 @@ fun AppNavigation(
         composable(Screenes.Logo.route) {
             LogoScreen(navController = navController)
         }
-        composable(Screenes.OnBoardingScreenes.route,
+        composable(
+            Screenes.OnBoardingScreenes.route,
         ) {
             val imageList = listOf(
                 R.drawable.onboarding1,
@@ -56,13 +58,13 @@ fun AppNavigation(
             )
         }
         composable(Screenes.PhoneNumberScreen.route) {
-            DoubleCard(title = "Sign up",{
+            DoubleCard(title = "Sign up", {
                 navController.popBackStack()
             }, body = {
                 HeadingText(bodyText = "Sign up to access all the feature of barber shop")
             }) {
-                PhoneNumberScreen(activity =context as Activity,
-                    navigateToVerification = {phoneNumber ->
+                PhoneNumberScreen(activity = context as Activity,
+                    navigateToVerification = { phoneNumber ->
                         navController.navigate(Screenes.OTPVerification.route + "/$phoneNumber")
                     }
                 )
@@ -78,29 +80,34 @@ fun AppNavigation(
 //            }
         }
         composable(Screenes.OTPVerification.route + "/{phoneNumber}") { backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber")?:"000"
-            DoubleCard(title = "OTP verification",{
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: "000"
+            DoubleCard(title = "OTP verification", {
                 navController.popBackStack()
             }, body =
             {
-                HeadingText(bodyText = "We've send the code to your phone number $phoneNumber",
+                HeadingText(
+                    bodyText = "We've send the code to your phone number $phoneNumber",
                 )
             }
             ) {
-                OtpVerificationScreen(phoneNumber= phoneNumber,activity = context as Activity,
+                OtpVerificationScreen(
+                    phoneNumber = phoneNumber, activity = context as Activity,
                     navController
                 )
             }
         }
         composable(Screenes.BarbarsSignUp.route + "/{phoneNumber}") { backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber")?:"000"
-            DoubleCard(title = "Sign Up",{
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: "000"
+            DoubleCard(title = "Sign Up", {
                 navController.popBackStack()
             }, body = {
                 HeadingText(bodyText = "Enter your details to access all the feature of barber shop")
             }) {
-                AdvancedSignUpScreen(phoneNumber = phoneNumber,activity =context as Activity)
+                AdvancedSignUpScreen(navController,phoneNumber = phoneNumber, activity = context as Activity)
             }
+        }
+        composable(Screenes.SelecterScr.route) {
+            ServiceSelectorScreen(navController =navController)
         }
     }
 }

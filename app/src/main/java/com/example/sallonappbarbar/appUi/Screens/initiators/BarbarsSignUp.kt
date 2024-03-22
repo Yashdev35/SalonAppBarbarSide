@@ -60,8 +60,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
@@ -77,9 +80,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedSignUpScreen(
+    navController: NavController,
     phoneNumber: String? = null,
     activity: Activity,
-    viewModel: BarberDataViewModel = hiltViewModel()
+    viewModel: BarberDataViewModel = hiltViewModel(),
 ) {
     val phone = phoneNumber ?: "1234567890"
     val context = LocalContext.current
@@ -366,7 +370,9 @@ fun AdvancedSignUpScreen(
                 value = aboutUs,
                 onValueChange = { aboutUs = it },
                 label = { Text("About us") },
-                modifier = Modifier.fillMaxWidth().height(100.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Purple80, // Change the outline color when focused
                     unfocusedBorderColor = purple_200, // Change the outline color when unfocused
@@ -399,7 +405,7 @@ fun AdvancedSignUpScreen(
                                 is Resource.Success -> {
                                     isDialog = false
                                     activity.showMsg(it.result)
-
+                                    navController.navigate(Screenes.SelecterScr.route)
 
                                 }
 
@@ -414,7 +420,6 @@ fun AdvancedSignUpScreen(
                             }
                         }
                     }
-
                 } else {
                     Toast.makeText(
                         context,
@@ -437,6 +442,7 @@ enum class SalonType(val label: String) {
 @Preview(showBackground = true)
 @Composable
 fun AdvancedSignUpScreenPreview() {
+    val navController = rememberNavController()
     val activity = Activity()
-    AdvancedSignUpScreen( phoneNumber = "1234567890", activity = activity)
+    AdvancedSignUpScreen(navController = navController, phoneNumber = "1234567890", activity = activity)
 }
