@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,8 +25,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -228,12 +231,16 @@ fun OnBoardingBottomTextCardPreview() {
 
 @Composable
 fun DoubleCard(
-    title: String,
-    onBackClick: () -> Unit,
-    body: @Composable () -> Unit,
+//    title: String, *Instead using topApp bar composable to add any thing at top
+//    onBackClick: () -> Unit,
+    midCarBody: @Composable () -> Unit,
     navController: NavController = rememberNavController(),
-    composable: @Composable () -> Unit
+    mainScreen: @Composable () -> Unit,
+    topAppBar: @Composable () -> Unit = {},
+    bottomAppBar: @Composable ()-> Unit={}
 ) {
+    val scrollState = rememberScrollState()
+
     val context = LocalContext.current
     Column(
         modifier = Modifier
@@ -242,68 +249,37 @@ fun DoubleCard(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Surface(
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .padding(20.dp)
-                    .wrapContentSize(align = Alignment.BottomEnd)
-                    .clip(RoundedCornerShape(20.dp))
-                    .size(width = 40.dp, height = 40.dp),
-                color = MaterialTheme.colorScheme.primary
-            ) {
-
-                IconButton(
-                    onClick = {
-                        onBackClick()
-                    },
-                    modifier = Modifier.background(color = Color.White)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Next",
-                        tint = Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-            Text(
-                text = title,
-                modifier = Modifier
-                    .padding(40.dp, 26.dp)
-                    .align(Alignment.CenterVertically), color = Color.Black,
-                textAlign = TextAlign.Center,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        topAppBar()
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 50.dp),
+                .padding(top = 40.dp),
             shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
             backgroundColor = colorResource(id = R.color.sallon_color)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 4.dp),
+                    .padding(top = 16.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                body()
+                midCarBody()
+
                 Card(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .fillMaxHeight()
+                        .padding(top = 20.dp)
+                        .verticalScroll(scrollState),
                     shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
                     backgroundColor = colorResource(id = R.color.white)
                 ) {
-                    composable()
+                    mainScreen()
                 }
             }
         }
+        bottomAppBar()
     }
 }
 

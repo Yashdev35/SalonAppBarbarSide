@@ -26,17 +26,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -44,21 +57,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material.Button
-import androidx.compose.material.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -71,8 +69,8 @@ import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
+import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -112,320 +110,387 @@ fun AdvancedSignUpScreen(
             selectedImageUri = imageUri
         }
     if (isDialog)
-        CommonDialog()
+        LoadingAnimation()
 
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White, shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
-            .clickable( // Dismiss keyboard
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                focusManager.clearFocus()
-            }
-    ) {
-        Column(
+    if (!isDialog) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(Color.White, shape = RoundedCornerShape(16.dp))
+                .padding(16.dp)
+                .clickable( // Dismiss keyboard
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                }
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .width(150.dp)
-                    .height(150.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Background image
-                AsyncImage(
-                    model = imageUri,
-
-                    contentDescription = "Avatar Image",
-                    contentScale = ContentScale.Crop,
+                Box(
                     modifier = Modifier
-                        .aspectRatio(1.0f)
                         .width(150.dp)
                         .height(150.dp)
-                        .clip(shape = CircleShape)
-                )
-                // Icon for adding photo
-                Icon(
-                    painter = painterResource(id = R.drawable.camera),
-                    contentDescription = "Add Photo",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
+                ) {
+                    // Background image
+                    AsyncImage(
+                        model = imageUri,
+
+                        contentDescription = "Avatar Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .aspectRatio(1.0f)
+                            .width(150.dp)
+                            .height(150.dp)
+                            .clip(shape = CircleShape)
+                    )
+                    // Icon for adding photo
+                    Icon(
+                        painter = painterResource(id = R.drawable.camera),
+                        contentDescription = "Add Photo",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {
 //                            singlePhotoPickerLauncher.launch(
 //                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
 //                            )
-                            imagePickerLauncher.launch("image/*")
+                                imagePickerLauncher.launch("image/*")
 
-                        }
-                        .align(Alignment.BottomEnd),
-                    tint = Color.Black
+                            }
+                            .align(Alignment.BottomEnd),
+                        tint = Color.Black
+                    )
+                }
+                OutlinedTextField(
+                    value = phone,
+                    enabled = false,
+                    onValueChange = { },
+                    label = { Text("Phone Number") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icons8_phone_50),
+                            contentDescription = "Name",
+                            Modifier.size(16.dp),
+                            tint = Color.Black
+
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
-            }
-            OutlinedTextField(
-                value = phone,
-                enabled = false,
-                onValueChange = { },
-                label = { Text("Phone Number") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icons8_phone_50),
-                        contentDescription = "Name",
-                        Modifier.size(16.dp),
-                        tint = Color.Black
 
-                    )
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.img),
+                            contentDescription = "Name",
+                            Modifier.size(16.dp),
+                            tint = Color.Black
 
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.img),
-                        contentDescription = "Name",
-                        Modifier.size(16.dp),
-                        tint = Color.Black
+                        )
+                    },
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
 
-                    )
-                },
-                trailingIcon = {
-                    if (name.isNotEmpty()) {
-                        IconButton(onClick = { name = "" }) {
-                            Icon(
-                                Icons.Filled.Clear,
-                                contentDescription = "Clear",
-                                modifier = Modifier.size(16.dp),
-                                tint = Color.Black,
-
-                                )
+                                    )
+                            }
                         }
-                    }
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
 
 
 
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                onClick = {
-                    dropdownExpanded = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.Black,
-                    backgroundColor = Color.White
-                ),
-                border = BorderStroke(0.5.dp, colorResource(id = R.color.grey_light))
-            ) {
-                Row(
+                Button(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                    onClick = {
+                        dropdownExpanded = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.Black,
+                        backgroundColor = Color.White
+                    ),
+                    border = BorderStroke(0.5.dp, colorResource(id = R.color.grey_light))
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.scissors),
-                        contentDescription = "drop down",
-                        modifier = Modifier
-                            .size(20.dp),
-                        tint = Color.Black
-                    )
-                    Spacer(modifier = Modifier.size(20.dp))
-                    Text(
-                        text = selectedSalonType?.label ?: "Male",
-                        style = MaterialTheme.typography.bodySmall,
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black
-                    )
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = dropdownExpanded, onDismissRequest = {
-                            dropdownExpanded = false
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Male", style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White
-                                )
-                            },
-                            onClick = {
-                                selectedSalonType = SalonType.MALE
-                                dropdownExpanded = false
-                            })
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Female",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White
-                                )
-                            },
-                            onClick = {
-                                selectedSalonType = SalonType.FEMALE
-                                dropdownExpanded = false
-                            }
+                        Icon(
+                            painter = painterResource(id = R.drawable.scissors),
+                            contentDescription = "drop down",
+                            modifier = Modifier
+                                .size(20.dp),
+                            tint = Color.Black
                         )
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = "Hybrid",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White
-                                )
-                            },
-                            onClick = {
-                                selectedSalonType = SalonType.HYBRID
-                                dropdownExpanded = false
-                            }
+                        Spacer(modifier = Modifier.size(20.dp))
+                        Text(
+                            text = selectedSalonType?.label ?: "Male",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            textAlign = TextAlign.Start,
+                            color = Color.Black
                         )
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = dropdownExpanded, onDismissRequest = {
+                                dropdownExpanded = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Male", style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.Center,
+                                        color = Color.White
+                                    )
+                                },
+                                onClick = {
+                                    selectedSalonType = SalonType.MALE
+                                    dropdownExpanded = false
+                                })
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Female",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.Center,
+                                        color = Color.White
+                                    )
+                                },
+                                onClick = {
+                                    selectedSalonType = SalonType.FEMALE
+                                    dropdownExpanded = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Hybrid",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.Center,
+                                        color = Color.White
+                                    )
+                                },
+                                onClick = {
+                                    selectedSalonType = SalonType.HYBRID
+                                    dropdownExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
-            // out line text field for birth date
-            OutlinedTextField(
-                value = shopName,
-                onValueChange = { shopName = it },
-                label = { Text("Name of your shop") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
-            OutlinedTextField(
-                value = streetAddress,
-                onValueChange = { streetAddress = it },
-                label = { Text("Enter local street address") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-            )
-            OutlinedTextField(
-                value = state,
-                onValueChange = { state = it },
-                label = { Text("State") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-            )
-            OutlinedTextField(
-                value = city,
-                onValueChange = { city = it },
-                label = { Text("City") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-            )
-            OutlinedTextField(
-                value = aboutUs,
-                onValueChange = { aboutUs = it },
-                label = { Text("About us") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                maxLines = 5
-            )
+                // out line text field for birth date
+                OutlinedTextField(
+                    value = shopName,
+                    onValueChange = { shopName = it },
+                    label = { Text("Name of your shop") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
 
-            GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
-                if (name.isNotBlank() && selectedSalonType != null &&
-                    shopName.isNotBlank() && aboutUs.isNotBlank()
-                ) {
-                    val barberModel = BarberModel(
-                        name = name,
-                        shopName = shopName,
-                        phoneNumber = phoneNumber.toString(),
-                        saloonType = selectedSalonType?.label,
-                        imageUri = selectedImageUri.toString(),
-                        shopStreetAddress = streetAddress,
-                        city = city,
-                        state = state,
-                        aboutUs = aboutUs,
-                        noOfReviews = "0",
-                        rating = "Not rated yet"
-                    )
-                    scope.launch(Dispatchers.Main) {
-                        viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
-                            when (it) {
-                                is Resource.Success -> {
-                                    isDialog = false
-                                    activity.showMsg(it.result)
-                                    navController.navigate(Screenes.SelecterScr.route)
-
-                                }
-
-                                is Resource.Failure -> {
-                                    isDialog = false
-                                    activity.showMsg(it.exception.toString())
-                                }
-
-                                Resource.Loading -> {
-                                    isDialog = true
-                                }
+                                    )
                             }
                         }
                     }
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Either a field is empty or an image is not selected",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                )
+                OutlinedTextField(
+                    value = streetAddress,
+                    onValueChange = { streetAddress = it },
+                    label = { Text("Enter local street address") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+
+                                    )
+                            }
+                        }
+                    }
+                )
+                OutlinedTextField(
+                    value = city,
+                    onValueChange = { city = it },
+                    label = { Text("City") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+
+                                    )
+                            }
+                        }
+                    }
+                )
+                OutlinedTextField(
+                    value = state,
+                    onValueChange = { state = it },
+                    label = { Text("State") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+
+                                    )
+                            }
+                        }
+                    }
+                )
+                OutlinedTextField(
+                    value = aboutUs,
+                    onValueChange = { aboutUs = it },
+                    label = { Text("About us") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Purple80, // Change the outline color when focused
+                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
+                        errorBorderColor = purple_200
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = { name = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+
+                                    )
+                            }
+                        }
+                    },
+                    maxLines = 5
+                )
+
+                GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
+                    if (name.isNotBlank() && selectedSalonType != null && city.isNotBlank() && state.isNotBlank() && streetAddress.isNotBlank() &&
+                        shopName.isNotBlank() && aboutUs.isNotBlank()
+                    ) {
+                        val barberModel = BarberModel(
+                            name = name,
+                            shopName = shopName,
+                            phoneNumber = phoneNumber.toString(),
+                            saloonType = selectedSalonType?.label,
+                            imageUri = selectedImageUri.toString(),
+                            shopStreetAddress = streetAddress,
+                            city = city,
+                            state = state,
+                            aboutUs = aboutUs,
+                            noOfReviews = 0,
+                            rating = 0.0,
+                            lat = 0.0,
+                            long = 0.0
+                        )
+                        scope.launch(Dispatchers.Main) {
+                            viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
+                                when (it) {
+                                    is Resource.Success -> {
+                                        isDialog = false
+                                        activity.showMsg(it.result)
+                                        navController.navigate(Screenes.SelecterScr.route)
+
+                                    }
+
+                                    is Resource.Failure -> {
+                                        isDialog = false
+                                        activity.showMsg(it.exception.toString())
+                                    }
+
+                                    Resource.Loading -> {
+                                        isDialog = true
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Either a field is empty or an image is not selected",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
@@ -444,5 +509,9 @@ enum class SalonType(val label: String) {
 fun AdvancedSignUpScreenPreview() {
     val navController = rememberNavController()
     val activity = Activity()
-    AdvancedSignUpScreen(navController = navController, phoneNumber = "1234567890", activity = activity)
+    AdvancedSignUpScreen(
+        navController = navController,
+        phoneNumber = "1234567890",
+        activity = activity
+    )
 }

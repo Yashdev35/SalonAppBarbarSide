@@ -42,7 +42,7 @@ fun LogoScreen(
                 }
             }
         }else{
-            navController.navigate(Screenes.BarbarsSignUp.route+ "/$dummyPhoneNumber"){
+            navController.navigate(Screenes.SelecterScr.route){
                 popUpTo(Screenes.Logo.route) {
                     inclusive = true
                 }
