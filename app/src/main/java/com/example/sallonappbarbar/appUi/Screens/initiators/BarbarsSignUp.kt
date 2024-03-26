@@ -69,6 +69,7 @@ import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
+import com.google.firebase.auth.FirebaseAuth
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
@@ -83,6 +84,7 @@ fun AdvancedSignUpScreen(
     activity: Activity,
     viewModel: BarberDataViewModel = hiltViewModel(),
 ) {
+    val auth = FirebaseAuth.getInstance()
     val phone = phoneNumber ?: "1234567890"
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -461,7 +463,8 @@ fun AdvancedSignUpScreen(
                             noOfReviews = 0,
                             rating = 0.0,
                             lat = 0.0,
-                            long = 0.0
+                            long = 0.0,
+                            uid = auth.currentUser?.uid.toString()
                         )
                         scope.launch(Dispatchers.Main) {
                             viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
