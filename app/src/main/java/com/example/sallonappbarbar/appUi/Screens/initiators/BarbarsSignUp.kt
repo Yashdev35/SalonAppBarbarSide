@@ -397,7 +397,7 @@ fun AdvancedSignUpScreen(
                         state = state,
                         aboutUs = aboutUs,
                         noOfReviews = "0",
-                        rating = "Not rated yet"
+                        rating = 0.0
                     )
                     scope.launch(Dispatchers.Main) {
                         viewModel.addUserData(barberModel, selectedImageUri, activity).collect {

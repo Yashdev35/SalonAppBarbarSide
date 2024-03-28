@@ -11,7 +11,7 @@ data class BarberModel(
         var state: String? = "",
         var aboutUs: String? = "",
         var noOfReviews: String? = "",
-        var rating: String? = "",
+        var rating: Double? = 0.0,
     )
 
 
