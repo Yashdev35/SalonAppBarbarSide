@@ -10,4 +10,6 @@ sealed class Screenes(
     object OTPVerification : Screenes("otpVerification")
     object BarbarsSignUp : Screenes("barbarsSignUp")
     object SelecterScr : Screenes("selectServices")
+
+    object PriceSelector : Screenes("priceSelector")
 }

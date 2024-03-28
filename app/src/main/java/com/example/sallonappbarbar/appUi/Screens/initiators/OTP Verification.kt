@@ -73,6 +73,7 @@ import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
+import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -92,7 +93,7 @@ fun PhoneNumberScreen(
     val focusManager = LocalFocusManager.current
 
     if (isDialog)
-        CommonDialog()
+        LoadingAnimation()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -185,12 +186,12 @@ fun OtpVerificationScreen(
     var isDialog by remember { mutableStateOf(false) }
 
     if (isDialog)
-        CommonDialog()
+        LoadingAnimation()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState),
+            ,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

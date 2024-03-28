@@ -115,7 +115,6 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     override suspend fun addUser(barberModel: BarberModel, imageUri: Uri?): Flow<Resource<String>> =
         callbackFlow {
             trySend(Resource.Loading)
-            val documentId = barberModel.name + barberModel.phoneNumber;
             CoroutineScope(Dispatchers.IO).launch {
                 if (imageUri != null) {
                     val storageRef =
@@ -133,7 +132,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 }
 
                 delay(1000)
-                barberdb.document(documentId)
+                barberdb.document(auth.currentUser?.uid.toString())
                     .set(barberModel)
                     .addOnSuccessListener {
                         trySend(Resource.Success("Successfully Sign In"))

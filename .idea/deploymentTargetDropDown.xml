@@ -2,31 +2,6 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="AdvancedSignUpScreenPreview">
-        <State>
-          <targetSelectedWithDropDown>
-            <Target>
-              <type value="QUICK_BOOT_TARGET" />
-              <deviceKey>
-                <Key>
-                  <type value="VIRTUAL_DEVICE_PATH" />
-                  <value value="C:\Users\YASH\.android\avd\Pixel_6_API_34.avd" />
-                </Key>
-              </deviceKey>
-            </Target>
-          </targetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2024-03-20T18:05:41.499664400Z" />
-        </State>
-      </entry>
-      <entry key="AppPreview">
-        <State />
-      </entry>
-      <entry key="LogoScreenPreview">
-        <State />
-      </entry>
-      <entry key="ServicesScreenPreview">
-        <State />
-      </entry>
       <entry key="saloon app barber side">
         <State />
       </entry>

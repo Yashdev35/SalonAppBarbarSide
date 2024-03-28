@@ -12,6 +12,9 @@ data class BarberModel(
         var aboutUs: String? = "",
         var noOfReviews: String? = "",
         var rating: Double? = 0.0,
+        var lat:Double? = 0.0,
+        var long:Double? =0.0,
+        val uid:String? = "",
     )
 
 
