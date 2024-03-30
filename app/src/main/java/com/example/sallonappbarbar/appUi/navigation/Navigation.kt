@@ -2,21 +2,18 @@ package com.example.sallonappbarbar.appUi.navigation
 
 import android.app.Activity
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
-import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
-import com.example.sallonappbarbar.appUi.Screens.DoubleCard
-import com.example.sallonappbarbar.appUi.Screens.HeadingText
+import com.example.sallonappbarbar.appUi.components.DoubleCard
+import com.example.sallonappbarbar.appUi.components.HeadingText
 import com.example.sallonappbarbar.appUi.Screens.initiators.AdvancedSignUpScreen
 import com.example.sallonappbarbar.appUi.Screens.initiators.PriceSelector
 import com.example.sallonappbarbar.appUi.Screens.initiators.ServiceSelectorScreen
-import com.example.sallonappbarbar.data.model.Service
+import com.example.sallonappbarbar.data.model.aService
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.screens.initiatorScreens.LogoScreen
 import com.practicecoding.sallonapp.screens.initiatorScreens.OnBoardingPageText
@@ -140,11 +137,6 @@ fun AppNavigation(
             ServiceSelectorScreen(navController)
         }
         composable(Screenes.PriceSelector.route){
-
-                val result =
-                    navController.previousBackStackEntry?.savedStateHandle?.get<List<Service>>("service")
-
-            PriceSelector(navController = navController, service = result )
         }
     }
 }

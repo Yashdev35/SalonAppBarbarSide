@@ -3,7 +3,6 @@ package com.example.sallonappbarbar.domain
 import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
-import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +10,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
-import android.widget.Toast
+import com.example.sallonappbarbar.data.model.aService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.storage.FirebaseStorage
@@ -144,4 +143,33 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 close()
             }
         }
+
+    override suspend fun addServices(
+        barberModel: BarberModel,
+        aServices: List<aService>
+    ): Flow<Resource<String>> =
+        callbackFlow {
+            trySend(Resource.Loading)
+            CoroutineScope(Dispatchers.IO).launch {
+                delay(1000)
+                if(aServices.isNotEmpty()) {
+                    barberModel.aServices = aServices
+                }else{
+                    barberModel.aServices = emptyList()
+                }
+            }
+            barberModel.aServices?.let {aServices->
+                barberdb.document(auth.currentUser?.uid.toString()).collection("aServices")
+                    .add(aServices)
+                    .addOnSuccessListener {
+                        trySend(Resource.Success("Successfully added services"))
+                    }.addOnFailureListener {
+                        trySend(Resource.Failure(it))
+                    }
+            }
+            awaitClose {
+                close()
+            }
+        }
+
 }

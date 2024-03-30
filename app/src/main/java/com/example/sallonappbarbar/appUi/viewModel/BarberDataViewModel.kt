@@ -13,6 +13,7 @@ import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.aService
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ class BarberDataViewModel @Inject constructor(
 ) : ViewModel() {
 
     suspend fun addUserData(barberModel: BarberModel,imageUri: Uri?, activity: Activity) =repo.addUser(barberModel,imageUri)
+    suspend fun addServiceData(barberModel: BarberModel,aServices: List<aService>, activity: Activity) =repo.addServices(barberModel,aServices)
 //    {
 //
 ////        viewModelScope.launch {

@@ -36,7 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
-import com.example.sallonappbarbar.appUi.Screens.OnBoardingBottomTextCard
+import com.example.sallonappbarbar.appUi.components.OnBoardingBottomTextCard
 import com.example.sallonappbarbar.ui.theme.purple_200
 import kotlinx.coroutines.launch
 

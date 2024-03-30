@@ -1,5 +1,9 @@
 package com.example.sallonappbarbar.data.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class BarberModel(
         val name: String? = "",
         val shopName: String? = "",
@@ -15,7 +19,8 @@ data class BarberModel(
         var lat:Double? = 0.0,
         var long:Double? =0.0,
         val uid:String? = "",
-    )
+        var aServices:List<aService>? = emptyList()
+    ): Parcelable
 
 
 

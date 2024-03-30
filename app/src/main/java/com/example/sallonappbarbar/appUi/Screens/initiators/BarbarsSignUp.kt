@@ -341,46 +341,6 @@ fun AdvancedSignUpScreen(
                         }
                     }
                 )
-            GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
-                if (name.isNotBlank() && selectedSalonType != null &&
-                    shopName.isNotBlank() && aboutUs.isNotBlank()
-                ) {
-                    val barberModel = BarberModel(
-                        name = name,
-                        shopName = shopName,
-                        phoneNumber = phoneNumber.toString(),
-                        saloonType = selectedSalonType?.label,
-                        imageUri = selectedImageUri.toString(),
-                        shopStreetAddress = streetAddress,
-                        city = city,
-                        state = state,
-                        aboutUs = aboutUs,
-                        noOfReviews = "0",
-                        rating = 0.0
-                    )
-                    scope.launch(Dispatchers.Main) {
-                        viewModel.addUserData(barberModel, selectedImageUri, activity).collect {
-                            when (it) {
-                                is Resource.Success -> {
-                                    isDialog = false
-                                    activity.showMsg(it.result)
-                                    navController.navigate(Screenes.SelecterScr.route)
-
-                                }
-
-                                is Resource.Failure -> {
-                                    isDialog = false
-                                    activity.showMsg(it.exception.toString())
-                                }
-
-                                Resource.Loading -> {
-                                    isDialog = true
-                                }
-                            }
-                        }
-                    }
-                }
-            }
                 OutlinedTextField(
                     value = streetAddress,
                     onValueChange = { streetAddress = it },
@@ -511,8 +471,11 @@ fun AdvancedSignUpScreen(
                                     is Resource.Success -> {
                                         isDialog = false
                                         activity.showMsg(it.result)
+                                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                                            "BarberModel",
+                                            barberModel
+                                        )
                                         navController.navigate(Screenes.SelecterScr.route)
-
                                     }
 
                                     is Resource.Failure -> {
