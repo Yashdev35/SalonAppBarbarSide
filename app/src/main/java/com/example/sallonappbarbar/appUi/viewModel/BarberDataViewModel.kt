@@ -25,7 +25,7 @@ class BarberDataViewModel @Inject constructor(
 ) : ViewModel() {
 
     suspend fun addUserData(barberModel: BarberModel,imageUri: Uri?, activity: Activity) =repo.addUser(barberModel,imageUri)
-    suspend fun addServiceData(barberModel: BarberModel,aServices: List<aService>, activity: Activity) =repo.addServices(barberModel,aServices)
+    suspend fun addServiceData(aServices: List<aService>, activity: Activity) =repo.addServices(aServices)
 //    {
 //
 ////        viewModelScope.launch {

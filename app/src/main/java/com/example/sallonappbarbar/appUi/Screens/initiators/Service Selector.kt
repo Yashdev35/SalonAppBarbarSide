@@ -2,6 +2,7 @@ package com.example.sallonappbarbar.appUi.Screens.initiators
 
 
 import android.app.Activity
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,7 +53,6 @@ import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.aService
-import com.example.sallonappbarbar.data.model.ServiceLevel
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
@@ -66,72 +67,7 @@ import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Composable
-fun ServiceSelectorScreen(
-    barberData: BarberModel,
-    navController: NavController,
-) {
-    var selectedServices by remember { mutableStateOf(emptyList<aService>()) }
-    val serviceTypes = listOf(
-        ServiceType(
-            serviceTypeHeading = "Hair Services",
-            aServices = listOf(
-                aService(listOf(), price = "$20", id = 1, serviceTypeHeading = "Hair Cut"),
-                aService(
-                    listOf(),
-                    price = "$50",
-                    id = 2,
-                    serviceTypeHeading = "Hair Color"
-                ),
-                aService( price = "$30", id = 3, serviceTypeHeading = "Hair Style")
-            )
-        ),
-        ServiceType(
-            serviceTypeHeading = "Nail Services",
-            aServices = listOf()
-        )
-    )
-    Surface(color = purple_200) {
 
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 6.dp, end = 6.dp, top = 5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Service Available")
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                items(serviceTypes) { serviceType ->
-                    ServiceTypeItem(serviceType = serviceType) { service, isSelected ->
-                        if (isSelected) {
-                            /*List of services selected by the are stored here*/
-                            selectedServices = selectedServices + service
-                        } else {
-                            selectedServices = selectedServices.filter { it.id != service.id }
-                        }
-                    }
-                }
-            }
-            GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    key = "service",
-                    value = selectedServices
-                )
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    key = "barber",
-                    value = barberData
-                )
-                navController.navigate(Screenes.PriceSelector.route)
-            }
-        }
-    }
-}
 
 @Composable
 fun ServiceTypeItem(
@@ -189,8 +125,7 @@ fun ServiceStandardAndPriceList(aService : aService) {
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        aService.servicesLevel.forEach() { serviceLevel ->
-            Row(
+        Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
@@ -198,20 +133,20 @@ fun ServiceStandardAndPriceList(aService : aService) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = serviceLevel.serviceLevelHeading,
+                    text = aService.serviceTypeHeading,
                 )
                 Text(
-                    text = serviceLevel.servicePrice,
+                    text = aService.price,
                 )
             }
         }
     }
-}
+
 @Composable
 fun ServiceCard(
     aService: aService,
     ) {
-    var serviceLevel by remember { mutableStateOf("") }
+//    var serviceLevel by remember { mutableStateOf("") }
     var servicePrice by remember { mutableStateOf("") }
     var showPriceInputDialog by remember { mutableStateOf(false) }
     Column {
@@ -234,12 +169,20 @@ fun ServiceCard(
                         text = aService.serviceTypeHeading,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    IconButton(
-                        onClick = {
-                            showPriceInputDialog = true
+                    Row(
+
+                    ){
+                        Text(
+                            text = aService.price,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        IconButton(
+                            onClick = {
+                                showPriceInputDialog = true
+                            }
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Variants")
                         }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Variants")
                     }
                 }
             }
@@ -254,15 +197,9 @@ fun ServiceCard(
             onDismissRequest = { showPriceInputDialog = false },
             confirmButton = {
                             Button(onClick = {
-                                if(serviceLevel.isNotEmpty() && servicePrice.isNotEmpty()) {
-                                    val newServiceLevel = ServiceLevel(
-                                        serviceLevelHeading = serviceLevel,
-                                        servicePrice = servicePrice,
-                                        id = aService.servicesLevel.size + 1
-                                    )
-                                    aService.servicesLevel = aService.servicesLevel + newServiceLevel
+                                if(servicePrice.isNotEmpty()) {
+                                    aService.price = servicePrice
                                     showPriceInputDialog = false
-                                    serviceLevel = ""
                                     servicePrice = ""
                                 }
                             }) {
@@ -280,24 +217,17 @@ fun ServiceCard(
                             },
             title = { Text("Add Service Variations")},
             text = {
-                OutlinedTextField(
-                    value = serviceLevel,
-                    onValueChange = { serviceLevel = it },
-                    label = { Text("Service Variations i.e. standard, short, premium etc") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = servicePrice,
-                    onValueChange = { servicePrice = it },
-                    label = { Text("Service Price") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
+                Column {
+                    OutlinedTextField(
+                        value = servicePrice,
+                        onValueChange = { servicePrice = it },
+                        label = { Text("Service Price") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+                }
             }
             )
     }
@@ -305,9 +235,75 @@ fun ServiceCard(
 }
 
 @Composable
+fun ServiceSelectorScreen(
+    barberData: BarberModel,
+    navController: NavController,
+) {
+    var selectedServices by remember { mutableStateOf(emptyList<aService>()) }
+    val serviceTypes = listOf(
+        ServiceType(
+            serviceTypeHeading = "Hair Services",
+            aServices = listOf(
+                aService(false, price = "0", id = 1, serviceTypeHeading = "Hair Service", serviceName = "Hair Cut"),
+                aService(
+                    false,
+                    price = "$50",
+                    id = 2,
+                    serviceTypeHeading = "Hair Service",
+                    serviceName = "Hair color"
+                ),
+                aService( price = "0", id = 3, serviceTypeHeading = "Hair Service", serviceName = "Hair style"),
+            )
+        ),
+        ServiceType(
+            serviceTypeHeading = "Nail Services",
+            aServices = listOf()
+        )
+    )
+    Surface(color = purple_200) {
+
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 6.dp, end = 6.dp, top = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Service Available")
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                items(serviceTypes) { serviceType ->
+                    ServiceTypeItem(serviceType = serviceType) { service, isSelected ->
+                        if (isSelected) {
+                            /*List of services selected by the are stored here*/
+                            selectedServices = selectedServices + service
+                        } else {
+                            selectedServices = selectedServices.filter { it.id != service.id }
+                        }
+                    }
+                }
+            }
+            GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    key = "services",
+                    value = selectedServices
+                )
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    key = "barber",
+                    value = barberData
+                )
+                navController.navigate(Screenes.PriceSelector.route)
+            }
+        }
+    }
+}
+@Composable
 fun PriceSelector(
     viewModel: BarberDataViewModel = hiltViewModel(),
-    barberData: BarberModel,
     navController: NavController,
     aServices: List<aService>,
     activity: Activity
@@ -346,8 +342,9 @@ fun PriceSelector(
             )
         ) {
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
+                Log.d("Barber", "PriceSelector: $aServices")
                 scope.launch(Dispatchers.Main) {
-                    viewModel.addServiceData(barberData, aServices,activity).collect {
+                    viewModel.addServiceData(aServices,activity).collect {
                         when (it) {
                             is Resource.Success -> {
                                 isDialogVisible = false

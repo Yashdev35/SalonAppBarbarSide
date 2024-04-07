@@ -145,31 +145,24 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
 
     override suspend fun addServices(
-        barberModel: BarberModel,
         aServices: List<aService>
-    ): Flow<Resource<String>> =
-        callbackFlow {
-            trySend(Resource.Loading)
-            CoroutineScope(Dispatchers.IO).launch {
-                delay(1000)
-                if(aServices.isNotEmpty()) {
-                    barberModel.aServices = aServices
-                }else{
-                    barberModel.aServices = emptyList()
+    ): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+        aServices.forEach(){Service->
+            val service = hashMapOf(
+                "serviceName" to Service.serviceName,
+                "price" to Service.price,
+                "serviceTypeHeading" to Service.serviceTypeHeading
+            )
+            barberdb.document(auth.currentUser!!.uid).collection("Services").document(Service.serviceName).set(service)
+                .addOnSuccessListener {
+                    trySend(Resource.Success("Successfully added services"))
+                }.addOnFailureListener {
+                    trySend(Resource.Failure(it))
                 }
-            }
-            barberModel.aServices?.let {aServices->
-                barberdb.document(auth.currentUser?.uid.toString()).collection("aServices")
-                    .add(aServices)
-                    .addOnSuccessListener {
-                        trySend(Resource.Success("Successfully added services"))
-                    }.addOnFailureListener {
-                        trySend(Resource.Failure(it))
-                    }
-            }
-            awaitClose {
-                close()
-            }
         }
-
+        awaitClose {
+            close()
+        }
+    }
 }

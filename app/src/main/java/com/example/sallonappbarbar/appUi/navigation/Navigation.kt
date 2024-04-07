@@ -13,6 +13,7 @@ import com.example.sallonappbarbar.appUi.components.HeadingText
 import com.example.sallonappbarbar.appUi.Screens.initiators.AdvancedSignUpScreen
 import com.example.sallonappbarbar.appUi.Screens.initiators.PriceSelector
 import com.example.sallonappbarbar.appUi.Screens.initiators.ServiceSelectorScreen
+import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.aService
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.screens.initiatorScreens.LogoScreen
@@ -134,9 +135,27 @@ fun AppNavigation(
 //            )
 //        }
         composable(Screenes.SelecterScr.route) {
-            ServiceSelectorScreen(navController)
+            val barberData = navController.previousBackStackEntry?.savedStateHandle?.get<BarberModel>("BarberModel")?:BarberModel(
+                "0",
+                "name",
+                "email",
+                "password",
+                "phone",
+                "address",
+                "city",
+                "state",
+                "zip",
+                "country",
+            )
+            ServiceSelectorScreen( barberData,navController)
         }
         composable(Screenes.PriceSelector.route){
+            val services = navController.previousBackStackEntry?.savedStateHandle?.get<List<aService>>("services")?: emptyList()
+            PriceSelector(
+                navController = navController,
+                aServices = services,
+                activity = context as Activity
+            )
         }
     }
 }

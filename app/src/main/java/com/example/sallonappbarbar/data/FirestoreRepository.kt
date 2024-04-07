@@ -14,7 +14,6 @@ interface FirestoreRepository {
 //        name:String,phoneNumber:String,dateOfBirth:String,gender:String,imageUri:String
     ) : Flow<Resource<String>>
     suspend fun addServices(
-        barberModel: BarberModel,
         aServices: List<aService>,
     ) : Flow<Resource<String>>
 
