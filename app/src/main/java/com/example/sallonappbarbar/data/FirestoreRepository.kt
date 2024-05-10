@@ -19,5 +19,6 @@ interface FirestoreRepository {
     suspend fun isShopOpen(
         shopOpen:Boolean
     ) : Flow<Resource<String>>
+    suspend fun getBarberData(): Flow<Resource<BarberModel>>
 
 }

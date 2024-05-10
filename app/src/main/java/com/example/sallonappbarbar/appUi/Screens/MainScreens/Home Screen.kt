@@ -25,7 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
+import com.example.sallonappbarbar.data.Resource
+import com.practicecoding.sallonapp.appui.components.CommonDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,7 +39,38 @@ fun HomeScreen(
 ){
     var isBarberShopOpen by remember { mutableStateOf(false) }
     var isOpenOrClose by remember { mutableStateOf("Open") }
+    var isLoading by remember { mutableStateOf(false) }
+    if(isLoading) {
+        CommonDialog()
+    }
     val scope = rememberCoroutineScope()
+    scope.launch(Dispatchers.IO) {
+        viewModel.getBarberData(activity).collect(){resource ->
+            when(resource) {
+                is Resource.Success -> {
+                    isLoading = false
+                    Toast.makeText(activity, "Data Loaded", Toast.LENGTH_SHORT).show()
+                    val BarberData = resource.result
+                    if(BarberData.isShopOpen!!.lowercase() == "yes") {
+                        isBarberShopOpen = true
+                        isOpenOrClose = "Open"
+                    } else {
+                        isBarberShopOpen = false
+                        isOpenOrClose = "Close"
+                    }
+                }
+                is Resource.Failure -> {
+                    isLoading = false
+                    Toast.makeText(activity, resource.exception.message, Toast.LENGTH_SHORT).show()
+                }
+                is Resource.Loading -> {
+                     isLoading = true
+                }
+            }
+        }
+    }
+
+
     Column(
         modifier = Modifier.padding(16.dp)
     ) {

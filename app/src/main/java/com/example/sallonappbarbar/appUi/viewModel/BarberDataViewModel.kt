@@ -27,6 +27,7 @@ class BarberDataViewModel @Inject constructor(
     suspend fun addUserData(barberModel: BarberModel,imageUri: Uri?, activity: Activity) =repo.addUser(barberModel,imageUri)
     suspend fun addServiceData(aServices: List<aService>, activity: Activity) =repo.addServices(aServices)
     suspend fun isShopOpen(shopOpen:Boolean, activity: Activity) =repo.isShopOpen(shopOpen)
+    suspend fun getBarberData(activity: Activity) = repo.getBarberData()
 //    {
 //
 ////        viewModelScope.launch {

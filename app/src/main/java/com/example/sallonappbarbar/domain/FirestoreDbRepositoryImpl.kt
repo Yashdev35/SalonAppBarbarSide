@@ -178,4 +178,36 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             close()
         }
     }
+
+    override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
+        trySend(Resource.Loading)
+        barberdb.document(auth.currentUser?.uid.toString()).get()
+            .addOnSuccessListener {
+                val barberModel = it.data?.map {
+                    BarberModel(
+                        name = it.value.toString(),
+                        shopName = it.value.toString(),
+                        phoneNumber = it.value.toString(),
+                        saloonType = it.value.toString(),
+                        imageUri = it.value.toString(),
+                        shopStreetAddress = it.value.toString(),
+                        city = it.value.toString(),
+                        state = it.value.toString(),
+                        aboutUs = it.value.toString(),
+                        noOfReviews = it.value.toString(),
+                        isShopOpen = it.value.toString(),
+                        rating = it.value.toString().toDouble(),
+                        lat = it.value.toString().toDouble(),
+                        long = it.value.toString().toDouble(),
+                        uid = it.value.toString()
+                    )
+                }
+                trySend(Resource.Success(barberModel!![0]))
+            }.addOnFailureListener {
+                trySend(Resource.Failure(it))
+            }
+        awaitClose {
+            close()
+        }
+    }
 }
