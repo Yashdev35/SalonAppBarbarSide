@@ -16,5 +16,8 @@ interface FirestoreRepository {
     suspend fun addServices(
         aServices: List<aService>,
     ) : Flow<Resource<String>>
+    suspend fun isShopOpen(
+        shopOpen:Boolean
+    ) : Flow<Resource<String>>
 
 }

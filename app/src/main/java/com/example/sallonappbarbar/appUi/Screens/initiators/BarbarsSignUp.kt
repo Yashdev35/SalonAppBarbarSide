@@ -460,6 +460,7 @@ fun AdvancedSignUpScreen(
                             state = state,
                             aboutUs = aboutUs,
                             noOfReviews = "0",
+                            isShopOpen = "No",
                             rating = 0.0,
                             lat = 0.0,
                             long = 0.0,

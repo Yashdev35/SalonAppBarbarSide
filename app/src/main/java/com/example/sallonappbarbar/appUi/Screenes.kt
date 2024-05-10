@@ -12,4 +12,5 @@ sealed class Screenes(
     object SelecterScr : Screenes("selectServices")
 
     object PriceSelector : Screenes("priceSelector")
+    object Home : Screenes("homeScreen")
 }

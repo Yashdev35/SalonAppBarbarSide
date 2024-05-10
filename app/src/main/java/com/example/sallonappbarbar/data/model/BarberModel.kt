@@ -15,6 +15,7 @@ data class BarberModel(
         var state: String? = "",
         var aboutUs: String? = "",
         var noOfReviews: String? = "",
+        var isShopOpen: String? = "Yes",
         var rating: Double? = 0.0,
         var lat:Double? = 0.0,
         var long:Double? =0.0,

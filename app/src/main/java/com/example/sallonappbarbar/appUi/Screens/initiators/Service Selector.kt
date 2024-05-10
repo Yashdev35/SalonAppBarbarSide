@@ -349,7 +349,7 @@ fun PriceSelector(
                             is Resource.Success -> {
                                 isDialogVisible = false
                                 activity.showMsg(it.result)
-//                                navController.navigate(Screenes.Home.route)
+                                navController.navigate(Screenes.Home.route)
                             }
                             is Resource.Failure -> {
                                 isDialogVisible = false
