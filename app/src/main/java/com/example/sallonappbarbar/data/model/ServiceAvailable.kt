@@ -18,9 +18,10 @@ data class aService(
     val serviceTypeHeading: String,
     val serviceName: String,
     val id: Int,
+    var time: String
 ):Parcelable
 @Parcelize
 data class ServiceType(
     val serviceTypeHeading: String,
-    val aServices: List<aService>
+    var aServices: List<aService>
 ):Parcelable

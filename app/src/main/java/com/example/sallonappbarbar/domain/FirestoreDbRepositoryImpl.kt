@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
-import com.example.sallonappbarbar.data.model.aService
+import com.example.sallonappbarbar.data.model.ServiceType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.storage.FirebaseStorage
@@ -145,21 +145,23 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
 
     override suspend fun addServices(
-        aServices: List<aService>
+        aServices: List<ServiceType>
     ): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
-        aServices.forEach(){Service->
-            val service = hashMapOf(
-                "serviceName" to Service.serviceName,
-                "price" to Service.price,
-                "serviceTypeHeading" to Service.serviceTypeHeading
-            )
-            barberdb.document(auth.currentUser!!.uid).collection("Services").document(Service.serviceName).set(service)
-                .addOnSuccessListener {
-                    trySend(Resource.Success("Successfully added services"))
-                }.addOnFailureListener {
-                    trySend(Resource.Failure(it))
-                }
+        aServices.forEach(){ServiceType->
+            ServiceType.aServices.forEach(){
+                val service = HashMap<String, Any>()
+                service["Service Name"] = it.serviceName
+                service["Service Price"] = it.price
+                service["Service Duration"] = it.time
+
+                barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.serviceTypeHeading).set(service)
+                    .addOnSuccessListener {
+                        trySend(Resource.Success("Successfully added services"))
+                    }.addOnFailureListener {
+                        trySend(Resource.Failure(it))
+                    }
+            }
         }
         awaitClose {
             close()
