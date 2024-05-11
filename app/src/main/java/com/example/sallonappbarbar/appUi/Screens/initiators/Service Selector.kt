@@ -381,7 +381,8 @@ fun PriceSelector(
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
                 Log.d("Barber", "PriceSelector: $aServices")
                 scope.launch(Dispatchers.Main) {
-                    viewModel.addServiceData(aServices,activity).collect {
+                    val serviceTypes = aServiceSorter(aServices)
+                    viewModel.addServiceData(serviceTypes,activity).collect {
                         when (it) {
                             is Resource.Success -> {
                                 isDialogVisible = false
