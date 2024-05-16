@@ -42,7 +42,12 @@ fun LogoScreen(
                 }
             }
         }else{
-            navController.navigate(Screenes.SelecterScr.route){
+//            navController.navigate(Screenes.Home.route){
+//                popUpTo(Screenes.Logo.route) {
+//                    inclusive = true
+//                }
+//            }
+            navController.navigate(Screenes.OTPVerification.route + "/$dummyPhoneNumber"){
                 popUpTo(Screenes.Logo.route) {
                     inclusive = true
                 }

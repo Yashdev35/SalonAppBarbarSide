@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.sallonappbarbar.data.model.ServiceType
+import com.example.sallonappbarbar.data.model.ServiceUploaded
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.storage.FirebaseStorage
@@ -147,21 +149,23 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     override suspend fun addServices(
         aServices: List<ServiceType>
     ): Flow<Resource<String>> = callbackFlow {
+        var service = HashMap<String, ServiceUploaded>()
         trySend(Resource.Loading)
-        aServices.forEach(){ServiceType->
+        aServices.forEach(){
+            ServiceType->
             ServiceType.aServices.forEach(){
-                val service = HashMap<String, Any>()
-                service["Service Name"] = it.serviceName
-                service["Service Price"] = it.price
-                service["Service Duration"] = it.time
+                service[it.serviceName] = ServiceUploaded(it.price,it.time)
 
-                barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.serviceTypeHeading).set(service)
-                    .addOnSuccessListener {
-                        trySend(Resource.Success("Successfully added services"))
-                    }.addOnFailureListener {
-                        trySend(Resource.Failure(it))
-                    }
             }
+            barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.serviceTypeHeading).set(service)
+                .addOnSuccessListener {
+                    trySend(Resource.Success("Successfully added services"))
+                }.addOnFailureListener {
+                    trySend(Resource.Failure(it))
+                    Log.d("TAGerr", "addServices: ${it.message}")
+                }
+            service.clear()
+
         }
         awaitClose {
             close()
@@ -169,45 +173,66 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     }
     override suspend fun isShopOpen(shopOpen: Boolean): Flow<Resource<String>> = callbackFlow {
         var status = if (shopOpen) "Yes" else "No"
-        trySend(Resource.Loading)
-        barberdb.document(auth.currentUser?.uid.toString()).update("isShopOpen", status)
-            .addOnSuccessListener {
-                trySend(Resource.Success("Shop is open"))
-            }.addOnFailureListener {
-                trySend(Resource.Failure(it))
-            }
-        awaitClose {
+        try {
+            // Emit loading state
+            trySend(Resource.Loading)
+
+            // Perform the update
+            barberdb.document(auth.currentUser?.uid.toString()).update("open", status)
+                .await() // Ensure update completes
+
+            // If successful, emit success with message
+            trySend(Resource.Success("Status updated successfully"))
+        } catch (e: Exception) {
+            // If an error occurs, emit failure with the exception
+            trySend(Resource.Failure(e))
+        } finally {
+            // Close the flow
             close()
         }
     }
 
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
-        barberdb.document(auth.currentUser?.uid.toString()).get()
-            .addOnSuccessListener {
-                val barberModel = it.data?.map {
-                    BarberModel(
-                        name = it.value.toString(),
-                        shopName = it.value.toString(),
-                        phoneNumber = it.value.toString(),
-                        saloonType = it.value.toString(),
-                        imageUri = it.value.toString(),
-                        shopStreetAddress = it.value.toString(),
-                        city = it.value.toString(),
-                        state = it.value.toString(),
-                        aboutUs = it.value.toString(),
-                        noOfReviews = it.value.toString(),
-                        isShopOpen = it.value.toString(),
-                        rating = it.value.toString().toDouble(),
-                        lat = it.value.toString().toDouble(),
-                        long = it.value.toString().toDouble(),
-                        uid = it.value.toString()
-                    )
+        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+        val listener = documentReference.get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val data = documentSnapshot.data
+                    if (data != null) {
+                        try {
+                            val barberModel = BarberModel(
+                                name = data["name"]?.toString().orEmpty(),
+                                shopName = data["shopName"]?.toString().orEmpty(),
+                                phoneNumber = data["phoneNumber"]?.toString().orEmpty(),
+                                saloonType = data["saloonType"]?.toString().orEmpty(),
+                                imageUri = data["imageUri"]?.toString().orEmpty(),
+                                shopStreetAddress = data["shopStreetAddress"]?.toString().orEmpty(),
+                                city = data["city"]?.toString().orEmpty(),
+                                state = data["state"]?.toString().orEmpty(),
+                                aboutUs = data["aboutUs"]?.toString().orEmpty(),
+                                noOfReviews = data["noOfReviews"]?.toString().orEmpty(),
+                                open = data["open"]?.toString().orEmpty(),
+                                rating = data["rating"]?.toString()?.toDoubleOrNull() ?: 0.0,
+                                lat = data["lat"]?.toString()?.toDoubleOrNull() ?: 0.0,
+                                long = data["long"]?.toString()?.toDoubleOrNull() ?: 0.0,
+                                uid = data["uid"]?.toString().orEmpty()
+                            )
+                            trySend(Resource.Success(barberModel))
+                        } catch (e: Exception) {
+                            trySend(Resource.Failure(e))
+                        }
+                    } else {
+                        trySend(Resource.Failure(Exception("Data is null")))
+                    }
+                } else {
+                    trySend(Resource.Failure(Exception("Document does not exist")))
                 }
-                trySend(Resource.Success(barberModel!![0]))
-            }.addOnFailureListener {
+            }
+            .addOnFailureListener {
                 trySend(Resource.Failure(it))
             }
+
         awaitClose {
             close()
         }

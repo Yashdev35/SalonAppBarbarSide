@@ -35,6 +35,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -47,16 +50,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -67,9 +78,12 @@ import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
+import com.exyte.animatednavbar.utils.toDp
 import com.google.firebase.auth.FirebaseAuth
+import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
@@ -88,8 +102,14 @@ fun AdvancedSignUpScreen(
     val phone = phoneNumber ?: "1234567890"
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
-    var dropdownExpanded by remember { mutableStateOf(false) }
-    var selectedSalonType by remember { mutableStateOf<SalonType?>(null) }
+    var mExpanded by remember { mutableStateOf(false) }
+    var mSelectedText by remember { mutableStateOf("") }
+    var mTextFieldSize by remember { mutableStateOf(Size.Zero)}
+    val icon = if (mExpanded)
+        Icons.Filled.KeyboardArrowUp
+    else
+        Icons.Filled.KeyboardArrowDown
+    var selectedSalonType by remember { mutableStateOf(" ") }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
@@ -111,8 +131,11 @@ fun AdvancedSignUpScreen(
             imageUri = uri
             selectedImageUri = imageUri
         }
+
+    val mCities = listOf("Male Salon" , "Female Salon" , "Unisex Salon")
+
     if (isDialog)
-        LoadingAnimation()
+        CommonDialog()
 
     if (!isDialog) {
         Box(
@@ -225,97 +248,49 @@ fun AdvancedSignUpScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
 
-
-
-
-                Button(
+                OutlinedTextField(
+                    value = mSelectedText,
+                    textStyle = TextStyle(color = Color.Black, fontWeight = FontWeight.SemiBold),
+                    onValueChange = { mSelectedText = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight(),
-                    onClick = {
-                        dropdownExpanded = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.Black,
-                        backgroundColor = Color.White
-                    ),
-                    border = BorderStroke(0.5.dp, colorResource(id = R.color.grey_light))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.scissors),
-                            contentDescription = "drop down",
-                            modifier = Modifier
-                                .size(20.dp),
+                        .onGloballyPositioned { coordinates ->
+                            // This value is used to assign to
+                            // the DropDown the same width
+                            mTextFieldSize = coordinates.size.toSize()
+                        }.padding(horizontal = 1.dp),
+                    label = {Text("Select a gender", color = Color.Black, fontWeight = FontWeight.Bold)},
+                    trailingIcon = {
+                        Icon(icon,"contentDescription",
+                            Modifier.clickable { mExpanded = !mExpanded },
                             tint = Color.Black
-                        )
-                        Spacer(modifier = Modifier.size(20.dp))
-                        Text(
-                            text = selectedSalonType?.label ?: "Male",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                            textAlign = TextAlign.Start,
-                            color = Color.Black
-                        )
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = dropdownExpanded, onDismissRequest = {
-                                dropdownExpanded = false
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "Male", style = MaterialTheme.typography.bodySmall,
-                                        textAlign = TextAlign.Center,
-                                        color = Color.White
-                                    )
-                                },
-                                onClick = {
-                                    selectedSalonType = SalonType.MALE
-                                    dropdownExpanded = false
-                                })
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "Female",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        textAlign = TextAlign.Center,
-                                        color = Color.White
-                                    )
-                                },
-                                onClick = {
-                                    selectedSalonType = SalonType.FEMALE
-                                    dropdownExpanded = false
-                                }
                             )
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "Hybrid",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        textAlign = TextAlign.Center,
-                                        color = Color.White
-                                    )
-                                },
-                                onClick = {
-                                    selectedSalonType = SalonType.HYBRID
-                                    dropdownExpanded = false
-                                }
-                            )
+                    },
+                    colors= TextFieldDefaults.outlinedTextFieldColors(
+                        disabledBorderColor = Purple80, // Change the border color when focused
+                        unfocusedBorderColor = Purple40,
+                        disabledTrailingIconColor = Color.White// Change the border color when unfocused
+                    ), enabled = false
+
+
+                )
+                DropdownMenu(
+                    expanded = mExpanded,
+                    onDismissRequest = { mExpanded = false },
+                    modifier = Modifier
+                        .width(with(LocalDensity.current){mTextFieldSize.width.toDp()}).background(
+                            if (mExpanded) Color(Purple80.toArgb()) else Color.Black // Change background color based on expansion state
+                        ),
+                    offset = DpOffset(0.dp, mTextFieldSize.height.toDp())
+                ) {
+                    mCities.forEach { label ->
+                        DropdownMenuItem(onClick = {
+                            mSelectedText = label
+                            mExpanded = false
+                        }, text = {Text(text=label, color = Color.Black)})
                         }
-                    }
-                }
+                   }
+
                 // out line text field for birth date
                 OutlinedTextField(
                     value = shopName,
@@ -453,14 +428,14 @@ fun AdvancedSignUpScreen(
                             name = name,
                             shopName = shopName,
                             phoneNumber = phoneNumber.toString(),
-                            saloonType = selectedSalonType?.label,
+                            saloonType = mSelectedText,
                             imageUri = selectedImageUri.toString(),
                             shopStreetAddress = streetAddress,
                             city = city,
                             state = state,
                             aboutUs = aboutUs,
                             noOfReviews = "0",
-                            isShopOpen = "No",
+                            open = "No",
                             rating = 0.0,
                             lat = 0.0,
                             long = 0.0,

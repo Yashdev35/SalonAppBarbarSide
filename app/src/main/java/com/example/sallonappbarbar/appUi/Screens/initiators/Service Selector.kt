@@ -157,7 +157,7 @@ fun ServiceStandardAndPriceList(aService : aService) {
 fun ServiceCard(
     aService: aService,
     ) {
-    var showPriceAndTimeInputDialog by remember { mutableStateOf(false) }
+    val showPriceAndTimeInputDialog = remember { mutableStateOf(false) }
     Column {
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -180,7 +180,7 @@ fun ServiceCard(
                     )
                         IconButton(
                             onClick = {
-                                showPriceAndTimeInputDialog = true
+                                showPriceAndTimeInputDialog.value = true
                             }
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = "edit")
@@ -193,10 +193,10 @@ fun ServiceCard(
             ServiceStandardAndPriceList(aService)
         }
     }
-    if(showPriceAndTimeInputDialog){
+    if(showPriceAndTimeInputDialog.value){
         TimeAndPriceEditorDialog(
             aService = aService,
-            showPriceAndTimeInputDialog = mutableStateOf(showPriceAndTimeInputDialog)
+            showPriceAndTimeInputDialog = showPriceAndTimeInputDialog
         )
     }
 }
@@ -215,8 +215,9 @@ fun TimeAndPriceEditorDialog(
                 if(servicePrice.isNotEmpty()) {
                     aService.price = servicePrice
                     aService.time = serviceTime
-                    showPriceAndTimeInputDialog.value = false
                     servicePrice = ""
+                    serviceTime = ""
+                    showPriceAndTimeInputDialog.value = false
                 }
             }) {
                 Text("Add")
@@ -281,7 +282,20 @@ fun ServiceSelectorScreen(
         ),
         ServiceType(
             serviceTypeHeading = "Nail Services",
-            aServices = listOf()
+            aServices = listOf(
+                aService(false, price = "0", id = 4, serviceTypeHeading = "Nail Service", serviceName = "Manicure",time = "1 hour"),
+                aService(false, price = "0", id = 5, serviceTypeHeading = "Nail Service", serviceName = "Pedicure",time = "1 hour"),
+                aService(false, price = "0", id = 6, serviceTypeHeading = "Nail Service", serviceName = "Nail Art",time = "1 hour"),
+            )
+        ),
+        ServiceType(
+            serviceTypeHeading = "Facial Services",
+            aServices = listOf(
+                aService(false, price = "0", id = 7, serviceTypeHeading = "Facial Service", serviceName = "Clean Up",time = "1 hour"),
+                aService(false, price = "0", id = 8, serviceTypeHeading = "Facial Service", serviceName = "Facial",time = "1 hour"),
+                aService(false, price = "0", id = 9, serviceTypeHeading = "Facial Service", serviceName = "Bleach",time = "1 hour"),
+            )
+
         )
     )
     Surface(color = purple_200) {

@@ -93,7 +93,7 @@ fun PhoneNumberScreen(
     val focusManager = LocalFocusManager.current
 
     if (isDialog)
-        LoadingAnimation()
+        CommonDialog()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -186,7 +186,7 @@ fun OtpVerificationScreen(
     var isDialog by remember { mutableStateOf(false) }
 
     if (isDialog)
-        LoadingAnimation()
+        CommonDialog()
 
     Column(
         modifier = Modifier
@@ -285,7 +285,7 @@ fun ClickableTextWithUnderline(text: String, onClick: () -> Unit) {
     val annotatedText = buildAnnotatedString {
         withStyle(
             style = SpanStyle(
-                color = contentColorFor(androidx.compose.material.MaterialTheme.colors.background),
+                color = contentColorFor(MaterialTheme.colorScheme.background),
                 textDecoration = TextDecoration.Underline
             )
         ) {

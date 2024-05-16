@@ -30,10 +30,13 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.animation.core.Animatable
+import androidx.compose.material.Card
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -41,19 +44,55 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.ui.theme.Purple40
+import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
 
 @Composable
 fun CommonDialog() {
+
     Dialog(onDismissRequest = { }) {
-CircularProgressIndicator()
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .width(50.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 16.dp, bottom = 16.dp),
+                    color = Color(sallonColor.toArgb()),
+                    trackColor = Color(purple_200.toArgb()),
+                )
+                Text(
+                    text = "Loading",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .wrapContentSize()
+                        .padding(30.dp),
+
+                    color = Purple40
+                )
+            }
+
+        }
     }
+
 
 }
 
@@ -262,8 +301,8 @@ fun BackButtonTopAppBar(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun AdvancedSignUpScreenPreview() {
-//    CommonDialog()
-//}
+@Preview(showBackground = true)
+@Composable
+fun AdvancedSignUpScreenPreview() {
+    LoadingAnimation()
+}

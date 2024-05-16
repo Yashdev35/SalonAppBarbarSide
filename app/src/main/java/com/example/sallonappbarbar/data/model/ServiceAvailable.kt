@@ -25,3 +25,8 @@ data class ServiceType(
     val serviceTypeHeading: String,
     var aServices: List<aService>
 ):Parcelable
+
+data class ServiceUploaded(
+    val servicePrice: String,
+    val serviceDuration: String,
+)
