@@ -34,7 +34,7 @@ fun LogoScreen(
     LaunchedEffect(true) {
         delay(logoDurationMillis)
         val updatedCurrentUser = FirebaseAuth.getInstance().currentUser
-        val dummyPhoneNumber = "1234567890"
+        val dummyPhoneNumber = "9373182023"
         if (updatedCurrentUser == null) {
             navController.navigate(Screenes.OnBoardingScreenes.route){
                 popUpTo(Screenes.Logo.route) {
@@ -42,17 +42,11 @@ fun LogoScreen(
                 }
             }
         }else{
-//            navController.navigate(Screenes.Home.route){
-//                popUpTo(Screenes.Logo.route) {
-//                    inclusive = true
-//                }
-//            }
-            navController.navigate(Screenes.OTPVerification.route + "/$dummyPhoneNumber"){
+            navController.navigate(Screenes.Home.route){
                 popUpTo(Screenes.Logo.route) {
                     inclusive = true
                 }
             }
-
         }
 
     }

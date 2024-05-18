@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.ui.theme.Purple80
+import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +51,7 @@ fun HomeScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     if (isLoading) {
-        CommonDialog()
+        CircularProgressWithAppLogo()
     }
 
     val scope = rememberCoroutineScope()
@@ -63,7 +64,7 @@ fun HomeScreen(
                         isLoading = false
                         Toast.makeText(activity, "Data Loaded", Toast.LENGTH_SHORT).show()
                         val barberData = resource.result
-                        isBarberShopOpen = barberData.open?.lowercase() == "yes"
+                        isBarberShopOpen = barberData.open?: false
                         isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"
                     }
                     is Resource.Failure -> {
@@ -80,7 +81,9 @@ fun HomeScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(Purple80.toArgb())),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(Purple80.toArgb())),
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

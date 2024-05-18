@@ -142,7 +142,11 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
 
     implementation("com.exyte:animated-navigation-bar:1.0.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.0.5")
 
-
+    //lottie animation
+    implementation ( "com.airbnb.android:lottie-compose:6.4.0" )
+    implementation("com.exyte:animated-navigation-bar:1.0.0")
 
 }

@@ -172,13 +172,12 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
     }
     override suspend fun isShopOpen(shopOpen: Boolean): Flow<Resource<String>> = callbackFlow {
-        var status = if (shopOpen) "Yes" else "No"
         try {
             // Emit loading state
             trySend(Resource.Loading)
 
             // Perform the update
-            barberdb.document(auth.currentUser?.uid.toString()).update("open", status)
+            barberdb.document(auth.currentUser?.uid.toString()).update("open", shopOpen)
                 .await() // Ensure update completes
 
             // If successful, emit success with message
@@ -212,7 +211,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                                 state = data["state"]?.toString().orEmpty(),
                                 aboutUs = data["aboutUs"]?.toString().orEmpty(),
                                 noOfReviews = data["noOfReviews"]?.toString().orEmpty(),
-                                open = data["open"]?.toString().orEmpty(),
+                                open = data["open"]?.toString().toBoolean(),
                                 rating = data["rating"]?.toString()?.toDoubleOrNull() ?: 0.0,
                                 lat = data["lat"]?.toString()?.toDoubleOrNull() ?: 0.0,
                                 long = data["long"]?.toString()?.toDoubleOrNull() ?: 0.0,

@@ -49,6 +49,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.purple_200
@@ -179,6 +183,34 @@ fun LoadingAnimation(
 
     }
 }
+@Composable
+fun CircularProgressWithAppLogo() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
+        var isPlaying by remember { mutableStateOf(true) }
+        val progress by animateLottieCompositionAsState(
+            composition = composition,
+            isPlaying = isPlaying,restartOnPlay = true, iterations = 10, speed = 0.75f
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    color = Color.White
+                ),
+        ) {
+            Box(modifier = Modifier.fillMaxSize()){
+                LottieAnimation(
+                    composition = composition, progress = { progress }, modifier = Modifier
+                        .size(250.dp)
+                        .padding(start = 100.dp, top = 40.dp)
+                    , alignment = Alignment.Center
+                )
+            }
+        }}
+}
 
 @Composable
 fun PasswordFields() {
@@ -304,5 +336,5 @@ fun BackButtonTopAppBar(
 @Preview(showBackground = true)
 @Composable
 fun AdvancedSignUpScreenPreview() {
-    LoadingAnimation()
+    CircularProgressWithAppLogo()
 }

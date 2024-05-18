@@ -1,6 +1,8 @@
 package com.example.sallonappbarbar.appUi.Screens.initiators
 
 import android.app.Activity
+import android.location.Address
+import android.location.Geocoder
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,7 +44,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,11 +55,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -76,8 +83,10 @@ import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.LocationViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.LocationModel
 import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
@@ -88,6 +97,7 @@ import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,10 +107,33 @@ fun AdvancedSignUpScreen(
     phoneNumber: String? = null,
     activity: Activity,
     viewModel: BarberDataViewModel = hiltViewModel(),
+    locationViewModel: LocationViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    locationViewModel.startLocationUpdates()
+    val location by locationViewModel.getLocationLiveData().observeAsState()
+    var locationDetails by remember {
+        mutableStateOf(LocationModel(null, null, null, null, null))
+    }
+    val geocoder = Geocoder(context, Locale.getDefault())
+    val addresses: List<Address>? = location?.latitude?.let {
+        geocoder.getFromLocation(
+            it.toDouble(), location!!.longitude!!.toDouble(), 1
+        )
+    }
+    if (!addresses.isNullOrEmpty()) {
+        val address = addresses[0]
+        locationDetails = LocationModel(
+            location!!.latitude,
+            location!!.longitude,
+            address.locality,
+            address.adminArea,
+            address.countryName
+        )
+//        Toast.makeText(context,locationDetails.latitude,Toast.LENGTH_SHORT).show()
+    }
     val auth = FirebaseAuth.getInstance()
     val phone = phoneNumber ?: "1234567890"
-    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var mExpanded by remember { mutableStateOf(false) }
     var mSelectedText by remember { mutableStateOf("") }
@@ -156,6 +189,7 @@ fun AdvancedSignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                var textFieldPosition by remember { mutableStateOf(Offset.Zero) }
                 Box(
                     modifier = Modifier
                         .width(150.dp)
@@ -255,41 +289,54 @@ fun AdvancedSignUpScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .onGloballyPositioned { coordinates ->
-                            // This value is used to assign to
-                            // the DropDown the same width
                             mTextFieldSize = coordinates.size.toSize()
-                        }.padding(horizontal = 1.dp),
-                    label = {Text("Select a gender", color = Color.Black, fontWeight = FontWeight.Bold)},
+                            textFieldPosition = coordinates.positionInWindow()
+                        }
+                        .padding(horizontal = 1.dp),
+                    label = {
+                        Text(
+                            "Select a gender",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
                     trailingIcon = {
-                        Icon(icon,"contentDescription",
+                        Icon(
+                            icon,
+                            contentDescription = null,
                             Modifier.clickable { mExpanded = !mExpanded },
                             tint = Color.Black
-                            )
+                        )
                     },
-                    colors= TextFieldDefaults.outlinedTextFieldColors(
-                        disabledBorderColor = Purple80, // Change the border color when focused
-                        unfocusedBorderColor = Purple40,
-                        disabledTrailingIconColor = Color.White// Change the border color when unfocused
-                    ), enabled = false
-
-
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        disabledBorderColor = Color(0xFFBB86FC),
+                        unfocusedBorderColor = Color(0xFF6200EE),
+                        disabledTrailingIconColor = Color.White
+                    ),
+                    enabled = false
                 )
+
                 DropdownMenu(
                     expanded = mExpanded,
                     onDismissRequest = { mExpanded = false },
                     modifier = Modifier
-                        .width(with(LocalDensity.current){mTextFieldSize.width.toDp()}).background(
-                            if (mExpanded) Color(Purple80.toArgb()) else Color.Black // Change background color based on expansion state
-                        ),
-                    offset = DpOffset(0.dp, mTextFieldSize.height.toDp())
+                        .width(with(LocalDensity.current) { mTextFieldSize.width.toDp() })
+                        .background(if (mExpanded) Color(0xFFBB86FC) else Color.Black),
+                    offset = DpOffset(
+                        x = 0.dp,
+                        y = with(LocalDensity.current) { textFieldPosition.y.toDp() + mTextFieldSize.height.toDp() }
+                    )
                 ) {
                     mCities.forEach { label ->
-                        DropdownMenuItem(onClick = {
-                            mSelectedText = label
-                            mExpanded = false
-                        }, text = {Text(text=label, color = Color.Black)})
-                        }
-                   }
+                        DropdownMenuItem(
+                            text = { Text(text = label, color = Color.Black) },
+                            onClick = {
+                                mSelectedText = label
+                                mExpanded = false
+                            }
+                        )
+                    }
+                }
 
                 // out line text field for birth date
                 OutlinedTextField(
@@ -435,10 +482,10 @@ fun AdvancedSignUpScreen(
                             state = state,
                             aboutUs = aboutUs,
                             noOfReviews = "0",
-                            open = "No",
+                            open = false,
                             rating = 0.0,
-                            lat = 0.0,
-                            long = 0.0,
+                            lat = locationDetails.latitude!!.toDouble(),
+                            long = locationDetails.longitude!!.toDouble(),
                             uid = auth.currentUser?.uid.toString()
                         )
                         scope.launch(Dispatchers.Main) {

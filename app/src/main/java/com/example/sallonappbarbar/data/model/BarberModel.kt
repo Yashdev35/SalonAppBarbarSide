@@ -15,7 +15,7 @@ data class BarberModel(
         var state: String? = "",
         var aboutUs: String? = "",
         var noOfReviews: String? = "",
-        var open: String? = "Yes",
+        var open: Boolean? = false,
         var rating: Double? =0.0,
         var lat:Double? = 0.0,
         var long:Double? =0.0,
