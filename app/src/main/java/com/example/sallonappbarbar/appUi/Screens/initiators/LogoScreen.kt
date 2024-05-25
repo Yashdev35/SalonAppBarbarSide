@@ -42,7 +42,12 @@ fun LogoScreen(
                 }
             }
         }else{
-            navController.navigate(Screenes.Home.route){
+//            navController.navigate(Screenes.Home.route){
+//                popUpTo(Screenes.Logo.route) {
+//                    inclusive = true
+//                }
+//            }
+            navController.navigate(Screenes.SlotAdderScr.route){
                 popUpTo(Screenes.Logo.route) {
                     inclusive = true
                 }

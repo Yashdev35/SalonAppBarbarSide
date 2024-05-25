@@ -14,6 +14,7 @@ import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ServiceType
+import com.example.sallonappbarbar.data.model.WeekDay
 import com.example.sallonappbarbar.data.model.aService
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,9 @@ class BarberDataViewModel @Inject constructor(
     suspend fun addUserData(barberModel: BarberModel,imageUri: Uri?, activity: Activity) =repo.addUser(barberModel,imageUri)
     suspend fun addServiceData(aServices: List<ServiceType>, activity: Activity) =repo.addServices(aServices)
     suspend fun isShopOpen(shopOpen:Boolean, activity: Activity) =repo.isShopOpen(shopOpen)
+    suspend fun addOpenCloseTime(openCloseTime:String, activity: Activity) =repo.addOpenCloseTime(openCloseTime)
+    suspend fun getOpenCloseTime(activity: Activity) =repo.getOpenCloseTime()
+    suspend fun addSlots(weekDays: List<WeekDay>, activity: Activity) =repo.addSlots(weekDays)
     suspend fun getBarberData(activity: Activity) = repo.getBarberData()
 //    {
 //

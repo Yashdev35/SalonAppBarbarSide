@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.HomeScreen
+import com.example.sallonappbarbar.appUi.Screens.MainScreens.SlotAdderScreen
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.HeadingText
 import com.example.sallonappbarbar.appUi.Screens.initiators.AdvancedSignUpScreen
@@ -160,6 +161,9 @@ fun AppNavigation(
         }
         composable(Screenes.Home.route){
             HomeScreen(activity = context as Activity, navController = navController)
+        }
+        composable(Screenes.SlotAdderScr.route){
+            SlotAdderScreen(context as Activity)
         }
     }
 }

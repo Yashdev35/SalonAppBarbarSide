@@ -13,8 +13,10 @@ import android.net.Uri
 import android.util.Log
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.ServiceUploaded
+import com.example.sallonappbarbar.data.model.WeekDay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -155,7 +157,6 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             ServiceType->
             ServiceType.aServices.forEach(){
                 service[it.serviceName] = ServiceUploaded(it.price,it.time)
-
             }
             barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.serviceTypeHeading).set(service)
                 .addOnSuccessListener {
@@ -191,6 +192,70 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
     }
 
+override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<String>> = callbackFlow {
+    trySend(Resource.Loading)
+    barberdb.document(auth.currentUser?.uid.toString()).set(hashMapOf("openCloseTime" to openCloseTime)
+    ,SetOptions.merge()
+        )
+        .addOnSuccessListener {
+            trySend(Resource.Success("Successfully added open close time"))
+        }.addOnFailureListener {
+            trySend(Resource.Failure(it))
+        }
+    awaitClose {
+        close()
+    }
+}
+
+    override suspend fun getOpenCloseTime(): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+        val listener = documentReference.get()
+            .addOnSuccessListener {documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val data = documentSnapshot.data
+                    if (data != null) {
+                        try {
+                            val openCloseTime = data["openCloseTime"]?.toString().orEmpty()
+                            trySend(Resource.Success(openCloseTime))
+                        } catch (e: Exception) {
+                            trySend(Resource.Failure(e))
+                        }
+                    } else {
+                        trySend(Resource.Failure(Exception("Data is null")))
+                    }
+                } else {
+                    trySend(Resource.Failure(Exception("Document does not exist")))
+                }
+            }
+    }
+
+    override suspend fun addSlots(weekDays: List<WeekDay>): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+
+        val map = weekDays.associate { weekDay ->
+            weekDay.name to weekDay.slots.map { slot ->
+                hashMapOf(
+                    "startTime" to slot.startTime,
+                    "endTime" to slot.endTime
+                )
+            }
+        }
+
+        val documentRef = barberdb.document(auth.currentUser!!.uid)
+
+        val listenerRegistration = documentRef.set(map, SetOptions.merge())
+            .addOnSuccessListener {
+                trySend(Resource.Success("Successfully added slots")).isSuccess
+            }
+            .addOnFailureListener { exception ->
+                trySend(Resource.Failure(exception)).isFailure
+            }
+
+        awaitClose { // Ensures listener is properly removed when the Flow is cancelled
+            close()
+        }
+    }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())

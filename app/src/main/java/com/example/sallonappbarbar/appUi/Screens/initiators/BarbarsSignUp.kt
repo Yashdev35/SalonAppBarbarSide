@@ -4,9 +4,11 @@ import android.app.Activity
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -97,10 +99,11 @@ import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 import java.util.Locale
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AdvancedSignUpScreen(
     navController: NavController,
@@ -535,6 +538,7 @@ enum class SalonType(val label: String) {
     HYBRID("Hybrid salon"),
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun AdvancedSignUpScreenPreview() {

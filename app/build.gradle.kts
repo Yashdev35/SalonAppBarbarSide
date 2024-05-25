@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.sallonappbarbar"
-        minSdk = 25
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -148,5 +148,8 @@ dependencies {
     //lottie animation
     implementation ( "com.airbnb.android:lottie-compose:6.4.0" )
     implementation("com.exyte:animated-navigation-bar:1.0.0")
+
+    //time dependency
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")
 
 }
