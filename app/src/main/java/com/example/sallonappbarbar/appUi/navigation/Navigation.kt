@@ -163,7 +163,7 @@ fun AppNavigation(
             HomeScreen(activity = context as Activity, navController = navController)
         }
         composable(Screenes.SlotAdderScr.route){
-            SlotAdderScreen(context as Activity)
+            SlotAdderScreen(context as Activity, navController = navController)
         }
     }
 }

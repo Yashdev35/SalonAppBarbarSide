@@ -231,9 +231,10 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
     }
 
     override suspend fun addSlots(weekDays: List<WeekDay>): Flow<Resource<String>> = callbackFlow {
-        trySend(Resource.Loading)
+        trySend(Resource.Loading).isSuccess
 
-        val map = weekDays.associate { weekDay ->
+        // Create a map where each key is a weekday name and the value is a list of slots
+        val slotsMap = weekDays.associate { weekDay ->
             weekDay.name to weekDay.slots.map { slot ->
                 hashMapOf(
                     "startTime" to slot.startTime,
@@ -242,9 +243,11 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
             }
         }
 
+        // Reference to the Firebase document
         val documentRef = barberdb.document(auth.currentUser!!.uid)
 
-        val listenerRegistration = documentRef.set(map, SetOptions.merge())
+        // Set the map in the document with merge option
+        documentRef.set(mapOf("Slots available" to slotsMap), SetOptions.merge())
             .addOnSuccessListener {
                 trySend(Resource.Success("Successfully added slots")).isSuccess
             }
@@ -252,10 +255,11 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
                 trySend(Resource.Failure(exception)).isFailure
             }
 
-        awaitClose { // Ensures listener is properly removed when the Flow is cancelled
-            close()
+        awaitClose {
+            // No need to call close() here, callbackFlow takes care of it
         }
     }
+
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())
