@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -87,10 +88,9 @@ fun SlotAdderScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
                 .background(
-                    Color(sallonColor.toArgb())
-                )
+                    Color(Purple80.toArgb())
+                ).padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -103,49 +103,71 @@ fun SlotAdderScreen(
                     .fillMaxWidth()
                     .padding(16.dp),
                 onClick = {
-                    scope.launch {
-                        isLoading = true
-                        try {
-                            val result = withContext(Dispatchers.IO) {
-                                barberDataViewModel.addSlots(weekDayList, activity)
-                            }
-                            withContext(Dispatchers.Main) {
-                                result.collect {
-                                    when (it) {
-                                        is Resource.Success -> {
-                                            isLoading = false
-                                            navController.navigate(Screenes.Home.route)
-                                        }
-                                        is Resource.Failure -> {
-                                            isLoading = false
-                                            Toast.makeText(
-                                                context,
-                                                "Error fetching data: ${it.exception.message}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                        is Resource.Loading -> {
-                                            isLoading = true
+                    val allSlotsPresent = weekDayList.all{
+                        it.slots.getOrNull(1)?.startTime?.isNotEmpty() ?: false && it.slots.getOrNull(1)?.endTime?.isNotEmpty() ?: false }
+
+                    if(
+                        allSlotsPresent
+                    ){
+                        scope.launch {
+                            val finalList =  listOf(
+                                WeekDay("Monday", mutableStateListOf(weekDayList[0].slots[1])),
+                                WeekDay("Tuesday", mutableStateListOf(weekDayList[1].slots[1])),
+                                WeekDay("Wednesday", mutableStateListOf(weekDayList[2].slots[1])),
+                                WeekDay("Thursday", mutableStateListOf(weekDayList[3].slots[1])),
+                                WeekDay("Friday", mutableStateListOf(weekDayList[4].slots[1])),
+                                WeekDay("Saturday", mutableStateListOf(weekDayList[5].slots[1])),
+                                WeekDay("Sunday", mutableStateListOf(weekDayList[6].slots[1]))
+                            )
+                            isLoading = true
+                            try {
+                                val result = withContext(Dispatchers.IO) {
+                                    barberDataViewModel.addSlots(finalList, activity)
+                                }
+                                withContext(Dispatchers.Main) {
+                                    result.collect {
+                                        when (it) {
+                                            is Resource.Success -> {
+                                                isLoading = false
+                                                navController.navigate(Screenes.Home.route)
+                                            }
+                                            is Resource.Failure -> {
+                                                isLoading = false
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error fetching data: ${it.exception.message}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                            is Resource.Loading -> {
+                                                isLoading = true
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) {
-                                isLoading = false
-                                Toast.makeText(
-                                    context,
-                                    "Unexpected error: ${e.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    isLoading = false
+                                    Toast.makeText(
+                                        context,
+                                        "Unexpected error: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         }
+                    }else{
+                        Toast.makeText(context, "Please add all slots", Toast.LENGTH_SHORT).show()
                     }
-                }) {
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(sallonColor.toArgb())
+                )
+                ) {
                 Text(
                     "Save and Next",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(sallonColor.toArgb()),
+                    color = Color.White,
                     fontSize = 16.sp,
                     fontFamily = FontFamily.SansSerif
                 )
@@ -158,6 +180,7 @@ fun SlotAdderScreen(
 fun DayCard(weekDay: WeekDay) {
     val openTimeDialog = rememberMaterialDialogState()
     val confirmDialog = rememberMaterialDialogState()
+    val context = LocalContext.current
 
     var openTime by remember { mutableStateOf("") }
     var closeTime by remember { mutableStateOf("") }
@@ -169,7 +192,7 @@ fun DayCard(weekDay: WeekDay) {
             .fillMaxWidth()
             .padding(horizontal = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(Purple80.toArgb())
+            containerColor = Color(Purple40.toArgb())
         )
     ) {
         Column(
@@ -183,14 +206,20 @@ fun DayCard(weekDay: WeekDay) {
                 Text(
                     text = weekDay.name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = sallonColor
+                    color = Color.Black
                 )
-                Button(onClick = { openTimeDialog.show() }) {
-                    Text("Add a Slot")
+                Button(
+                    onClick = {openTimeDialog.show()},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(sallonColor.toArgb())
+                    )
+                ) {
+                    Text("Add a Slot",
+                        color = Color.White)
                 }
             }
             Spacer(modifier = Modifier.height(1.dp))
-            weekDay.slots.drop(1).forEach { slot ->
+            weekDay.slots.getOrNull(1)?.let { slot ->
                 Text(
                     text = "${slot.startTime} - ${slot.endTime}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -252,6 +281,10 @@ fun DayCard(weekDay: WeekDay) {
             buttons = {
                 positiveButton("Ok") {
                     confirmDialog.hide()
+                    if(weekDay.slots.size > 2){
+                        Toast.makeText(context, "You can only add 1 slot", Toast.LENGTH_SHORT).show()
+                        weekDay.slots.removeLast()
+                    }
                 }
                 negativeButton("Cancel") {
                     weekDay.slots.removeLast()
