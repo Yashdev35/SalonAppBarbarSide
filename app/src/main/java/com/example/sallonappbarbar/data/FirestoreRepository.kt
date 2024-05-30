@@ -32,5 +32,5 @@ interface FirestoreRepository {
 
     suspend fun getOpenCloseTime(): Flow<Resource<String>>
     suspend fun getBarberData(): Flow<Resource<BarberModel>>
-
+    suspend fun getBarberSlots(): Flow<Resource<List<WeekDay>>>
 }

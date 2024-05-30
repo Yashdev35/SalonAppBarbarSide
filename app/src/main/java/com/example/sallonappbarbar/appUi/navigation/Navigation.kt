@@ -2,8 +2,10 @@ package com.example.sallonappbarbar.appUi.navigation
 
 import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
@@ -15,6 +17,8 @@ import com.example.sallonappbarbar.appUi.components.HeadingText
 import com.example.sallonappbarbar.appUi.Screens.initiators.AdvancedSignUpScreen
 import com.example.sallonappbarbar.appUi.Screens.initiators.PriceSelector
 import com.example.sallonappbarbar.appUi.Screens.initiators.ServiceSelectorScreen
+import com.example.sallonappbarbar.appUi.components.BottomAppNavigationBar
+import com.example.sallonappbarbar.appUi.components.TransparentTopAppBar
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.aService
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
@@ -160,7 +164,31 @@ fun AppNavigation(
             )
         }
         composable(Screenes.Home.route){
-            HomeScreen(activity = context as Activity, navController = navController)
+            DoubleCard(
+                midCarBody = { /*TODO*/ },
+                mainScreen = {
+                    HomeScreen(activity = context as Activity,
+                        navController = navController)
+                },
+                navController = navController,
+                topAppBar = {
+                    TransparentTopAppBar(
+                        onBackClick = { /*TODO*/ },
+                        onLikeClick = { /*TODO*/ },
+                        onShareClick = { /*TODO*/ },
+                        isFavorite = false
+                    )
+                },
+                bottomAppBar = {
+                    BottomAppNavigationBar(
+                        onHomeClick = { /*TODO*/ },
+                        onBookClick = { /*TODO*/ },
+                        onMessageClick = { /*TODO*/ },
+                        onProfileClick = { /*TODO*/ },
+                        modifier = Modifier
+                    )
+                }
+            )
         }
         composable(Screenes.SlotAdderScr.route){
             SlotAdderScreen(context as Activity, navController = navController)

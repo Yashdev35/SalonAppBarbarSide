@@ -25,11 +25,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,18 +37,16 @@ import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.TimeSlot
+import com.example.sallonappbarbar.data.model.TimeSlots
 import com.example.sallonappbarbar.data.model.WeekDay
 import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.Purple80
-import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
@@ -68,13 +64,13 @@ fun SlotAdderScreen(
     var weekDayList by remember {
         mutableStateOf(
             listOf(
-                WeekDay("Monday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Tuesday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Wednesday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Thursday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Friday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Saturday", mutableStateListOf(TimeSlot("10:00", "12:00"))),
-                WeekDay("Sunday", mutableStateListOf(TimeSlot("10:00", "12:00")))
+                WeekDay("Monday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Tuesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Wednesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Thursday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Friday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Saturday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
+                WeekDay("Sunday", mutableStateListOf(TimeSlots("10:00", "12:00")))
             )
         )
     }
@@ -232,7 +228,7 @@ fun DayCard(weekDay: WeekDay) {
             dialogState = openTimeDialog,
             buttons = {
                 positiveButton("Confirm") {
-                    weekDay.slots.add(TimeSlot(openTime, closeTime))
+                    weekDay.slots.add(TimeSlots(openTime, closeTime))
                     confirmDialog.show()
                 }
                 negativeButton("Cancel") {

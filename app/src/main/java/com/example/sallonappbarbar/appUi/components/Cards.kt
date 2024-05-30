@@ -250,7 +250,6 @@ fun DoubleCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 midCarBody()
-
                 Card(
                     modifier = Modifier
                         .fillMaxSize()

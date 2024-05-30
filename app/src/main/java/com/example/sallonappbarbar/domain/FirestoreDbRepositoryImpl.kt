@@ -11,8 +11,11 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.toMutableStateList
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.ServiceUploaded
+import com.example.sallonappbarbar.data.model.TimeSlots
 import com.example.sallonappbarbar.data.model.WeekDay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
@@ -176,11 +179,9 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         try {
             // Emit loading state
             trySend(Resource.Loading)
-
             // Perform the update
             barberdb.document(auth.currentUser?.uid.toString()).update("open", shopOpen)
                 .await() // Ensure update completes
-
             // If successful, emit success with message
             trySend(Resource.Success("Status updated successfully"))
         } catch (e: Exception) {
@@ -207,29 +208,6 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
     }
 }
 
-    override suspend fun getOpenCloseTime(): Flow<Resource<String>> = callbackFlow {
-        trySend(Resource.Loading)
-        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
-        val listener = documentReference.get()
-            .addOnSuccessListener {documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val data = documentSnapshot.data
-                    if (data != null) {
-                        try {
-                            val openCloseTime = data["openCloseTime"]?.toString().orEmpty()
-                            trySend(Resource.Success(openCloseTime))
-                        } catch (e: Exception) {
-                            trySend(Resource.Failure(e))
-                        }
-                    } else {
-                        trySend(Resource.Failure(Exception("Data is null")))
-                    }
-                } else {
-                    trySend(Resource.Failure(Exception("Document does not exist")))
-                }
-            }
-    }
-
     override suspend fun addSlots(weekDays: List<WeekDay>): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading).isSuccess
 
@@ -242,10 +220,8 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
                 )
             }
         }
-
         // Reference to the Firebase document
         val documentRef = barberdb.document(auth.currentUser!!.uid)
-
         // Set the map in the document with merge option
         documentRef.set(mapOf("Slots available" to slotsMap), SetOptions.merge())
             .addOnSuccessListener {
@@ -254,12 +230,9 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
             .addOnFailureListener { exception ->
                 trySend(Resource.Failure(exception)).isFailure
             }
-
         awaitClose {
-            // No need to call close() here, callbackFlow takes care of it
         }
     }
-
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())
@@ -301,8 +274,84 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
                 trySend(Resource.Failure(it))
             }
 
-        awaitClose {
-            close()
+        awaitClose { // No listeners to remove, but awaitClose is necessary
+            // Optional: Clean up any resources if needed
+        }
+    }
+    override suspend fun getOpenCloseTime(): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+
+        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+        val listener = documentReference.get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val data = documentSnapshot.data
+                    if (data != null) {
+                        try {
+                            val openCloseTime = data["openCloseTime"]?.toString().orEmpty()
+                            trySend(Resource.Success(openCloseTime))
+                        } catch (e: Exception) {
+                            trySend(Resource.Failure(e))
+                        }
+                    } else {
+                        trySend(Resource.Failure(Exception("Data is null")))
+                    }
+                } else {
+                    trySend(Resource.Failure(Exception("Document does not exist")))
+                }
+            }
+            .addOnFailureListener {
+                trySend(Resource.Failure(it))
+            }
+
+        awaitClose { // No listeners to remove, but awaitClose is necessary
+            // Optional: Clean up any resources if needed
+        }
+    }
+    override suspend fun getBarberSlots(): Flow<Resource<List<WeekDay>>> = callbackFlow {
+        trySend(Resource.Loading)
+
+        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+        documentReference.get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val data = documentSnapshot.data
+                    if (data != null) {
+                        try {
+                            val slotsMap = data["Slots available"] as? Map<String, List<Map<String, String>>>
+                            if (slotsMap != null) {
+                                val weekDaySlots = slotsMap.mapNotNull { (day, slots) ->
+                                    if (day is String && slots is List<*>) {
+                                        val timeSlots = slots.mapNotNull { slotMap ->
+                                            if (slotMap is Map<*, *>) {
+                                                val startTime = slotMap["startTime"] as? String ?: ""
+                                                val endTime = slotMap["endTime"] as? String ?: ""
+                                                TimeSlots(startTime, endTime)
+                                            } else null
+                                        }.toMutableStateList()
+                                        WeekDay(day, timeSlots)
+                                    } else null
+                                }
+                                trySend(Resource.Success(weekDaySlots))
+                            } else {
+                                trySend(Resource.Failure(Exception("Slots data is not in the expected format")))
+                            }
+                        } catch (e: Exception) {
+                            trySend(Resource.Failure(e))
+                        }
+                    } else {
+                        trySend(Resource.Failure(Exception("Data is null")))
+                    }
+                } else {
+                    trySend(Resource.Failure(Exception("Document does not exist")))
+                }
+            }
+            .addOnFailureListener { exception ->
+                trySend(Resource.Failure(exception))
+            }
+
+        awaitClose { // No listeners to remove, but awaitClose is necessary
+            // Optional: Clean up any resources if needed
         }
     }
 }

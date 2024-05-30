@@ -20,11 +20,14 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +38,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.model.TimeSlots
+import com.example.sallonappbarbar.data.model.WeekDay
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -61,7 +66,14 @@ fun HomeScreen(
         mutableStateOf(LocalTime.of(21, 0).toString())
     }
     var isLoading by remember { mutableStateOf(false) }
-
+    var slots: SnapshotStateList<TimeSlots> by mutableStateOf(
+        mutableStateListOf(
+            TimeSlots("9:00", "10:00")
+        )
+    )
+    val barberData by viewModel.barberData.collectAsState()
+    val barberSlots by viewModel.barberSlots.collectAsState()
+    val openCloseTime by viewModel.openCloseTime.collectAsState()
     val openTimeDialogState = rememberMaterialDialogState()
     val closeTimeDialogState = rememberMaterialDialogState()
     val confirmOpenCloseDialogState = rememberMaterialDialogState()
@@ -73,60 +85,75 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        scope.launch {
-            viewModel.getBarberData(activity).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        isLoading = false
-                        Toast.makeText(activity, "Data Loaded", Toast.LENGTH_SHORT).show()
-                        val barberData = resource.result
-                        isBarberShopOpen = barberData.open ?: false
-                        isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"
-                    }
+        viewModel.fetchBarberData()
+    }
 
-                    is Resource.Failure -> {
-                        isLoading = false
-                        // Handle data fetching error here (e.g., show a toast)
-                        Toast.makeText(
-                            activity,
-                            "Error fetching data: ${resource.exception.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                    is Resource.Loading -> {
-                        isLoading = true
-                    }
-                }
-            }
-            viewModel.getOpenCloseTime(activity).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        isLoading = false
-                        Toast.makeText(activity, "Time Loaded", Toast.LENGTH_SHORT).show()
-                        val openCloseTime = resource.result
-                        val time = openCloseTime.split(" - ")
-                        openTime = time[0]
-                        closeTime = time[1]
-                    }
-
-                    is Resource.Failure -> {
-                        isLoading = false
-                        // Handle data fetching error here (e.g., show a toast)
-                        Toast.makeText(
-                            activity,
-                            "Error fetching data: ${resource.exception.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                    is Resource.Loading -> {
-                        isLoading = true
-                    }
-                }
+    when (barberData) {
+        is Resource.Success -> {
+            isLoading = false
+            Toast.makeText(activity, "Data Loaded", Toast.LENGTH_SHORT).show()
+            val data = (barberData as Resource.Success).result
+            isBarberShopOpen = data.open ?: false
+            isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"
+            LaunchedEffect(Unit) {
+                viewModel.fetchBarberSlots()
             }
         }
+        is Resource.Failure -> {
+            isLoading = false
+            Toast.makeText(activity, "Error fetching data: ${(barberData as Resource.Failure).exception.message}", Toast.LENGTH_SHORT).show()
+        }
+        is Resource.Loading -> {
+            isLoading = true
+        }
     }
+
+    when (barberSlots) {
+        is Resource.Success -> {
+            isLoading = false
+            val slotsData = (barberSlots as Resource.Success).result
+            if (slotsData.isNotEmpty()) {
+                slots.clear()
+                slots.addAll(slotsData[0].slots)
+                Toast.makeText(activity, "Slots Loaded", Toast.LENGTH_LONG).show()
+                LaunchedEffect(Unit) {
+                    viewModel.fetchOpenCloseTime()
+                }
+            } else {
+                Toast.makeText(activity, "No slots available", Toast.LENGTH_LONG).show()
+            }
+        }
+        is Resource.Failure -> {
+            isLoading = false
+            Toast.makeText(activity, "Error fetching data: ${(barberSlots as Resource.Failure).exception.message}", Toast.LENGTH_SHORT).show()
+        }
+        is Resource.Loading -> {
+            isLoading = true
+        }
+    }
+
+    when (openCloseTime) {
+        is Resource.Success -> {
+            isLoading = false
+            Toast.makeText(activity, "Time Loaded", Toast.LENGTH_SHORT).show()
+            val time = (openCloseTime as Resource.Success).result.split(" - ")
+            if (time.size == 2) {
+                openTime = time[0]
+                closeTime = time[1]
+            } else {
+                openTime = "N/A"
+                closeTime = "N/A"
+            }
+        }
+        is Resource.Failure -> {
+            isLoading = false
+            Toast.makeText(activity, "Error fetching data: ${(openCloseTime as Resource.Failure).exception.message}", Toast.LENGTH_SHORT).show()
+        }
+        is Resource.Loading -> {
+            isLoading = true
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -232,6 +259,11 @@ fun HomeScreen(
             ) {
                 Text(text = "Change Open/Close Time")
             }
+            Text(
+                text = "${slots[0].startTime} - ${slots[0].endTime}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(8.dp)
+            )
         }
         MaterialDialog(
             dialogState = openTimeDialogState,
