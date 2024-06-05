@@ -77,6 +77,7 @@ fun MainScreen1(navHostController: NavController,context: Context) {
                 NavigationItem.Book -> androidx.compose.material3.Text("Book Screen")  // Placeholder for BookScreen
                 NavigationItem.Message -> androidx.compose.material3.Text("Message Screen")  // Placeholder for MessageScreen
                 NavigationItem.Profile -> androidx.compose.material3.Text("Profile Screen")  // Placeholder for ProfileScreen
+                NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
             }
         }
     }

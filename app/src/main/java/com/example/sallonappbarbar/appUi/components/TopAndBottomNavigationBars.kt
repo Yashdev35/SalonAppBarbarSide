@@ -57,7 +57,8 @@ enum class NavigationItem(val icon: ImageVector, val iconName:String) {
     Home(Icons.Default.Home,"Home"),
     Book(Icons.AutoMirrored.TwoTone.List,"Booking"),
     Message(Icons.AutoMirrored.Filled.Send,"Chats"),
-    Profile(Icons.Default.Person,"Profile")
+    Profile(Icons.Default.Person,"Profile"),
+    Review(Icons.Default.Favorite,"Review")
 }
 
 fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
