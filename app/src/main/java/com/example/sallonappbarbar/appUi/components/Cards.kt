@@ -37,12 +37,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sallonappbarbar.R
@@ -222,10 +224,10 @@ fun DoubleCard(
     navController: NavController = rememberNavController(),
     mainScreen: @Composable () -> Unit,
     topAppBar: @Composable () -> Unit = {},
-    bottomAppBar: @Composable ()-> Unit={}
+    bottomAppBar: @Composable () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
-
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
     Column(
         modifier = Modifier
@@ -238,32 +240,42 @@ fun DoubleCard(
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp),
+                .padding(top = 30.dp),
             shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
             backgroundColor = colorResource(id = R.color.sallon_color)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 16.dp),
+                    .padding(top = 20.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 midCarBody()
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
-                        .fillMaxHeight()
                         .padding(top = 20.dp)
-                        .verticalScroll(scrollState),
+//                        .verticalScroll(scrollState)
+                    ,
                     shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
                     backgroundColor = colorResource(id = R.color.white)
                 ) {
-                    mainScreen()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        mainScreen()
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .zIndex(1f) // Ensure the BottomAppBar is on top
+                        ) {
+                            bottomAppBar()
+                        }
+                    }
                 }
             }
         }
-        bottomAppBar()
     }
 }
 

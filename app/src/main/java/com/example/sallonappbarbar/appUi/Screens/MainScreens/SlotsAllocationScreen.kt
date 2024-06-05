@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screenes
@@ -100,20 +101,27 @@ fun SlotAdderScreen(
                     .padding(16.dp),
                 onClick = {
                     val allSlotsPresent = weekDayList.all{
-                        it.slots.getOrNull(1)?.startTime?.isNotEmpty() ?: false && it.slots.getOrNull(1)?.endTime?.isNotEmpty() ?: false }
+                        it.availableSlots.getOrNull(1)?.startTime?.isNotEmpty() ?: false && it.availableSlots.getOrNull(1)?.endTime?.isNotEmpty() ?: false }
 
                     if(
                         allSlotsPresent
                     ){
                         scope.launch {
                             val finalList =  listOf(
-                                WeekDay("Monday", mutableStateListOf(weekDayList[0].slots[1])),
-                                WeekDay("Tuesday", mutableStateListOf(weekDayList[1].slots[1])),
-                                WeekDay("Wednesday", mutableStateListOf(weekDayList[2].slots[1])),
-                                WeekDay("Thursday", mutableStateListOf(weekDayList[3].slots[1])),
-                                WeekDay("Friday", mutableStateListOf(weekDayList[4].slots[1])),
-                                WeekDay("Saturday", mutableStateListOf(weekDayList[5].slots[1])),
-                                WeekDay("Sunday", mutableStateListOf(weekDayList[6].slots[1]))
+                                WeekDay("Monday", mutableStateListOf(weekDayList[0].availableSlots[1]),
+                                    dayCloseTime = weekDayList[0].dayCloseTime, dayOpenTime = weekDayList[0].dayOpenTime),
+                                WeekDay("Tuesday", mutableStateListOf(weekDayList[1].availableSlots[1]),
+                                    dayCloseTime = weekDayList[1].dayCloseTime, dayOpenTime = weekDayList[1].dayOpenTime),
+                                WeekDay("Wednesday", mutableStateListOf(weekDayList[2].availableSlots[1]),
+                                    dayCloseTime = weekDayList[2].dayCloseTime, dayOpenTime = weekDayList[2].dayOpenTime),
+                                WeekDay("Thursday", mutableStateListOf(weekDayList[3].availableSlots[1]),
+                                    dayCloseTime = weekDayList[3].dayCloseTime, dayOpenTime = weekDayList[3].dayOpenTime),
+                                WeekDay("Friday", mutableStateListOf(weekDayList[4].availableSlots[1]),
+                                    dayCloseTime = weekDayList[4].dayCloseTime, dayOpenTime = weekDayList[4].dayOpenTime),
+                                WeekDay("Saturday", mutableStateListOf(weekDayList[5].availableSlots[1]),
+                                    dayCloseTime = weekDayList[5].dayCloseTime, dayOpenTime = weekDayList[5].dayOpenTime),
+                                WeekDay("Sunday", mutableStateListOf(weekDayList[6].availableSlots[1]),
+                                    dayCloseTime = weekDayList[6].dayCloseTime, dayOpenTime = weekDayList[6].dayOpenTime)
                             )
                             isLoading = true
                             try {
@@ -210,12 +218,13 @@ fun DayCard(weekDay: WeekDay) {
                         containerColor = Color(sallonColor.toArgb())
                     )
                 ) {
-                    Text("Add a Slot",
-                        color = Color.White)
+                    Text("➕ Open close time",
+                        color = Color.White,
+                        modifier = Modifier.padding(1.dp))
                 }
             }
             Spacer(modifier = Modifier.height(1.dp))
-            weekDay.slots.getOrNull(1)?.let { slot ->
+            weekDay.availableSlots.getOrNull(1)?.let { slot ->
                 Text(
                     text = "${slot.startTime} - ${slot.endTime}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -228,14 +237,36 @@ fun DayCard(weekDay: WeekDay) {
             dialogState = openTimeDialog,
             buttons = {
                 positiveButton("Confirm") {
-                    weekDay.slots.add(TimeSlots(openTime, closeTime))
-                    confirmDialog.show()
+                    val openTimeParts = openTime.split(":").map { it.toInt() }
+                    val closeTimeParts = closeTime.split(":").map { it.toInt() }
+
+                    val openTimeMinutes = openTimeParts[1]
+                    val closeTimeMinutes = closeTimeParts[1]
+                    val openTimeHours = openTimeParts[0]
+                    val closeTimeHours = closeTimeParts[0]
+                    val normalizedOpenTime = openTimeHours * 60 + openTimeMinutes
+                    val normalizedCloseTime = if (closeTimeHours == 0 && closeTimeMinutes == 0) 1440 else closeTimeHours * 60 + closeTimeMinutes
+
+                    if (normalizedOpenTime < normalizedCloseTime) {
+                        if ((openTimeMinutes == 0 || openTimeMinutes == 30) && (closeTimeMinutes == 0 || closeTimeMinutes == 30)) {
+                            weekDay.availableSlots.add(TimeSlots(openTime, closeTime))
+                            confirmDialog.show()
+                        } else {
+                            Toast.makeText(context, "Please select only 30 or 00 in minute", Toast.LENGTH_SHORT).show()
+                            openTimeDialog.show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Close time should be greater than open time", Toast.LENGTH_SHORT).show()
+                        openTimeDialog.show()
+                    }
                 }
                 negativeButton("Cancel") {
                     openTime = ""
                     closeTime = ""
                 }
-            }
+            },
+            properties = DialogProperties(dismissOnClickOutside = false,
+                dismissOnBackPress = false)
         ) {
             val scrollState = rememberScrollState()
             Column(
@@ -250,11 +281,7 @@ fun DayCard(weekDay: WeekDay) {
                     title = "Select open time",
                     timeRange = LocalTime.of(0, 0)..LocalTime.of(23, 59)
                 ) {
-                    if (it.minute < 10) {
-                        openTime = "${it.hour}:0${it.minute}"
-                    } else {
-                        openTime = "${it.hour}:${it.minute}"
-                    }
+                        openTime = String.format("%02d:%02d", it.hour, it.minute)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Close Time")
@@ -264,11 +291,7 @@ fun DayCard(weekDay: WeekDay) {
                     title = "Select close time",
                     timeRange = LocalTime.of(0, 0)..LocalTime.of(23, 59)
                 ) {
-                    if (it.minute < 10) {
-                        closeTime = "${it.hour}:0${it.minute}"
-                    } else {
-                        closeTime = "${it.hour}:${it.minute}"
-                    }
+                        closeTime = String.format("%02d:%02d", it.hour, it.minute)
                 }
             }
         }
@@ -277,18 +300,25 @@ fun DayCard(weekDay: WeekDay) {
             buttons = {
                 positiveButton("Ok") {
                     confirmDialog.hide()
-                    if(weekDay.slots.size > 2){
+                    if(weekDay.availableSlots.size > 2){
                         Toast.makeText(context, "You can only add 1 slot", Toast.LENGTH_SHORT).show()
-                        weekDay.slots.removeLast()
+                        weekDay.availableSlots.removeLast()
                     }
                 }
                 negativeButton("Cancel") {
-                    weekDay.slots.removeLast()
+                    weekDay.availableSlots.removeLast()
                     confirmDialog.hide()
                 }
-            }
+            },
+            properties = DialogProperties(dismissOnClickOutside = false,
+                dismissOnBackPress = false)
         ) {
-            Text("Add this slot: $openTime - $closeTime?")
+            Text(
+                text = "Open close time for ${weekDay.name} : $openTime - $closeTime?",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black
+                )
         }
     }
 }

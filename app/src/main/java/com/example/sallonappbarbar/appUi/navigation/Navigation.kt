@@ -1,6 +1,12 @@
 package com.example.sallonappbarbar.appUi.navigation
 
 import android.app.Activity
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -11,6 +17,7 @@ import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.HomeScreen
+import com.example.sallonappbarbar.appUi.Screens.MainScreens.MainScreen1
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.SlotAdderScreen
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.HeadingText
@@ -32,6 +39,41 @@ import com.practicecoding.sallonapp.screens.initiatorScreens.PhoneNumberScreen
 fun AppNavigation(
     navController: NavHostController,
 ) {
+    val enterTransition =
+        slideInHorizontally(
+            initialOffsetX = { 1000 },
+            animationSpec = spring(
+                stiffness = Spring.StiffnessVeryLow,
+                dampingRatio = Spring.DampingRatioLowBouncy
+            )
+        )
+
+    val exitTransition =
+        slideOutHorizontally(
+            targetOffsetX = { -1000 },
+            animationSpec = spring(
+                stiffness = Spring.StiffnessVeryLow,
+                dampingRatio = Spring.DampingRatioNoBouncy
+            )
+        )
+
+    val popEnterTransition =
+        slideInHorizontally(
+            initialOffsetX = { -1000 },
+            animationSpec = spring(
+                stiffness = Spring.StiffnessVeryLow,
+                dampingRatio = Spring.DampingRatioLowBouncy
+            )
+        )
+
+    val popExitTransition =
+        slideOutHorizontally(
+            targetOffsetX = { 1000 },
+            animationSpec = spring(
+                stiffness = Spring.StiffnessVeryLow,
+                dampingRatio = Spring.DampingRatioNoBouncy
+            )
+        )
     val context = LocalContext.current
     NavHost(navController = navController, startDestination = Screenes.Logo.route) {
         composable(Screenes.Logo.route) {
@@ -163,32 +205,15 @@ fun AppNavigation(
                 activity = context as Activity
             )
         }
-        composable(Screenes.Home.route){
-            DoubleCard(
-                midCarBody = { /*TODO*/ },
-                mainScreen = {
-                    HomeScreen(activity = context as Activity,
-                        navController = navController)
-                },
-                navController = navController,
-                topAppBar = {
-                    TransparentTopAppBar(
-                        onBackClick = { /*TODO*/ },
-                        onLikeClick = { /*TODO*/ },
-                        onShareClick = { /*TODO*/ },
-                        isFavorite = false
-                    )
-                },
-                bottomAppBar = {
-                    BottomAppNavigationBar(
-                        onHomeClick = { /*TODO*/ },
-                        onBookClick = { /*TODO*/ },
-                        onMessageClick = { /*TODO*/ },
-                        onProfileClick = { /*TODO*/ },
-                        modifier = Modifier
-                    )
-                }
-            )
+        composable(Screenes.Home.route,
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+            ){
+            MainScreen1(
+                navHostController = navController,
+                context = context)
         }
         composable(Screenes.SlotAdderScr.route){
             SlotAdderScreen(context as Activity, navController = navController)

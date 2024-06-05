@@ -11,7 +11,6 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.toMutableStateList
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.ServiceUploaded
@@ -20,12 +19,16 @@ import com.example.sallonappbarbar.data.model.WeekDay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 class FirestoreDbRepositoryImpl @Inject constructor(
@@ -207,31 +210,57 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
         close()
     }
 }
+    private fun generateTimeSlots(startTime: String, endTime: String): List<String> {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val start = LocalTime.parse(startTime, formatter)
+        val end = if (endTime == "00:00") LocalTime.MAX else LocalTime.parse(endTime, formatter)
+        val slots = mutableListOf<String>()
+        var current = start
+
+        while (current.isBefore(end) || (end == LocalTime.MAX && current.isBefore(LocalTime.MIDNIGHT))) {
+            slots.add(current.format(formatter))
+            current = current.plusMinutes(30)
+            if (current == LocalTime.MIDNIGHT) {
+                break
+            }
+        }
+        if (end == LocalTime.MAX) {
+            slots.add("00:00")
+        }
+        return slots
+    }
 
     override suspend fun addSlots(weekDays: List<WeekDay>): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading).isSuccess
 
-        // Create a map where each key is a weekday name and the value is a list of slots
-        val slotsMap = weekDays.associate { weekDay ->
-            weekDay.name to weekDay.slots.map { slot ->
-                hashMapOf(
-                    "startTime" to slot.startTime,
-                    "endTime" to slot.endTime
-                )
+
+        weekDays.forEach { weekDay ->
+            val slotsList = weekDay.availableSlots.flatMap { slot ->
+                generateTimeSlots(slot.startTime, slot.endTime)
+            }
+            val weekDayData = mapOf(
+                "date" to weekDay.date,
+                "Booked" to weekDay.bookedSlots.map { slot ->
+                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
+                },
+                "NotAvailable" to weekDay.unavailableSlots.map { slot ->
+                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
+                },
+                "StartTime" to weekDay.availableSlots[0].startTime,
+                "EndTime" to weekDay.availableSlots[0].endTime
+            )
+            try {
+                barberdb.document(auth.currentUser!!.uid).collection("Slots").document(weekDay.name).set(weekDayData).await()
+            } catch (e: Exception) {
+                trySend(Resource.Failure(e)).isSuccess
+                close(e)
+                return@callbackFlow
             }
         }
-        // Reference to the Firebase document
-        val documentRef = barberdb.document(auth.currentUser!!.uid)
-        // Set the map in the document with merge option
-        documentRef.set(mapOf("Slots available" to slotsMap), SetOptions.merge())
-            .addOnSuccessListener {
-                trySend(Resource.Success("Successfully added slots")).isSuccess
-            }
-            .addOnFailureListener { exception ->
-                trySend(Resource.Failure(exception)).isFailure
-            }
-        awaitClose {
-        }
+
+        trySend(Resource.Success("All data uploaded successfully")).isSuccess
+        close()
+        awaitClose { /* Cleanup if needed */ }
     }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
