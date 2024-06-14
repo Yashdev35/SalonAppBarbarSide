@@ -2,10 +2,10 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="AdvancedSignUpScreenPreview">
+      <entry key="PreviewHomeScreen">
         <State />
       </entry>
-      <entry key="PreviewHomeScreen">
+      <entry key="ScheduleScreenPreview">
         <State />
       </entry>
       <entry key="ServiceCardPreview">

@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 data class TimeSlots(val startTime: String, val endTime: String)
 
-data class WeekDay(
+data class WorkDay(
     val name: String,
     val availableSlots: SnapshotStateList<TimeSlots>,
     val bookedSlots: SnapshotStateList<TimeSlots> = mutableStateListOf(),

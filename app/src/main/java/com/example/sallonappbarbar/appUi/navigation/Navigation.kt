@@ -18,6 +18,7 @@ import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.HomeScreen
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.MainScreen1
+import com.example.sallonappbarbar.appUi.Screens.MainScreens.ScheduleScreen
 import com.example.sallonappbarbar.appUi.Screens.MainScreens.SlotAdderScreen
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.HeadingText
@@ -217,6 +218,9 @@ fun AppNavigation(
         }
         composable(Screenes.SlotAdderScr.route){
             SlotAdderScreen(context as Activity, navController = navController)
+        }
+        composable(Screenes.SlotEditorScr.route){
+            ScheduleScreen(navController = navController)
         }
     }
 }

@@ -10,10 +10,10 @@ import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.ServiceCat
 import kotlinx.parcelize.Parcelize
 
-class RestScreenViewModel:ViewModel(){
+open class RestScreenViewModel:ViewModel(){
     var genderCounter = mutableStateOf<List<Int>>(value = listOf(0,0,0))
     var listOfService = mutableStateOf<List<Service>>(emptyList())
-    var selectedSlots = mutableStateListOf<TimeSlot>()
+    open var selectedSlots = mutableStateListOf<TimeSlot>()
 
     fun initializedServices(serviceCat:List<ServiceCat>){
         if (listOfService.value.isEmpty()) {
