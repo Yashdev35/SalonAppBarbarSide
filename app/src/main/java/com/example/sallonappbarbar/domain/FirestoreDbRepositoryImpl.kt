@@ -11,16 +11,11 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.ServiceUploaded
-import com.example.sallonappbarbar.data.model.TimeSlots
-import com.example.sallonappbarbar.data.model.WorkDay
+import com.example.sallonappbarbar.data.model.Slots
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 
 class FirestoreDbRepositoryImpl @Inject constructor(
@@ -232,83 +226,71 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
         return slots
     }
 
-    override suspend fun addSlots(workDays: List<WorkDay>): Flow<Resource<String>> = callbackFlow {
-        trySend(Resource.Loading).isSuccess
-        val bookedSlotsList = workDays.flatMap {it.bookedSlots}
-        workDays.forEach { weekDay ->
-            val weekDayData = mapOf(
-                "date" to weekDay.date,
-                "Booked" to weekDay.bookedSlots.map { slot ->
-                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
-                },
-                "NotAvailable" to weekDay.unavailableSlots.map { slot ->
-                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
-                },
-                "StartTime" to weekDay.availableSlots[0].startTime,
-                "EndTime" to weekDay.availableSlots[0].endTime
-            )
-            try {
-                barberdb.document(auth.currentUser!!.uid).collection("Slots").document(weekDay.name).set(weekDayData).await()
-            } catch (e: Exception) {
-                trySend(Resource.Failure(e)).isSuccess
-                close(e)
-                return@callbackFlow
+    override suspend fun setSlots(openCloseTime: List<Slots>): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+        CoroutineScope(Dispatchers.IO).launch {
+            openCloseTime.forEach { slot ->
+                try {
+                    barberdb.document(auth.currentUser!!.uid).collection("Slots").document(slot.day)
+                        .set(slot).await()
+                    trySend(Resource.Success("All data uploaded successfully")).isSuccess
+                } catch (e: Exception) {
+                    trySend(Resource.Failure(e)).isSuccess
+                }
             }
         }
 
-        trySend(Resource.Success("All data uploaded successfully")).isSuccess
-        close()
-        awaitClose { /* Cleanup if needed */ }
+        awaitClose { close() }
     }
 
-    override suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
-        val barberdb = FirebaseFirestore.getInstance()
-        val auth = FirebaseAuth.getInstance()
+//    override suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
+//        val barberdb = FirebaseFirestore.getInstance()
+//        val auth = FirebaseAuth.getInstance()
+//
+//        trySend(Resource.Loading).isSuccess
+//
+//        try {
+//            val snapshot = barberdb.collection("Slots").get().await()
+//            val workDays = snapshot.documents.map { document ->
+//                val data = document.data ?: emptyMap<String, Any>()
+//                val date = data["date"] as? String ?: ""
+//                val bookedSlots = (data["Booked"] as? List<String>)?.map { startTime ->
+//                    createSlot(startTime)
+//                } ?: listOf(TimeSlots("12:00", "16:00"))
+//                val unavailableSlots = (data["NotAvailable"] as? List<String>)?.map { startTime ->
+//                    createSlot(startTime)
+//                } ?: listOf(TimeSlots("10:00", "14:00"))
+//                val availableSlots = listOf(createSlot(data["StartTime"] as String, data["EndTime"] as String))
+//
+//                WorkDay(
+//                    name = document.id,
+//                    date = date,
+//                    availableSlots = SnapshotStateList<TimeSlots>().apply { addAll(availableSlots) },
+//                    bookedSlots = SnapshotStateList<TimeSlots>().apply { addAll(bookedSlots) },
+//                    unavailableSlots = SnapshotStateList<TimeSlots>().apply { addAll(unavailableSlots) },
+//                    dayOpenTime = mutableStateOf(data["StartTime"] as String),
+//                    dayCloseTime = mutableStateOf(data["EndTime"] as String)
+//                )
+//            }
+//
+//            trySend(Resource.Success(workDays)).isSuccess
+//        } catch (e: Exception) {
+//            trySend(Resource.Failure(e)).isSuccess
+//        }
+//
+//        awaitClose { /* Cleanup if needed */ }
+//    }
 
-        trySend(Resource.Loading).isSuccess
-
-        try {
-            val snapshot = barberdb.collection("Slots").get().await()
-            val workDays = snapshot.documents.map { document ->
-                val data = document.data ?: emptyMap<String, Any>()
-                val date = data["date"] as? String ?: ""
-                val bookedSlots = (data["Booked"] as? List<String>)?.map { startTime ->
-                    createSlot(startTime)
-                } ?: listOf(TimeSlots("12:00", "16:00"))
-                val unavailableSlots = (data["NotAvailable"] as? List<String>)?.map { startTime ->
-                    createSlot(startTime)
-                } ?: listOf(TimeSlots("10:00", "14:00"))
-                val availableSlots = listOf(createSlot(data["StartTime"] as String, data["EndTime"] as String))
-
-                WorkDay(
-                    name = document.id,
-                    date = date,
-                    availableSlots = SnapshotStateList<TimeSlots>().apply { addAll(availableSlots) },
-                    bookedSlots = SnapshotStateList<TimeSlots>().apply { addAll(bookedSlots) },
-                    unavailableSlots = SnapshotStateList<TimeSlots>().apply { addAll(unavailableSlots) },
-                    dayOpenTime = mutableStateOf(data["StartTime"] as String),
-                    dayCloseTime = mutableStateOf(data["EndTime"] as String)
-                )
-            }
-
-            trySend(Resource.Success(workDays)).isSuccess
-        } catch (e: Exception) {
-            trySend(Resource.Failure(e)).isSuccess
-        }
-
-        awaitClose { /* Cleanup if needed */ }
-    }
-
-    fun createSlot(startTime: String, endTime: String? = null): TimeSlots {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val start = LocalTime.parse(startTime, formatter)
-        val end = endTime?.let { LocalTime.parse(it, formatter) } ?: start.plus(30, ChronoUnit.MINUTES)
-
-        return TimeSlots(
-            startTime = start.format(formatter),
-            endTime = end.format(formatter)
-        )
-    }
+//    fun createSlot(startTime: String, endTime: String? = null): TimeSlots {
+//        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+//        val start = LocalTime.parse(startTime, formatter)
+//        val end = endTime?.let { LocalTime.parse(it, formatter) } ?: start.plus(30, ChronoUnit.MINUTES)
+//
+//        return TimeSlots(
+//            startTime = start.format(formatter),
+//            endTime = end.format(formatter)
+//        )
+//    }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())
@@ -384,50 +366,50 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
             // Optional: Clean up any resources if needed
         }
     }
-    override suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
-        trySend(Resource.Loading)
-
-        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
-        documentReference.get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val data = documentSnapshot.data
-                    if (data != null) {
-                        try {
-                            val slotsMap = data["Slots available"] as? Map<String, List<Map<String, String>>>
-                            if (slotsMap != null) {
-                                val workDaySlots = slotsMap.mapNotNull { (day, slots) ->
-                                    if (day is String && slots is List<*>) {
-                                        val timeSlots = slots.mapNotNull { slotMap ->
-                                            if (slotMap is Map<*, *>) {
-                                                val startTime = slotMap["startTime"] as? String ?: ""
-                                                val endTime = slotMap["endTime"] as? String ?: ""
-                                                TimeSlots(startTime, endTime)
-                                            } else null
-                                        }.toMutableStateList()
-                                        WorkDay(day, timeSlots)
-                                    } else null
-                                }
-                                trySend(Resource.Success(workDaySlots))
-                            } else {
-                                trySend(Resource.Failure(Exception("Slots data is not in the expected format")))
-                            }
-                        } catch (e: Exception) {
-                            trySend(Resource.Failure(e))
-                        }
-                    } else {
-                        trySend(Resource.Failure(Exception("Data is null")))
-                    }
-                } else {
-                    trySend(Resource.Failure(Exception("Document does not exist")))
-                }
-            }
-            .addOnFailureListener { exception ->
-                trySend(Resource.Failure(exception))
-            }
-
-        awaitClose { // No listeners to remove, but awaitClose is necessary
-            // Optional: Clean up any resources if needed
-        }
-    }
+//    override suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
+//        trySend(Resource.Loading)
+//
+//        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+//        documentReference.get()
+//            .addOnSuccessListener { documentSnapshot ->
+//                if (documentSnapshot.exists()) {
+//                    val data = documentSnapshot.data
+//                    if (data != null) {
+//                        try {
+//                            val slotsMap = data["Slots available"] as? Map<String, List<Map<String, String>>>
+//                            if (slotsMap != null) {
+//                                val workDaySlots = slotsMap.mapNotNull { (day, slots) ->
+//                                    if (day is String && slots is List<*>) {
+//                                        val timeSlots = slots.mapNotNull { slotMap ->
+//                                            if (slotMap is Map<*, *>) {
+//                                                val startTime = slotMap["startTime"] as? String ?: ""
+//                                                val endTime = slotMap["endTime"] as? String ?: ""
+//                                                TimeSlots(startTime, endTime)
+//                                            } else null
+//                                        }.toMutableStateList()
+//                                        WorkDay(day, timeSlots)
+//                                    } else null
+//                                }
+//                                trySend(Resource.Success(workDaySlots))
+//                            } else {
+//                                trySend(Resource.Failure(Exception("Slots data is not in the expected format")))
+//                            }
+//                        } catch (e: Exception) {
+//                            trySend(Resource.Failure(e))
+//                        }
+//                    } else {
+//                        trySend(Resource.Failure(Exception("Data is null")))
+//                    }
+//                } else {
+//                    trySend(Resource.Failure(Exception("Document does not exist")))
+//                }
+//            }
+//            .addOnFailureListener { exception ->
+//                trySend(Resource.Failure(exception))
+//            }
+//
+//        awaitClose { // No listeners to remove, but awaitClose is necessary
+//            // Optional: Clean up any resources if needed
+//        }
+//    }
 }

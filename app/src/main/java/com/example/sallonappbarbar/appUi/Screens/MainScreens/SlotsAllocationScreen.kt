@@ -37,8 +37,7 @@ import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screenes
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.TimeSlots
-import com.example.sallonappbarbar.data.model.WorkDay
+import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
@@ -61,19 +60,7 @@ fun SlotAdderScreen(
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    var workDayLists by remember {
-        mutableStateOf(
-            listOf(
-                WorkDay("Monday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Tuesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Wednesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Thursday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Friday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Saturday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Sunday", mutableStateListOf(TimeSlots("10:00", "12:00")))
-            )
-        )
-    }
+
     if (isLoading) {
         CommonDialog()
     }
@@ -90,7 +77,7 @@ fun SlotAdderScreen(
                 .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            workDayLists.forEach { weekDay ->
+            barberDataViewModel.openCloseTime.value.forEach { weekDay ->
                 DayCard(workDay = weekDay)
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -180,13 +167,10 @@ fun SlotAdderScreen(
 }
 
 @Composable
-fun DayCard(workDay: WorkDay) {
+fun DayCard(workDay: Slots) {
     val openTimeDialog = rememberMaterialDialogState()
     val confirmDialog = rememberMaterialDialogState()
     val context = LocalContext.current
-
-    var openTime by remember { mutableStateOf("") }
-    var closeTime by remember { mutableStateOf("") }
 
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -207,7 +191,7 @@ fun DayCard(workDay: WorkDay) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = workDay.name,
+                    text = workDay.day,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.Black
                 )
@@ -236,8 +220,8 @@ fun DayCard(workDay: WorkDay) {
             dialogState = openTimeDialog,
             buttons = {
                 positiveButton("Confirm") {
-                    val openTimeParts = openTime.split(":").map { it.toInt() }
-                    val closeTimeParts = closeTime.split(":").map { it.toInt() }
+                    val openTimeParts = workDay.StartTime.split(":").map { it.toInt() }
+                    val closeTimeParts = workDay.EndTime.split(":").map { it.toInt() }
 
                     val openTimeMinutes = openTimeParts[1]
                     val closeTimeMinutes = closeTimeParts[1]
