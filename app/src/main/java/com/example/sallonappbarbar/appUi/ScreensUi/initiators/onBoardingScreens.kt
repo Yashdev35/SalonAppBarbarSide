@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sallonappbarbar.R
-import com.example.sallonappbarbar.appUi.Screenes
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.OnBoardingBottomTextCard
 import com.example.sallonappbarbar.ui.theme.purple_200
 import kotlinx.coroutines.launch
@@ -144,8 +144,8 @@ fun OnBoardingScreen(
                 OnBoardingPageImage(
                     image = imageList[page],
                     onClickSkip = {
-                        navController.navigate(Screenes.PhoneNumberScreen.route){
-                            popUpTo(Screenes.OnBoardingScreenes.route) {
+                        navController.navigate(Screens.PhoneNumberScreen.route){
+                            popUpTo(Screens.OnBoardingScreenes.route) {
                                 inclusive = true
                             }
                         }
@@ -161,8 +161,8 @@ fun OnBoardingScreen(
                     if(pagerState.currentPage <= imageList.size - 2){
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                     }else{
-                        navController.navigate(Screenes.PhoneNumberScreen.route){
-                            popUpTo(Screenes.OnBoardingScreenes.route) {
+                        navController.navigate(Screens.PhoneNumberScreen.route){
+                            popUpTo(Screens.OnBoardingScreenes.route) {
                                 inclusive = true
                             }
                         }
@@ -174,7 +174,7 @@ fun OnBoardingScreen(
                     if(pagerState.currentPage > 0){
                         pagerState.animateScrollToPage(pagerState.currentPage - 1)
                     }else{
-                        navController.navigate(Screenes.Logo.route)
+                        navController.navigate(Screens.Logo.route)
                     }
                 }
             }

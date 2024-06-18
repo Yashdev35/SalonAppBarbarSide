@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.domain
 
+import android.content.ContentValues.TAG
 import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
@@ -14,9 +15,11 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.SlotStatus
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.ServiceUploaded
-import com.example.sallonappbarbar.data.model.TimeSlots
+import com.example.sallonappbarbar.data.model.Slots
+import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.data.model.WorkDay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
@@ -28,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -239,13 +243,13 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
             val weekDayData = mapOf(
                 "date" to weekDay.date,
                 "Booked" to weekDay.bookedSlots.map { slot ->
-                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
+                    mapOf("startTime" to slot.time)
                 },
                 "NotAvailable" to weekDay.unavailableSlots.map { slot ->
-                    mapOf("startTime" to slot.startTime, "endTime" to slot.endTime)
+                    mapOf("startTime" to slot.time)
                 },
-                "StartTime" to weekDay.availableSlots[0].startTime,
-                "EndTime" to weekDay.availableSlots[0].endTime
+                "StartTime" to weekDay.dayOpenTime.value,
+                "EndTime" to weekDay.dayCloseTime.value
             )
             try {
                 barberdb.document(auth.currentUser!!.uid).collection("Slots").document(weekDay.name).set(weekDayData).await()
@@ -262,53 +266,76 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
     }
 
     override suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
-        val barberdb = FirebaseFirestore.getInstance()
-        val auth = FirebaseAuth.getInstance()
-
-        trySend(Resource.Loading).isSuccess
-
-        try {
-            val snapshot = barberdb.collection("Slots").get().await()
-            val workDays = snapshot.documents.map { document ->
-                val data = document.data ?: emptyMap<String, Any>()
-                val date = data["date"] as? String ?: ""
-                val bookedSlots = (data["Booked"] as? List<String>)?.map { startTime ->
-                    createSlot(startTime)
-                } ?: listOf(TimeSlots("12:00", "16:00"))
-                val unavailableSlots = (data["NotAvailable"] as? List<String>)?.map { startTime ->
-                    createSlot(startTime)
-                } ?: listOf(TimeSlots("10:00", "14:00"))
-                val availableSlots = listOf(createSlot(data["StartTime"] as String, data["EndTime"] as String))
-
-                WorkDay(
-                    name = document.id,
-                    date = date,
-                    availableSlots = SnapshotStateList<TimeSlots>().apply { addAll(availableSlots) },
-                    bookedSlots = SnapshotStateList<TimeSlots>().apply { addAll(bookedSlots) },
-                    unavailableSlots = SnapshotStateList<TimeSlots>().apply { addAll(unavailableSlots) },
-                    dayOpenTime = mutableStateOf(data["StartTime"] as String),
-                    dayCloseTime = mutableStateOf(data["EndTime"] as String)
-                )
+//        val barberdb = FirebaseFirestore.getInstance()
+//        val auth = FirebaseAuth.getInstance()
+//
+//        trySend(Resource.Loading).isSuccess
+//
+//        try {
+//            val snapshot = barberdb.collection("Slots").get().await()
+//            val workDays = snapshot.documents.map { document ->
+//                val data = document.data ?: emptyMap<String, Any>()
+//                val date = data["date"] as? String ?: ""
+//                val bookedSlots = (data["Booked"] as? List<String>)?.map { startTime ->
+//                    createSlot(startTime)
+//                } ?: listOf(TimeSlot("12:00", "16:00"))
+//                val unavailableSlots = (data["NotAvailable"] as? List<String>)?.map { startTime ->
+//                    createSlot(startTime)
+//                } ?: listOf(TimeSlot("10:00", "14:00"))
+//                val availableSlots = listOf(createSlot(data["StartTime"] as String, data["EndTime"] as String))
+//
+//                WorkDay(
+//                    name = document.id,
+//                    date = date,
+//                    availableSlots = SnapshotStateList<TimeSlot>().apply { addAll(availableSlots) },
+//                    bookedSlots = SnapshotStateList<TimeSlot>().apply { addAll(bookedSlots) },
+//                    unavailableSlots = SnapshotStateList<TimeSlot>().apply { addAll(unavailableSlots) },
+//                    dayOpenTime = mutableStateOf(data["StartTime"] as String),
+//                    dayCloseTime = mutableStateOf(data["EndTime"] as String)
+//                )
+//            }
+//
+//            trySend(Resource.Success(workDays)).isSuccess
+//        } catch (e: Exception) {
+//            trySend(Resource.Failure(e)).isSuccess
+//        }
+//
+//        awaitClose { /* Cleanup if needed */ }
+    }
+    override suspend fun getTimeSlot(day: String, uid: String): Slots {
+        return withContext(Dispatchers.IO) {
+            try {
+                val documentSnapshot = barberdb.document(auth.currentUser?.uid.toString()).
+                collection("Slots").document(day).get().await()
+                val slots = documentSnapshot.let { document->
+                    Slots(
+                        StartTime = document.getString("StartTime").toString(),
+                        EndTime = document.getString("EndTime").toString(),
+                        Booked = document.get("Booked") as? List<String>?: emptyList(),
+                        NotAvailable = document.get("NotAvailable") as? List<String>?: emptyList(),
+                        date = document.getString("date").toString()
+                    )
+                }
+                slots
+            } catch (e: Exception) {
+                // Handle exceptions (e.g., FirestoreException, IllegalStateException)
+                // You can log the error or handle it based on your application's needs
+                Log.e(TAG, "Error fetching time slots: ${e.message}", e)
+                throw e  // Propagate the exception to the caller for further handling
             }
-
-            trySend(Resource.Success(workDays)).isSuccess
-        } catch (e: Exception) {
-            trySend(Resource.Failure(e)).isSuccess
         }
-
-        awaitClose { /* Cleanup if needed */ }
     }
 
-    fun createSlot(startTime: String, endTime: String? = null): TimeSlots {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val start = LocalTime.parse(startTime, formatter)
-        val end = endTime?.let { LocalTime.parse(it, formatter) } ?: start.plus(30, ChronoUnit.MINUTES)
-
-        return TimeSlots(
-            startTime = start.format(formatter),
-            endTime = end.format(formatter)
-        )
-    }
+//    fun createSlot(startTime: String, endTime: String? = null): TimeSlot {
+//        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+//        val start = LocalTime.parse(startTime, formatter)
+//        val end = endTime?.let { LocalTime.parse(it, formatter) } ?: start.plus(30, ChronoUnit.MINUTES)
+//
+//        return TimeSlot(
+//            startTime = start.format(formatter),
+//            endTime = end.format(formatter)
+//        )
+//    }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())
@@ -402,7 +429,7 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
                                             if (slotMap is Map<*, *>) {
                                                 val startTime = slotMap["startTime"] as? String ?: ""
                                                 val endTime = slotMap["endTime"] as? String ?: ""
-                                                TimeSlots(startTime, endTime)
+                                                TimeSlot(startTime,"20- 5-50", SlotStatus.AVAILABLE)
                                             } else null
                                         }.toMutableStateList()
                                         WorkDay(day, timeSlots)

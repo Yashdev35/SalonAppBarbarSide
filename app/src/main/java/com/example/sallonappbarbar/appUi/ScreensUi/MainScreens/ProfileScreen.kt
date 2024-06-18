@@ -1,4 +1,4 @@
-package com.example.sallonappbarbar.appUi.Screens.MainScreens
+package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -38,7 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.example.sallonappbarbar.ui.theme.Purple40
-import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
 
 @Composable

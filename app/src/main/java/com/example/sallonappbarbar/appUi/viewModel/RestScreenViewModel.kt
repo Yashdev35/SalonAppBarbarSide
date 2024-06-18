@@ -3,12 +3,9 @@ package com.example.sallonappbarbar.appUi.viewModel
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.sallonappbarbar.appUi.Screens.MainScreens.TimeSlot
-import com.example.sallonappbarbar.data.model.aService
-import android.os.Parcelable
 import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.ServiceCat
-import kotlinx.parcelize.Parcelize
+import com.example.sallonappbarbar.data.model.TimeSlot
 
 open class RestScreenViewModel:ViewModel(){
     var genderCounter = mutableStateOf<List<Int>>(value = listOf(0,0,0))

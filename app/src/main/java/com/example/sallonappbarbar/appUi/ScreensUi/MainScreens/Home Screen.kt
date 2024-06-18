@@ -1,4 +1,4 @@
-package com.example.sallonappbarbar.appUi.Screens.MainScreens
+package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
 import android.app.Activity
 import android.content.Context
@@ -40,21 +40,46 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.BottomAppNavigationBar
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.components.OrderCard
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Order
-import com.example.sallonappbarbar.data.model.TimeSlots
+import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @Composable
-fun MainScreen1(navHostController: NavController,context: Context) {
-    var selectedScreen by remember { mutableStateOf(NavigationItem.Home) }
+fun MainScreen1(
+    viewModel: BarberDataViewModel= hiltViewModel(),
+    navHostController: NavController,
+    context: Context,
+    ) {
+    var barberUid by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        scope.launch {
+            viewModel.getBarberData(context as Activity).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                      barberUid = resource.result.uid!!
+                    }
+                    is Resource.Failure -> {
+                        Toast.makeText(context, "Error fetching data: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    is Resource.Loading -> {
+                    }
+                }
+            }
+        }
+    }
+    var selectedScreen by remember {mutableStateOf(NavigationItem.Home)}
     Scaffold(
         bottomBar = {
             BottomAppNavigationBar(
@@ -66,7 +91,7 @@ fun MainScreen1(navHostController: NavController,context: Context) {
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedScreen) {
                 NavigationItem.Home -> TopScreen(navHostController,context)
-                NavigationItem.Book -> ScheduleScreen(navController = navHostController) // Placeholder for BookScreen
+                NavigationItem.Book -> TimeSelection(date = LocalDate.now(), navController = navHostController, barberUid = barberUid)
                 NavigationItem.Message -> androidx.compose.material3.Text("Message Screen")  // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
                 NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
@@ -180,9 +205,9 @@ fun HomeScreen(
     var isBarberShopOpen by remember { mutableStateOf(false) }
     var isOpenOrClose by remember { mutableStateOf("Open") }
     var isLoading by remember { mutableStateOf(false) }
-    var slots: SnapshotStateList<TimeSlots> by mutableStateOf(
+    var slots: SnapshotStateList<TimeSlot> by mutableStateOf(
         mutableStateListOf(
-            TimeSlots("9:00", "10:00")
+            TimeSlot("9:00", "10:00",SlotStatus.AVAILABLE)
         )
     )
     val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels

@@ -2,7 +2,6 @@ package com.practicecoding.sallonapp.screens.initiatorScreens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.sallonappbarbar.R
-import com.example.sallonappbarbar.appUi.Screenes
+import com.example.sallonappbarbar.appUi.Screens
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
@@ -36,19 +35,19 @@ fun LogoScreen(
         val updatedCurrentUser = FirebaseAuth.getInstance().currentUser
         val dummyPhoneNumber = "9373182023"
         if (updatedCurrentUser == null) {
-            navController.navigate(Screenes.OnBoardingScreenes.route){
-                popUpTo(Screenes.Logo.route) {
+            navController.navigate(Screens.OnBoardingScreenes.route){
+                popUpTo(Screens.Logo.route) {
                     inclusive = true
                 }
             }
         }else{
-            navController.navigate(Screenes.Home.route){
-                popUpTo(Screenes.Logo.route) {
+            navController.navigate(Screens.Home.route){
+                popUpTo(Screens.Logo.route) {
                     inclusive = true
                 }
             }
-//            navController.navigate(Screenes.SlotAdderScr.route){
-//                popUpTo(Screenes.Logo.route) {
+//            navController.navigate(Screens.SlotAdderScr.route){
+//                popUpTo(Screens.Logo.route) {
 //                    inclusive = true
 //                }
 //            }

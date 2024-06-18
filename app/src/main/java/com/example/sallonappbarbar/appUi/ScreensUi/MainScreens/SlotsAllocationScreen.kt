@@ -1,4 +1,4 @@
-package com.example.sallonappbarbar.appUi.Screens.MainScreens
+package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
 
 import android.app.Activity
@@ -34,10 +34,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.sallonappbarbar.appUi.Screenes
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.TimeSlots
+import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.data.model.WorkDay
 import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.Purple80
@@ -49,10 +50,13 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
 fun SlotAdderScreen(
+    barberData : BarberModel,
     activity: Activity,
     barberDataViewModel: BarberDataViewModel = hiltViewModel(),
     navController: NavController
@@ -64,13 +68,13 @@ fun SlotAdderScreen(
     var workDayLists by remember {
         mutableStateOf(
             listOf(
-                WorkDay("Monday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Tuesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Wednesday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Thursday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Friday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Saturday", mutableStateListOf(TimeSlots("10:00", "12:00"))),
-                WorkDay("Sunday", mutableStateListOf(TimeSlots("10:00", "12:00")))
+                WorkDay("Monday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.AVAILABLE))),
+                WorkDay("Tuesday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.BOOKED))),
+                WorkDay("Wednesday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.NOT_AVAILABLE))),
+                WorkDay("Thursday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.BOOKED))),
+                WorkDay("Friday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.NOT_AVAILABLE))),
+                WorkDay("Saturday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.BOOKED))),
+                WorkDay("Sunday", mutableStateListOf(TimeSlot("10:00", "12:00",SlotStatus.NOT_AVAILABLE)))
             )
         )
     }
@@ -100,62 +104,63 @@ fun SlotAdderScreen(
                     .padding(16.dp),
                 onClick = {
                     val allSlotsPresent = workDayLists.all{
-                        it.availableSlots.getOrNull(1)?.startTime?.isNotEmpty() ?: false && it.availableSlots.getOrNull(1)?.endTime?.isNotEmpty() ?: false }
+                        it.availableSlots.getOrNull(1)?.time?.isNotEmpty() ?: false
+                    }
 
                     if(
                         allSlotsPresent
                     ){
                         scope.launch {
-                            val finalList =  listOf(
+                            val finalList = listOf(
                                 WorkDay("Monday", mutableStateListOf(workDayLists[0].availableSlots[1]),
-                                    dayCloseTime = workDayLists[0].dayCloseTime, dayOpenTime = workDayLists[0].dayOpenTime),
+                                    dayCloseTime = workDayLists[0].dayCloseTime, dayOpenTime = workDayLists[0].dayOpenTime,
+                                    date = workDayLists[0].date),
                                 WorkDay("Tuesday", mutableStateListOf(workDayLists[1].availableSlots[1]),
-                                    dayCloseTime = workDayLists[1].dayCloseTime, dayOpenTime = workDayLists[1].dayOpenTime),
+                                    dayCloseTime = workDayLists[1].dayCloseTime, dayOpenTime = workDayLists[1].dayOpenTime,
+                                    date = workDayLists[1].date),
                                 WorkDay("Wednesday", mutableStateListOf(workDayLists[2].availableSlots[1]),
-                                    dayCloseTime = workDayLists[2].dayCloseTime, dayOpenTime = workDayLists[2].dayOpenTime),
+                                    dayCloseTime = workDayLists[2].dayCloseTime, dayOpenTime = workDayLists[2].dayOpenTime,
+                                    date = workDayLists[2].date),
                                 WorkDay("Thursday", mutableStateListOf(workDayLists[3].availableSlots[1]),
-                                    dayCloseTime = workDayLists[3].dayCloseTime, dayOpenTime = workDayLists[3].dayOpenTime),
+                                    dayCloseTime = workDayLists[3].dayCloseTime, dayOpenTime = workDayLists[3].dayOpenTime,
+                                    date = workDayLists[3].date),
                                 WorkDay("Friday", mutableStateListOf(workDayLists[4].availableSlots[1]),
-                                    dayCloseTime = workDayLists[4].dayCloseTime, dayOpenTime = workDayLists[4].dayOpenTime),
+                                    dayCloseTime = workDayLists[4].dayCloseTime, dayOpenTime = workDayLists[4].dayOpenTime,
+                                    date = workDayLists[4].date),
                                 WorkDay("Saturday", mutableStateListOf(workDayLists[5].availableSlots[1]),
-                                    dayCloseTime = workDayLists[5].dayCloseTime, dayOpenTime = workDayLists[5].dayOpenTime),
+                                    dayCloseTime = workDayLists[5].dayCloseTime, dayOpenTime = workDayLists[5].dayOpenTime,
+                                    date = workDayLists[5].date),
                                 WorkDay("Sunday", mutableStateListOf(workDayLists[6].availableSlots[1]),
-                                    dayCloseTime = workDayLists[6].dayCloseTime, dayOpenTime = workDayLists[6].dayOpenTime)
+                                    dayCloseTime = workDayLists[6].dayCloseTime, dayOpenTime = workDayLists[6].dayOpenTime,
+                                    date = workDayLists[6].date)
                             )
+
                             isLoading = true
                             try {
-                                val result = withContext(Dispatchers.IO) {
-                                    barberDataViewModel.addSlots(finalList, activity)
-                                }
+                                val result = withContext(Dispatchers.IO) { barberDataViewModel.addSlots(finalList, activity) }
                                 withContext(Dispatchers.Main) {
                                     result.collect {
                                         when (it) {
                                             is Resource.Success -> {
                                                 isLoading = false
-                                                navController.navigate(Screenes.Home.route)
+                                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                                    key = "barber",
+                                                    value = barberData
+                                                )
+                                                navController.navigate(Screens.Home.route)
                                             }
                                             is Resource.Failure -> {
                                                 isLoading = false
-                                                Toast.makeText(
-                                                    context,
-                                                    "Error fetching data: ${it.exception.message}",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                Toast.makeText(context, "Error fetching data: ${it.exception.message}", Toast.LENGTH_SHORT).show()
                                             }
-                                            is Resource.Loading -> {
-                                                isLoading = true
-                                            }
+                                            is Resource.Loading -> isLoading = true
                                         }
                                     }
                                 }
                             } catch (e: Exception) {
                                 withContext(Dispatchers.Main) {
                                     isLoading = false
-                                    Toast.makeText(
-                                        context,
-                                        "Unexpected error: ${e.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    Toast.makeText(context, "Unexpected error: ${e.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -178,13 +183,31 @@ fun SlotAdderScreen(
         }
     }
 }
+fun getDatesOfWeek(): Map<DayOfWeek, LocalDate> {
+    val today = LocalDate.now()
+    val todayDayOfWeek = today.dayOfWeek
 
+    // Map to store the dates for each day of the week
+    val datesOfWeek = mutableMapOf<DayOfWeek, LocalDate>()
+
+    // Iterate through all days of the week
+    for (day in DayOfWeek.values()) {
+        // Calculate the date for the current day of the week
+        val difference = day.value - todayDayOfWeek.value
+        val date = today.plusDays(difference.toLong())
+        datesOfWeek[day] = date
+    }
+
+    return datesOfWeek
+}
 @Composable
 fun DayCard(workDay: WorkDay) {
+    val datesOfWeek = getDatesOfWeek()
+    val dateOfTheCurrentDay = datesOfWeek[DayOfWeek.valueOf(workDay.name.uppercase())]!!
     val openTimeDialog = rememberMaterialDialogState()
     val confirmDialog = rememberMaterialDialogState()
     val context = LocalContext.current
-
+    workDay.date = dateOfTheCurrentDay.toString()
     var openTime by remember { mutableStateOf("") }
     var closeTime by remember { mutableStateOf("") }
 
@@ -225,7 +248,7 @@ fun DayCard(workDay: WorkDay) {
             Spacer(modifier = Modifier.height(1.dp))
             workDay.availableSlots.getOrNull(1)?.let { slot ->
                 Text(
-                    text = "${slot.startTime} - ${slot.endTime}",
+                    text = "${slot.time} - ${workDay.dayCloseTime.value}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black
                 )
@@ -248,7 +271,9 @@ fun DayCard(workDay: WorkDay) {
 
                     if (normalizedOpenTime < normalizedCloseTime) {
                         if ((openTimeMinutes == 0 || openTimeMinutes == 30) && (closeTimeMinutes == 0 || closeTimeMinutes == 30)) {
-                            workDay.availableSlots.add(TimeSlots(openTime, closeTime))
+                            workDay.availableSlots.add(TimeSlot(openTime, dateOfTheCurrentDay.toString(),SlotStatus.AVAILABLE))
+                            workDay.dayOpenTime.value = openTime
+                            workDay.dayCloseTime.value = closeTime
                             confirmDialog.show()
                         } else {
                             Toast.makeText(context, "Please select only 30 or 00 in minute", Toast.LENGTH_SHORT).show()

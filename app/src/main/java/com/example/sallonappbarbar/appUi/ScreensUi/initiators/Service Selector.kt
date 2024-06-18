@@ -1,11 +1,9 @@
-package com.example.sallonappbarbar.appUi.Screens.initiators
+package com.example.sallonappbarbar.appUi.ScreensUi.initiators
 
 
 import android.app.Activity
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -57,7 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.sallonappbarbar.appUi.Screenes
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
@@ -65,8 +62,6 @@ import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.aService
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.ui.theme.Purple40
-import com.example.sallonappbarbar.ui.theme.Purple80
-import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.appui.components.GeneralButton
@@ -357,7 +352,7 @@ fun ServiceSelectorScreen(
                     key = "barber",
                     value = barberData
                 )
-                navController.navigate(Screenes.PriceSelector.route)
+                navController.navigate(Screens.PriceSelector.route)
             }
         }
     }
@@ -377,6 +372,7 @@ fun aServiceSorter(aServices : List<aService>) : List<ServiceType> {
 
 @Composable
 fun PriceSelector(
+    barberData: BarberModel,
     viewModel: BarberDataViewModel = hiltViewModel(),
     navController: NavController,
     aServices: List<aService>,
@@ -434,7 +430,11 @@ fun PriceSelector(
                             is Resource.Success -> {
                                 isDialogVisible = false
                                 activity.showMsg(it.result)
-                                navController.navigate(Screenes.SlotAdderScr.route)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    key = "barber",
+                                    value = barberData
+                                )
+                                navController.navigate(Screens.SlotAdderScr.route)
                             }
                             is Resource.Failure -> {
                                 isDialogVisible = false
@@ -451,24 +451,3 @@ fun PriceSelector(
     }
 }
 
-@Preview
-@Composable
-fun ServiceSelectorScreenPreview() {
-    var context = Activity()
-
-    var navController = rememberNavController()
-    PriceSelector(navController = navController, aServices =
-    listOf(
-        aService(false, price = "0", id = 1, serviceTypeHeading = "Hair Service", serviceName = "Hair Cut",time = "1 hour"),
-        aService(
-            false,
-            price = "$50",
-            id = 2,
-            serviceTypeHeading = "Hair Service",
-            serviceName = "Hair color",
-            time = "1 hour"
-        ),
-        aService( price = "0", id = 3, serviceTypeHeading = "Hair Service", serviceName = "Hair style",time = "1 hour"),
-    )
-        , activity = context)
-}
