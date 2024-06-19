@@ -91,7 +91,7 @@ fun MainScreen1(
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedScreen) {
                 NavigationItem.Home -> TopScreen(navHostController,context)
-                NavigationItem.Book -> TimeSelection(date = LocalDate.now(), navController = navHostController, barberUid = barberUid)
+                NavigationItem.Book -> ScheduleScreen(navHostController)
                 NavigationItem.Message -> androidx.compose.material3.Text("Message Screen")  // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
                 NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen

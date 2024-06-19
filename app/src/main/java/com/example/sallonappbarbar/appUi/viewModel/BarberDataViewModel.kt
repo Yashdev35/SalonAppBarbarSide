@@ -2,12 +2,15 @@ package com.example.sallonappbarbar.appUi.viewModel
 
 import android.app.Activity
 import android.net.Uri
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ServiceType
-import com.example.sallonappbarbar.data.model.WorkDay
+import com.example.sallonappbarbar.data.model.Slots
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -15,16 +18,50 @@ class BarberDataViewModel @Inject constructor(
     private val repo: FirestoreRepository
 ) : ViewModel() {
 
+    var openCloseTime = mutableStateOf(
+        listOf(
+            Slots(day = "Monday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Tuesday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Wednesday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Thursday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Friday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Saturday", StartTime = "10:00", EndTime = "12:00"),
+            Slots(day = "Sunday", StartTime = "10:00", EndTime = "12:00"),
+        )
+    )
+
+    suspend fun onEvent(event: MainEvent2) {
+        when (event) {
+            is MainEvent.setSlots -> setSlots()
+            else -> {}
+        }
+    }
+
     suspend fun getBarberData(activity: Activity) = repo.getBarberData()
-    suspend fun addUserData(barberModel: BarberModel, imageUri: Uri?, activity: Activity) = repo.addUser(barberModel, imageUri)
-    suspend fun addServiceData(aServices: List<ServiceType>, activity: Activity) = repo.addServices(aServices)
+    suspend fun addUserData(barberModel: BarberModel, imageUri: Uri?, activity: Activity) =
+        repo.addUser(barberModel, imageUri)
+
+    suspend fun addServiceData(aServices: List<ServiceType>, activity: Activity) =
+        repo.addServices(aServices)
+
     suspend fun isShopOpen(shopOpen: Boolean, activity: Activity) = repo.isShopOpen(shopOpen)
-    suspend fun addOpenCloseTime(openCloseTime: String, activity: Activity) = repo.addOpenCloseTime(openCloseTime)
-    suspend fun addSlots(workDays: List<WorkDay>, activity: Activity) = repo.addSlots(workDays)
-    suspend fun retrieveSlots(activity: Activity) = repo.retrieveSlots()
+    suspend fun addOpenCloseTime(openCloseTime: String, activity: Activity) =
+        repo.addOpenCloseTime(openCloseTime)
+
+    suspend fun setSlots() {
+        viewModelScope.launch { repo.setSlots(openCloseTime.value) }
+    }
+
+//    suspend fun retrieveSlots(activity: Activity) = repo.retrieveSlots()
 }
 
+sealed class MainEvent {
+    data class getBarberPopular(val city: String, val limit: Long) : MainEvent2()
+    data class getBarberNearby(val city: String, val limit: Long) : MainEvent2()
+    data class getServices(val uid: String) : MainEvent2()
+    data object setSlots : MainEvent2()
 
+}
 
 
 //viewModel.getBarberSlots(activity).collect { resource ->

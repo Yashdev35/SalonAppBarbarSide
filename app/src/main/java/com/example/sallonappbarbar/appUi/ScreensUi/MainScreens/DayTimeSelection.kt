@@ -1,5 +1,7 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -22,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
@@ -31,11 +34,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -44,12 +50,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.components.RowofDate
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
+import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
+import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -65,34 +76,33 @@ enum class SlotStatus {
 
 @Composable
 fun TimeSelection(
+    day : String,
     date: LocalDate,
     navController: NavController,
     barberUid: String,
-    viewModel: GetBarberDataViewModel = hiltViewModel()
+    viewModel: GetBarberDataViewModel = hiltViewModel(),
+    slotsViewModel: SlotsViewModel = hiltViewModel()
 ) {
     BackHandler {
         navController.popBackStack()
     }
-//    var slotTime by remember {
-//        mutableStateOf(restScreenViewModel.slots.value)
-//    }
-    val dayOfWeek = date.dayOfWeek
-    val dayNameFull = dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    LaunchedEffect(date) {
+        viewModel.getSlots(day,barberUid)
+    }
+    val scope = rememberCoroutineScope()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val context = LocalContext.current
     val slotTime = viewModel._slots.value
-    LaunchedEffect(date) {
-//        slotTime = restScreenViewModel.getSlots(dayNameFull, barber.uid, slotsViewModel)
-        viewModel.getSlots(dayNameFull,barberUid)
-    }
     val startTime = LocalTime.parse(slotTime.StartTime, timeFormatter)
     val endTime = LocalTime.parse(slotTime.EndTime, timeFormatter)
 
-    // Retrieve the booked and not available times for the selected date
     val bookedTimes = remember {
         mutableStateListOf<LocalTime>()
     }
-
+    var isLoading by remember { mutableStateOf(false) }
+    if(isLoading){
+        CommonDialog()
+    }
     val notAvailableTimes = remember {
         mutableStateListOf<LocalTime>()
     }
@@ -110,7 +120,9 @@ if (date==LocalDate.parse(slotTime.date)) {
         notAvailableTimes.add(localTime)
     }}
 
-    val slots = generateTimeSlots(date,startTime, endTime, 30L, bookedTimes, notAvailableTimes)
+    val slots by remember {
+        mutableStateOf(generateTimeSlots(date, startTime, endTime, 30L, bookedTimes, notAvailableTimes))
+    }
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
 
@@ -166,7 +178,7 @@ if (date==LocalDate.parse(slotTime.date)) {
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "YOUR BOOKING",
+                        text = "SELECTED",
                         color = Color.Green,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold
@@ -214,7 +226,8 @@ if (date==LocalDate.parse(slotTime.date)) {
             }
         }
 
-        AnimatedVisibility(showDialog, enter = fadeIn(animationSpec = tween(500)),exit = fadeOut(animationSpec = tween(500))) {
+        AnimatedVisibility(showDialog, enter = fadeIn(animationSpec = tween(500)),
+            exit = fadeOut(animationSpec = tween(500))) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
                 title = { Text("Selection Error") },
@@ -227,17 +240,88 @@ if (date==LocalDate.parse(slotTime.date)) {
             )
         }
 
-
         Text(
-            text = "Estimated total time you need according to your selection is approx mins",
-            color = sallonColor, // Update to match `sallonColor` if defined
+            text = "Select slots to add to booked or not available",
+            color = Color.Black, // Update to match `sallonColor` if defined
             fontWeight = FontWeight.SemiBold,
             textDecoration = TextDecoration.Underline,
             fontSize = 12.sp
         )
     }
-        GeneralButton(text = "Continue", width = 300, height = 50, modifier = Modifier.align(Alignment.BottomCenter)) {
-        }}
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            GeneralButton(text = "Add to booked", width = 150, height = 50, modifier = Modifier) {
+                if (viewModel.selectedSlots.isNotEmpty()){
+                    val selectedSlots = viewModel.selectedSlots.map { it.time }
+                    scope.launch {
+                        slotsViewModel.updateBookedSlotsFb(selectedSlots, day,context as Activity).collect{
+                            when(it){
+                                is Resource.Loading -> {
+                                    isLoading = true
+                                }
+                                is Resource.Success -> {
+                                    isLoading = false
+                                    slotsViewModel.updateBookedSlots(selectedSlots, day)
+                                    Toast.makeText(context, "Slots added to booked $day", Toast.LENGTH_SHORT).show()
+                                    for (timeSlot in viewModel.selectedSlots){
+                                        slots.map{slot->
+                                            if(slot.time == timeSlot.time){
+                                                slot.status = SlotStatus.BOOKED
+                                            }
+                                        }
+                                    }
+                                    viewModel.selectedSlots.clear()
+                                }
+                                is Resource.Failure -> {
+                                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+            GeneralButton(text = "Add to not available", width = 160, height = 50, modifier = Modifier) {
+                if (viewModel.selectedSlots.isNotEmpty()){
+                    val selectedSlots = viewModel.selectedSlots.map { it.time }
+                    scope.launch {
+                        slotsViewModel.updateNotAvailableSlotsFb(selectedSlots, day,context as Activity).collect{
+                            when(it){
+                                is Resource.Loading -> {
+                                    isLoading = true
+                                }
+                                is Resource.Success -> {
+                                    isLoading = false
+                                    slotsViewModel.updateNotAvailableSlots(selectedSlots, day)
+                                    Toast.makeText(context, "Slots added to not Available $day", Toast.LENGTH_SHORT).show()
+                                    for (timeSlot in viewModel.selectedSlots){
+                                        slots.map{slot->
+                                            if(slot.time == timeSlot.time){
+                                                slot.status = SlotStatus.NOT_AVAILABLE
+                                            }
+                                        }
+                                    }
+                                    viewModel.selectedSlots.clear()
+                                }
+                                is Resource.Failure -> {
+                                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+    }
 }
 
 

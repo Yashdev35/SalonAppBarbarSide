@@ -26,13 +26,17 @@ interface FirestoreRepository {
         openCloseTime:String
     ) : Flow<Resource<String>>
 
-    suspend fun addSlots(
-        workDays: List<WorkDay>
+    suspend fun setSlots(
+        openCloseTime:List<Slots>
     ): Flow<Resource<String>>
 
     suspend fun getOpenCloseTime(): Flow<Resource<String>>
     suspend fun getBarberData(): Flow<Resource<BarberModel>>
     suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>>
     suspend fun getTimeSlot(day:String,uid:String): Slots
-    suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>>
+    suspend fun updateBookedSlots(times:List<String>, day:String):Flow<Resource<String>>
+    suspend fun updateNotAvailableSlots(times:List<String>, day:String):Flow<Resource<String>>
+  //  suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>>
+//    suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>>
+//    suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>>
 }

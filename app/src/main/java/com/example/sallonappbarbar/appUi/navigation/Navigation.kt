@@ -254,7 +254,7 @@ fun AppNavigation(
                 "zip",
                 "country",
             )
-            SlotAdderScreen(barberData,context as Activity, navController = navController)
+            SlotAdderScreen(context as Activity, navController = navController)
         }
     }
 }
