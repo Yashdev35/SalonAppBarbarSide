@@ -13,23 +13,18 @@ import javax.inject.Inject
 class SlotsViewModel @Inject constructor(
     private val repo: FirestoreRepository
 ) :ViewModel(){
-private val slotsList = mutableStateListOf<Slots>()
-    var _slotsList :SnapshotStateList<Slots> = slotsList
-
+private val _slotsList = mutableStateListOf<Slots>()
+    var slotsList :SnapshotStateList<Slots> = _slotsList
     fun addSlot(slots:Slots){
-        slotsList.add(slots)
-    }
-    fun removeSlot(slots: Slots){
-        slotsList.remove(slots)
+        _slotsList.add(slots)
     }
     fun updateBookedSlots(times:List<String>, date:String){
-        slotsList.find { it.date == date }?.Booked = times
+        _slotsList.find { it.date == date }?.Booked = times
     }
     fun updateNotAvailableSlots(times:List<String>, date:String){
-        slotsList.find { it.date == date }?.NotAvailable = times
+        _slotsList.find { it.date == date }?.NotAvailable = times
     }
     suspend fun setSlots(slotList : List<Slots>,activity: Activity)= repo.setSlots(slotList)
     suspend fun updateBookedSlotsFb(times:List<String>, day:String,activity: Activity)= repo.updateBookedSlots(times,day)
     suspend fun updateNotAvailableSlotsFb(times:List<String>, day:String,activity: Activity)= repo.updateNotAvailableSlots(times,day)
-
 }

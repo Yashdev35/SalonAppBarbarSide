@@ -91,7 +91,7 @@ fun MainScreen1(
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedScreen) {
                 NavigationItem.Home -> TopScreen(navHostController,context)
-                NavigationItem.Book -> ScheduleScreen(navHostController)
+                NavigationItem.Book -> ScheduleScreen(navController = navHostController)
                 NavigationItem.Message -> androidx.compose.material3.Text("Message Screen")  // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
                 NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
@@ -99,7 +99,6 @@ fun MainScreen1(
         }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopScreen(navController: NavController,context: Context){
     DoubleCard(
@@ -159,13 +158,7 @@ fun TopScreen(navController: NavController,context: Context){
                 pendingOrders = pendingOrders,
                 completedOrders = completedOrders
             )
-        },
-        topAppBar = {
-
-        },
-//        bottomAppBar = {
-//
-//        }
+        }
     )
 }
 @Composable

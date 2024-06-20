@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
+import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
@@ -7,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sallonappbarbar.data.FirestoreRepository
+import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.data.model.TimeSlot
@@ -21,8 +24,14 @@ class GetBarberDataViewModel @Inject constructor(
 ) : ViewModel(){
     var selectedSlots = mutableStateListOf<TimeSlot>()
 
-    private var slots = mutableStateOf(Slots("08:00", "22:00"))
-    var _slots: State<Slots> = slots
+    private var _slots = mutableStateOf(Slots("08:00", "22:00"))
+    var slots: State<Slots> = _slots
+
+    private var barber = mutableStateOf(BarberModel())
+    var _barber: State<BarberModel> = barber
+
+    suspend fun getBarber(uid:String) {
+        viewModelScope.launch { repo.getBarber(uid) }}
 
     suspend fun onEvent(event: MainEvent2) {
         when (event) {
@@ -37,7 +46,7 @@ class GetBarberDataViewModel @Inject constructor(
     }
 
     suspend fun getSlots(day: String, uid: String) {
-        viewModelScope.launch { slots.value = repo.getTimeSlot(day, uid) }
+        viewModelScope.launch { _slots.value = repo.getTimeSlot(day, uid) }
     }
 }
 sealed class MainEvent2 {

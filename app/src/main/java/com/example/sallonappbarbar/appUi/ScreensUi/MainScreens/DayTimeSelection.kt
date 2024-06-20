@@ -12,19 +12,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
@@ -39,41 +35,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.sallonappbarbar.appUi.components.RowofDate
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.BarberModel
-import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
-import java.util.Locale
-import kotlin.math.ceil
 
 enum class SlotStatus {
     AVAILABLE, BOOKED, NOT_AVAILABLE
 }
-
-
 @Composable
 fun TimeSelection(
     day : String,
@@ -92,7 +77,7 @@ fun TimeSelection(
     val scope = rememberCoroutineScope()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val context = LocalContext.current
-    val slotTime = viewModel._slots.value
+    val slotTime = viewModel.slots.value
     val startTime = LocalTime.parse(slotTime.StartTime, timeFormatter)
     val endTime = LocalTime.parse(slotTime.EndTime, timeFormatter)
 
@@ -120,9 +105,7 @@ if (date==LocalDate.parse(slotTime.date)) {
         notAvailableTimes.add(localTime)
     }}
 
-    val slots by remember {
-        mutableStateOf(generateTimeSlots(date, startTime, endTime, 30L, bookedTimes, notAvailableTimes))
-    }
+    val slots = generateTimeSlots(date,startTime, endTime, 30L, bookedTimes, notAvailableTimes)
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
 
@@ -241,11 +224,11 @@ if (date==LocalDate.parse(slotTime.date)) {
         }
 
         Text(
-            text = "Select slots to add to booked or not available",
-            color = Color.Black, // Update to match `sallonColor` if defined
+            text = "Tap the respective day above to edit the slots of that day.",
+            color = Color.Black,
             fontWeight = FontWeight.SemiBold,
             textDecoration = TextDecoration.Underline,
-            fontSize = 12.sp
+            fontSize = 16.sp
         )
     }
         Row(
@@ -268,7 +251,7 @@ if (date==LocalDate.parse(slotTime.date)) {
                                 is Resource.Success -> {
                                     isLoading = false
                                     slotsViewModel.updateBookedSlots(selectedSlots, day)
-                                    Toast.makeText(context, "Slots added to booked $day", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Slots added to booked", Toast.LENGTH_SHORT).show()
                                     for (timeSlot in viewModel.selectedSlots){
                                         slots.map{slot->
                                             if(slot.time == timeSlot.time){
@@ -299,7 +282,7 @@ if (date==LocalDate.parse(slotTime.date)) {
                                 is Resource.Success -> {
                                     isLoading = false
                                     slotsViewModel.updateNotAvailableSlots(selectedSlots, day)
-                                    Toast.makeText(context, "Slots added to not Available $day", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Slots added to not Available", Toast.LENGTH_SHORT).show()
                                     for (timeSlot in viewModel.selectedSlots){
                                         slots.map{slot->
                                             if(slot.time == timeSlot.time){
@@ -319,8 +302,6 @@ if (date==LocalDate.parse(slotTime.date)) {
                 }
             }
         }
-
-
     }
 }
 
@@ -335,7 +316,7 @@ fun TimeSlotBox(
     val backgroundColor = when {
         isSelected -> Color.Green
         slot.status == SlotStatus.AVAILABLE -> Color.Gray
-        slot.status == SlotStatus.BOOKED -> sallonColor // Update to match `sallonColor` if defined
+        slot.status == SlotStatus.BOOKED -> sallonColor
         slot.status == SlotStatus.NOT_AVAILABLE -> Color.Red
         else -> Color.Transparent
     }
@@ -360,45 +341,6 @@ fun TimeSlotBox(
         }
     }
 }
-
-@Composable
-fun daySelection(): LocalDate {
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    val currentDate = LocalDate.now()
-    val monthName = currentDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
-    val year = currentDate.year
-    val daysToShow = (0..6).map { currentDate.plusDays(it.toLong()) }
-
-    Column(
-        modifier = Modifier
-            .wrapContentHeight()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "$monthName $year",
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            for (date in daysToShow) {
-                val isSelected = date == selectedDate
-                RowofDate(
-                    isSelected = isSelected,
-                    date = date.dayOfMonth.toString(),
-                    day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                ) {
-                    selectedDate = date
-                }
-            }
-        }
-
-    }
-    return selectedDate
-
-}
-
 fun generateTimeSlots(
     date:LocalDate,
     startTime: LocalTime,

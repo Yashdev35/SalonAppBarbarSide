@@ -44,15 +44,10 @@ class BarberDataViewModel @Inject constructor(
     suspend fun addServiceData(aServices: List<ServiceType>, activity: Activity) =
         repo.addServices(aServices)
 
-    suspend fun isShopOpen(shopOpen: Boolean, activity: Activity) = repo.isShopOpen(shopOpen)
-    suspend fun addOpenCloseTime(openCloseTime: String, activity: Activity) =
-        repo.addOpenCloseTime(openCloseTime)
 
     suspend fun setSlots() {
         viewModelScope.launch { repo.setSlots(openCloseTime.value) }
     }
-
-//    suspend fun retrieveSlots(activity: Activity) = repo.retrieveSlots()
 }
 
 sealed class MainEvent {

@@ -9,7 +9,6 @@ import com.example.sallonappbarbar.data.model.WorkDay
 import kotlinx.coroutines.flow.Flow
 
 interface FirestoreRepository {
-
     suspend  fun addUser(
         barberModel: BarberModel,
         imageUri: Uri?
@@ -18,25 +17,14 @@ interface FirestoreRepository {
     suspend fun addServices(
         aServices: List<ServiceType>,
     ) : Flow<Resource<String>>
-    suspend fun isShopOpen(
-        shopOpen:Boolean
-    ) : Flow<Resource<String>>
-
-    suspend fun addOpenCloseTime(
-        openCloseTime:String
-    ) : Flow<Resource<String>>
-
     suspend fun setSlots(
         openCloseTime:List<Slots>
     ): Flow<Resource<String>>
 
-    suspend fun getOpenCloseTime(): Flow<Resource<String>>
     suspend fun getBarberData(): Flow<Resource<BarberModel>>
-    suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>>
     suspend fun getTimeSlot(day:String,uid:String): Slots
+
+    suspend fun getBarber(uid:String?):BarberModel?
     suspend fun updateBookedSlots(times:List<String>, day:String):Flow<Resource<String>>
     suspend fun updateNotAvailableSlots(times:List<String>, day:String):Flow<Resource<String>>
-  //  suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>>
-//    suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>>
-//    suspend fun retrieveSlots(): Flow<Resource<List<WorkDay>>>
 }

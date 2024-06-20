@@ -40,89 +40,6 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 
 ) : FirestoreRepository {
-
-//    override fun insert(item: BarberModelResponse.BarberModelItem): Flow<Resource<String>> = callbackFlow{
-//        trySend(Resource.Loading)
-//        db.collection("barber")
-//            .add(item)
-//            .addOnSuccessListener {
-//                trySend(Resource.Success("Data is inserted with ${it.id}"))//id is id of document at firestore
-//            }.addOnFailureListener {
-//                trySend(Resource.Failure(it))
-//            }
-//        awaitClose {
-//            close()
-//        }
-//    }
-// is it necessary to getItems and other function , should we allow the barbar to modify his data , i think we can use them
-// in some way
-//    override fun getItems(): Flow<Resource<List<BarberModelResponse>>> =  callbackFlow{
-//        trySend(Resource.Loading)
-//        db.collection("barber")
-//            .get()
-//            .addOnSuccessListener {
-//                val items =  it.map { data->
-//                    BarberModelResponse(
-//                        item = BarberModelResponse.BarberModelItem(
-//                            name = data.getString("name"),
-//                            shopName = data.getString("shopName"),
-//                            phoneNumber = data.getString("phoneNumber"),
-//                            saloonType = data.getString("saloonType"),
-//                            imageUris = data.get("imageUris") as List<String?>,
-//                            shopAddress = data.getString("shopAddress")
-//                        ),
-//                        key = data.id
-//                    )
-//                }
-//                trySend(Resource.Success(items))
-//            }.addOnFailureListener {
-//                trySend(Resource.Failure(it))
-//            }
-//
-//        awaitClose {
-//            close()
-//        }
-//    }
-
-//    override fun delete(key: String): Flow<Resource<String>> = callbackFlow{
-//        trySend(Resource.Loading)
-//        db.collection("barber")
-//            .document(key)
-//            .delete()
-//            .addOnCompleteListener {
-//                if(it.isSuccessful)
-//                    trySend(Resource.Success("Deleted successfully.."))
-//            }.addOnFailureListener {
-//                trySend(Resource.Failure(it))
-//            }
-//        awaitClose {
-//            close()
-//        }
-//    }
-
-    //    override fun update(item: BarberModelResponse): Flow<Resource<String>> = callbackFlow{
-//        trySend(Resource.Loading)
-//        val map = HashMap<String,Any>()
-//        map["name"] = item.item.name!!
-//        map["shopName"] = item.item.shopName!!
-//        map["phoneNumber"] = item.item.phoneNumber!!
-//        map["saloonType"] = item.item.saloonType!!
-//        map["imageUris"] = item.item.imageUris
-//        map["shopAddress"] = item.item.shopAddress!!
-//
-//        db.collection("barber")
-//            .document(item.key!!)
-//            .update(map)
-//            .addOnCompleteListener {
-//                if(it.isSuccessful)
-//                    trySend(Resource.Success("Update successfully..."))
-//            }.addOnFailureListener {
-//                trySend(Resource.Failure(it))
-//            }
-//        awaitClose {
-//            close()
-//        }
-//    }
     override suspend fun addUser(barberModel: BarberModel, imageUri: Uri?): Flow<Resource<String>> =
         callbackFlow {
             trySend(Resource.Loading)
@@ -179,52 +96,6 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         awaitClose {
             close()
         }
-    }
-    override suspend fun isShopOpen(shopOpen: Boolean): Flow<Resource<String>> = callbackFlow {
-        try {
-            trySend(Resource.Loading)
-            barberdb.document(auth.currentUser?.uid.toString()).update("open", shopOpen)
-                .await()
-            trySend(Resource.Success("Status updated successfully"))
-        } catch (e: Exception) {
-            trySend(Resource.Failure(e))
-        } finally {
-            close()
-        }
-    }
-
-override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<String>> = callbackFlow {
-    trySend(Resource.Loading)
-    barberdb.document(auth.currentUser?.uid.toString()).set(hashMapOf("openCloseTime" to openCloseTime)
-    ,SetOptions.merge()
-        )
-        .addOnSuccessListener {
-            trySend(Resource.Success("Successfully added open close time"))
-        }.addOnFailureListener {
-            trySend(Resource.Failure(it))
-        }
-    awaitClose {
-        close()
-    }
-}
-    private fun generateTimeSlots(startTime: String, endTime: String): List<String> {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val start = LocalTime.parse(startTime, formatter)
-        val end = if (endTime == "00:00") LocalTime.MAX else LocalTime.parse(endTime, formatter)
-        val slots = mutableListOf<String>()
-        var current = start
-
-        while (current.isBefore(end) || (end == LocalTime.MAX && current.isBefore(LocalTime.MIDNIGHT))) {
-            slots.add(current.format(formatter))
-            current = current.plusMinutes(30)
-            if (current == LocalTime.MIDNIGHT) {
-                break
-            }
-        }
-        if (end == LocalTime.MAX) {
-            slots.add("00:00")
-        }
-        return slots
     }
     override suspend fun setSlots(openCloseTime: List<Slots>): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
@@ -326,21 +197,33 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
             }
         }
     }
-
-//    fun createSlot(startTime: String, endTime: String? = null): TimeSlot {
-//    }
-
-//    fun createSlot(startTime: String, endTime: String? = null): TimeSlots {
-//        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-//        val start = LocalTime.parse(startTime, formatter)
-//        val end = endTime?.let { LocalTime.parse(it, formatter) } ?: start.plus(30, ChronoUnit.MINUTES)
-//
-//     return TimeSlot(
-//        return TimeSlots(
-//            startTime = start.format(formatter),
-//            endTime = end.format(formatter)
-//        )
-//    }
+    override suspend fun getBarber(uid: String?): BarberModel? {
+        return withContext(Dispatchers.IO) {
+            val querySnapshot =
+                barberdb.whereEqualTo("uid", uid)
+                    .limit(1).get().await()
+            val barberDocument = querySnapshot.documents.firstOrNull()
+            barberDocument?.let { document ->
+                BarberModel(
+                    name = document.getString("name") ?: "",
+                    rating = document.getDouble("rating") ?: 0.0,
+                    shopName = document.getString("shopName") ?: "",
+                    imageUri = document.getString("imageUri")
+                        ?: "https://firebasestorage.googleapis.com/v0/b/sallon-app-6139e.appspot.com/o/profile_image%2FptNTxkdC31NBaSQbJT5cnQQHO2u2.jpg?alt=media&token=ed411c18-99ad-4db2-94ab-23e1c9b2b1b6",
+                    shopStreetAddress = document.getString("shopStreetAddress") ?: "",
+                    phoneNumber = document.getString("phoneNumber") ?: "",
+                    city = document.getString("city") ?: "",
+                    uid = document.getString("uid").toString(),
+                    noOfReviews = document.getString("noOfReviews"),
+                    state = document.getString("state").toString(),
+                    aboutUs = document.getString("aboutUs").toString(),
+                    lat = document.getDouble("lat")!!.toDouble(),
+                    long = document.getDouble("long")!!.toDouble(),
+                    open = document.getBoolean("open")!!,
+                    )
+            }
+        }
+    }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberdb.document(auth.currentUser?.uid.toString())
@@ -382,130 +265,6 @@ override suspend fun addOpenCloseTime(openCloseTime: String): Flow<Resource<Stri
                 trySend(Resource.Failure(it))
             }
 
-        awaitClose { // No listeners to remove, but awaitClose is necessary
-            // Optional: Clean up any resources if needed
-        }
+        awaitClose { }
     }
-    override suspend fun getOpenCloseTime(): Flow<Resource<String>> = callbackFlow {
-        trySend(Resource.Loading)
-
-        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
-        val listener = documentReference.get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val data = documentSnapshot.data
-                    if (data != null) {
-                        try {
-                            val openCloseTime = data["openCloseTime"]?.toString().orEmpty()
-                            trySend(Resource.Success(openCloseTime))
-                        } catch (e: Exception) {
-                            trySend(Resource.Failure(e))
-                        }
-                    } else {
-                        trySend(Resource.Failure(Exception("Data is null")))
-                    }
-                } else {
-                    trySend(Resource.Failure(Exception("Document does not exist")))
-                }
-            }
-            .addOnFailureListener {
-                trySend(Resource.Failure(it))
-            }
-
-        awaitClose { // No listeners to remove, but awaitClose is necessary
-            // Optional: Clean up any resources if needed
-        }
-    }
-    override suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
-        trySend(Resource.Loading)
-
-        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
-        documentReference.get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val data = documentSnapshot.data
-                    if (data != null) {
-                        try {
-                            val slotsMap = data["Slots available"] as? Map<String, List<Map<String, String>>>
-                            if (slotsMap != null) {
-                                val workDaySlots = slotsMap.mapNotNull { (day, slots) ->
-                                    if (day is String && slots is List<*>) {
-                                        val timeSlots = slots.mapNotNull { slotMap ->
-                                            if (slotMap is Map<*, *>) {
-                                                val startTime = slotMap["startTime"] as? String ?: ""
-                                                val endTime = slotMap["endTime"] as? String ?: ""
-                                                TimeSlot(startTime,"20- 5-50", SlotStatus.AVAILABLE)
-                                            } else null
-                                        }.toMutableStateList()
-                                        WorkDay(day, timeSlots)
-                                    } else null
-                                }
-                                trySend(Resource.Success(workDaySlots))
-                            } else {
-                                trySend(Resource.Failure(Exception("Slots data is not in the expected format")))
-                            }
-                        } catch (e: Exception) {
-                            trySend(Resource.Failure(e))
-                        }
-                    } else {
-                        trySend(Resource.Failure(Exception("Data is null")))
-                    }
-                } else {
-                    trySend(Resource.Failure(Exception("Document does not exist")))
-                }
-            }
-            .addOnFailureListener { exception ->
-                trySend(Resource.Failure(exception))
-            }
-
-        awaitClose { // No listeners to remove, but awaitClose is necessary
-            // Optional: Clean up any resources if needed
-        }
-    }
-//    override suspend fun getBarberSlots(): Flow<Resource<List<WorkDay>>> = callbackFlow {
-//        trySend(Resource.Loading)
-//
-//        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
-//        documentReference.get()
-//            .addOnSuccessListener { documentSnapshot ->
-//                if (documentSnapshot.exists()) {
-//                    val data = documentSnapshot.data
-//                    if (data != null) {
-//                        try {
-//                            val slotsMap = data["Slots available"] as? Map<String, List<Map<String, String>>>
-//                            if (slotsMap != null) {
-//                                val workDaySlots = slotsMap.mapNotNull { (day, slots) ->
-//                                    if (day is String && slots is List<*>) {
-//                                        val timeSlots = slots.mapNotNull { slotMap ->
-//                                            if (slotMap is Map<*, *>) {
-//                                                val startTime = slotMap["startTime"] as? String ?: ""
-//                                                val endTime = slotMap["endTime"] as? String ?: ""
-//                                                TimeSlots(startTime, endTime)
-//                                            } else null
-//                                        }.toMutableStateList()
-//                                        WorkDay(day, timeSlots)
-//                                    } else null
-//                                }
-//                                trySend(Resource.Success(workDaySlots))
-//                            } else {
-//                                trySend(Resource.Failure(Exception("Slots data is not in the expected format")))
-//                            }
-//                        } catch (e: Exception) {
-//                            trySend(Resource.Failure(e))
-//                        }
-//                    } else {
-//                        trySend(Resource.Failure(Exception("Data is null")))
-//                    }
-//                } else {
-//                    trySend(Resource.Failure(Exception("Document does not exist")))
-//                }
-//            }
-//            .addOnFailureListener { exception ->
-//                trySend(Resource.Failure(exception))
-//            }
-//
-//        awaitClose { // No listeners to remove, but awaitClose is necessary
-//            // Optional: Clean up any resources if needed
-//        }
-//    }
 }

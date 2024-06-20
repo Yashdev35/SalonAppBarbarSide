@@ -1,7 +1,5 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -11,24 +9,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.accompanist.pager.*
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.ui.platform.LocalContext
-import com.example.sallonappbarbar.appUi.viewModel.RestScreenViewModel
-import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.TimeSlot
-import com.example.sallonappbarbar.data.model.WorkDay
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.example.sallonappbarbar.appUi.components.DoubleCard
+import com.example.sallonappbarbar.appUi.components.RowofDate
 import com.google.firebase.auth.FirebaseAuth
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import kotlinx.coroutines.launch
 import java.time.format.TextStyle
 import java.util.Locale
-
-class MockRestScreenViewModel : RestScreenViewModel() {
-    // Override necessary properties and methods for the preview
-    override var selectedSlots = mutableStateListOf<TimeSlot>()
-}
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -36,45 +25,62 @@ fun ScheduleScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     var isLoading by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState()
+    val weekDayList = getWeekdaysWithDates()
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    val coroutineScope = rememberCoroutineScope()
 
     if (isLoading) {
         CommonDialog()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Schedule") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+    LaunchedEffect(pagerState.currentPage) {
+        selectedDate = weekDayList[pagerState.currentPage].values.first()
+    }
+
+    DoubleCard(
+        midCarBody = {
+            daySelection(
+                selectedDate = selectedDate,
+                onDateSelected = { date ->
+                    selectedDate = date
+                    // Launch coroutine to scroll pagerState to the new page
+                    coroutineScope.launch {
+                        val newPageIndex = weekDayList.indexOfFirst { it.containsValue(date) }
+                        if (newPageIndex != -1) {
+                            pagerState.scrollToPage(newPageIndex)
+                        }
                     }
                 }
             )
-        }
-    ) {
-        val weekDayList = getWeekdaysWithDates()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(it)
-        ) {
-            Tabs(pagerState = pagerState, weekDays = weekDayList)
-            HorizontalPager(
-                state = pagerState,
-                count = weekDayList.size,
-                modifier = Modifier.weight(1f)
-            ) { page ->
-                val (day, date) = weekDayList[page].entries.first()
-                TimeSelection(
-                    day = day,
-                    date = date,
-                    navController = navController,
-                    barberUid = auth.currentUser?.uid ?: "",
-                )
+        },
+        navController = navController,
+        topAppBar = {},
+        bottomAppBar = {},
+        mainScreen = {
+            Scaffold {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        count = weekDayList.size,
+                        modifier = Modifier.weight(1f),
+                        userScrollEnabled = false
+                    ) { page ->
+                        val (day, date) = weekDayList[page].entries.first()
+                        TimeSelection(
+                            day = day,
+                            date = date,
+                            navController = navController,
+                            barberUid = auth.currentUser?.uid ?: "",
+                        )
+                    }
+                }
             }
         }
-    }
+    )
 }
 
 fun getWeekdaysWithDates(): List<Map<String, LocalDate>> {
@@ -86,50 +92,40 @@ fun getWeekdaysWithDates(): List<Map<String, LocalDate>> {
     }
 }
 
-
-@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun Tabs(pagerState: PagerState, weekDays: List<Map<String, LocalDate>>) {
-    val coroutineScope = rememberCoroutineScope()
-    val visibleTabs = 7
-    val startIndex = (pagerState.currentPage - visibleTabs / 2).coerceAtLeast(0)
-    val endIndex = (startIndex + visibleTabs).coerceAtMost(weekDays.size)
+fun daySelection(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+): LocalDate {
+    val currentDate = LocalDate.now()
+    val monthName = currentDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val year = currentDate.year
+    val daysToShow = (0..6).map { currentDate.plusDays(it.toLong()) }
 
-    ScrollableTabRow(
-        selectedTabIndex = pagerState.currentPage,
-        edgePadding = 0.dp,
-        indicator = { tabPositions ->
-            TabRowDefaults.Indicator(
-                Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
-            )
-        }
+    Column(
+        modifier = Modifier
+            .wrapContentHeight()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        weekDays.subList(startIndex, endIndex).forEachIndexed { index, weekDay ->
-            val actualIndex = startIndex + index
-            weekDay.entries.forEach { (day, date) ->
-                Tab(
-                    text = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                day,
-                                style = MaterialTheme.typography.body1
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                date.format(DateTimeFormatter.ofPattern("d MMM")),
-                                style = MaterialTheme.typography.body2
-                            )
-                        }
-                    },
-                    selected = pagerState.currentPage == actualIndex,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.scrollToPage(actualIndex)
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+        Text(
+            text = "$monthName $year",
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            for (date in daysToShow) {
+                val isSelected = date == selectedDate
+                RowofDate(
+                    isSelected = isSelected,
+                    date = date.dayOfMonth.toString(),
+                    day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                ) {
+                    onDateSelected(date)
+                }
             }
         }
     }
+    return selectedDate
 }

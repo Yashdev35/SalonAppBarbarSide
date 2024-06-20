@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -39,7 +38,6 @@ import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.data.model.WorkDay
 import com.example.sallonappbarbar.data.model.Slots
@@ -110,7 +108,7 @@ fun SlotAdderScreen(
 
                     if(allSlotsPresent){
                         scope.launch {
-                            slotViewModel.setSlots(slotViewModel._slotsList,activity).collect {
+                            slotViewModel.setSlots(slotViewModel.slotsList,activity).collect {
                                 when(it){
                                     is Resource.Loading -> {
                                         isLoading = true
@@ -304,12 +302,9 @@ fun DayCard(workDay: WorkDay,slotViewModel: SlotsViewModel) {
 fun getDatesOfWeek(): Map<DayOfWeek, LocalDate> {
     val today = LocalDate.now()
     val datesOfWeek = mutableMapOf<DayOfWeek, LocalDate>()
-
-    // Get all days of the week starting from today
     for (i in 0..6) {
         val date = today.plusDays(i.toLong())
         datesOfWeek[date.dayOfWeek] = date
     }
-
     return datesOfWeek
 }
