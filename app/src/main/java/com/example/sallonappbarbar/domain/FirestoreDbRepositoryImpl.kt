@@ -185,8 +185,8 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     Slots(
                         StartTime = document.getString("startTime").toString(),
                         EndTime = document.getString("endTime").toString(),
-                        Booked = document.get("booked") as? List<String>?: emptyList(),
-                        NotAvailable = document.get("notAvailable") as? List<String>?: emptyList(),
+                        Booked = (document.get("booked") as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf(),
+                        NotAvailable = (document.get("notAvailable") as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf(),
                         date = document.getString("date").toString()
                     )
                 }

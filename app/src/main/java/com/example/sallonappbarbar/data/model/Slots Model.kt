@@ -21,15 +21,18 @@ data class WorkDay(
     val dayOpenTime: MutableState<String> = mutableStateOf("10:00"),
     val dayCloseTime: MutableState<String> = mutableStateOf("20:00")
 )
-
+@Parcelize
 data class Slots(
     val StartTime: String,
     val EndTime: String,
-    var Booked: List<String>? = emptyList(),
-    var NotAvailable: List<String>? = emptyList(),
+    var Booked: MutableList<String>? = mutableListOf(),
+    var NotAvailable: MutableList<String>? = mutableListOf(),
     val date: String= LocalDate.now().toString(),
     val day: String = LocalDate.now().dayOfWeek.toString()
-)
+): Parcelable
 
 @Parcelize
 data class DateSlots(val date: LocalDate, val slots: List<TimeSlot>) : Parcelable
+
+@Parcelize
+data class SlotsDay(val day: String, var slots: MutableList<Slots>) : Parcelable

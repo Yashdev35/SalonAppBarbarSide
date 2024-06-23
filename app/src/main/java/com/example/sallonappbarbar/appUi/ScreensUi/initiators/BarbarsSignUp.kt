@@ -26,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
@@ -171,7 +172,7 @@ fun AdvancedSignUpScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize().verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -455,7 +456,7 @@ fun AdvancedSignUpScreen(
 
                     GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
                     if (name.isNotBlank() && selectedSalonType != null && city.isNotBlank() && state.isNotBlank() && streetAddress.isNotBlank() &&
-                        shopName.isNotBlank() && aboutUs.isNotBlank()
+                        shopName.isNotBlank() && aboutUs.isNotBlank() && locationDetails.latitude != null && locationDetails.longitude != null && selectedImageUri != null
                     ) {
                         val barberModel = BarberModel(
                             name = name,
@@ -498,10 +499,22 @@ fun AdvancedSignUpScreen(
                                 }
                             }
                         }
-                    } else {
+                    } else if(selectedImageUri == null) {
                         Toast.makeText(
                             context,
-                            "Either a field is empty or an image is not selected",
+                            "Please select an image",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }else if(locationDetails.latitude == null || locationDetails.longitude == null){
+                        Toast.makeText(
+                            context,
+                            "Turn on your location",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }else {
+                        Toast.makeText(
+                            context,
+                            "Please fill all the fields",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

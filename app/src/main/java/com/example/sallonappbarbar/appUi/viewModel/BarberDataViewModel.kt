@@ -32,7 +32,7 @@ class BarberDataViewModel @Inject constructor(
 
     suspend fun onEvent(event: MainEvent2) {
         when (event) {
-            is MainEvent.setSlots -> setSlots()
+            is MainEvent.setSlots -> {}
             else -> {}
         }
     }
@@ -45,9 +45,6 @@ class BarberDataViewModel @Inject constructor(
         repo.addServices(aServices)
 
 
-    suspend fun setSlots() {
-        viewModelScope.launch { repo.setSlots(openCloseTime.value) }
-    }
 }
 
 sealed class MainEvent {

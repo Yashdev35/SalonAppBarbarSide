@@ -57,7 +57,6 @@ import java.time.LocalTime
 @Composable
 fun SlotAdderScreen(
     activity: Activity,
-    barberDataViewModel: BarberDataViewModel = hiltViewModel(),
     navController: NavController,
     slotViewModel: SlotsViewModel = hiltViewModel()
 ) {
@@ -105,7 +104,6 @@ fun SlotAdderScreen(
                 onClick = {
                     val allSlotsPresent = workDayLists.all{
                         it.availableSlots.getOrNull(1)?.time?.isNotEmpty() ?: false }
-
                     if(allSlotsPresent){
                         scope.launch {
                             slotViewModel.setSlots(slotViewModel.slotsList,activity).collect {

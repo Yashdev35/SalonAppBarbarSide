@@ -45,11 +45,15 @@ import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import com.vanpra.composematerialdialogs.title
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -77,19 +81,28 @@ fun TimeSelection(
     val scope = rememberCoroutineScope()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val context = LocalContext.current
-    val slotTime = viewModel.slots.value
-    val startTime = LocalTime.parse(slotTime.StartTime, timeFormatter)
-    val endTime = LocalTime.parse(slotTime.EndTime, timeFormatter)
+    val slotTime = slotsViewModel.listOfDays.find { it.value.day == day }?.value?.slots?.getOrNull(0) ?: Slots("08:00", "22:00")
+    val startTime = slotTime.StartTime?.let { LocalTime.parse(it, timeFormatter) } ?: LocalTime.of(8, 0)
+    val endTime = slotTime.EndTime?.let { LocalTime.parse(it, timeFormatter) } ?: LocalTime.of(22, 0)
 
     val bookedTimes = remember {
+        mutableStateListOf<LocalTime>()
+    }
+    val notAvailableTimes = remember {
         mutableStateListOf<LocalTime>()
     }
     var isLoading by remember { mutableStateOf(false) }
     if(isLoading){
         CommonDialog()
     }
-    val notAvailableTimes = remember {
-        mutableStateListOf<LocalTime>()
+    // Safely parse booked and not available times
+    slotTime.Booked?.forEach { timeString ->
+        val localTime = runCatching { LocalTime.parse(timeString, timeFormatter) }.getOrNull()
+        if (localTime != null) bookedTimes.add(localTime)
+    }
+    slotTime.NotAvailable?.forEach { timeString ->
+        val localTime = runCatching { LocalTime.parse(timeString, timeFormatter) }.getOrNull()
+        if (localTime != null) notAvailableTimes.add(localTime)
     }
 if (date==LocalDate.parse(slotTime.date)) {
     bookedTimes.clear()
@@ -108,7 +121,8 @@ if (date==LocalDate.parse(slotTime.date)) {
     val slots = generateTimeSlots(date,startTime, endTime, 30L, bookedTimes, notAvailableTimes)
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
-
+    val addSlotDialog = rememberMaterialDialogState()
+    val removeSlotDialog = rememberMaterialDialogState()
 
     Box(modifier = Modifier.fillMaxSize()){
     Column(
@@ -182,7 +196,7 @@ if (date==LocalDate.parse(slotTime.date)) {
                         timeFormatter = timeFormatter,
                         isSelected = viewModel.selectedSlots.contains(slot),
                         onClick = {
-                            when (slot.status) {
+                           /* when (slot.status) {
                                 SlotStatus.AVAILABLE -> {
                                     if (viewModel.selectedSlots.contains(slot)) {
                                         viewModel.selectedSlots.remove(slot)
@@ -193,7 +207,6 @@ if (date==LocalDate.parse(slotTime.date)) {
                                         viewModel.selectedSlots.add(slot)
                                     }
                                 }
-
                                 SlotStatus.BOOKED, SlotStatus.NOT_AVAILABLE -> {
                                     showDialog = true
                                     dialogMessage = if (slot.status == SlotStatus.BOOKED) {
@@ -202,6 +215,18 @@ if (date==LocalDate.parse(slotTime.date)) {
                                         "This slot is not available."
                                     }
                                 }
+                            }*/
+                            if(slot.status==SlotStatus.AVAILABLE){
+                                viewModel.selectedSlots.clear()
+                                viewModel.selectedSlots.add(slot)
+                                addSlotDialog.show()
+                            }else{
+                                showDialog = true
+                                dialogMessage = if (slot.status == SlotStatus.BOOKED) {
+                                    "This slot is already booked."
+                                } else {
+                                    "This slot is not available."
+                                }
                             }
                         }
                     )
@@ -209,6 +234,38 @@ if (date==LocalDate.parse(slotTime.date)) {
             }
         }
 
+        MaterialDialog(
+            dialogState = addSlotDialog,
+            buttons = {
+                positiveButton(text = "Booked slots"){
+                    scope.launch {
+                        if(viewModel.selectedSlots[0].status==SlotStatus.AVAILABLE && slotsViewModel.listOfDays.find { it.value.day == day }?.value?.slots?.get(0)?.Booked?.contains(viewModel.selectedSlots[0].time) == false){
+                            slotsViewModel.addBookedSlots(viewModel.selectedSlots[0],day)
+                            viewModel.selectedSlots.clear()
+                        }else{
+                            Toast.makeText(context, "Slot is already booked or not available", Toast.LENGTH_SHORT).show()
+                            viewModel.selectedSlots.clear()
+                        }
+                    }
+                }
+                positiveButton(text = "Not Available slots"){
+                    scope.launch {
+                        if(viewModel.selectedSlots[0].status==SlotStatus.AVAILABLE && slotsViewModel.listOfDays.find { it.value.day == day }?.value?.slots?.get(0)?.NotAvailable?.contains(viewModel.selectedSlots[0].time) == false){
+                            slotsViewModel.addNotAvailableSlots(viewModel.selectedSlots[0],day)
+                            viewModel.selectedSlots.clear()
+                        }else{
+                            Toast.makeText(context, "Slot is already booked or not available", Toast.LENGTH_SHORT).show()
+                            viewModel.selectedSlots.clear()
+                        }
+                    }
+                }
+                negativeButton(text = "Cancel"){
+                    viewModel.selectedSlots.clear()
+                }
+            }
+        ) {
+            title(text = "Add Slot to")
+        }
         AnimatedVisibility(showDialog, enter = fadeIn(animationSpec = tween(500)),
             exit = fadeOut(animationSpec = tween(500))) {
             AlertDialog(
@@ -239,64 +296,37 @@ if (date==LocalDate.parse(slotTime.date)) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            GeneralButton(text = "Add to booked", width = 150, height = 50, modifier = Modifier) {
-                if (viewModel.selectedSlots.isNotEmpty()){
-                    val selectedSlots = viewModel.selectedSlots.map { it.time }
-                    scope.launch {
-                        slotsViewModel.updateBookedSlotsFb(selectedSlots, day,context as Activity).collect{
-                            when(it){
-                                is Resource.Loading -> {
-                                    isLoading = true
-                                }
-                                is Resource.Success -> {
-                                    isLoading = false
-                                    slotsViewModel.updateBookedSlots(selectedSlots, day)
-                                    Toast.makeText(context, "Slots added to booked", Toast.LENGTH_SHORT).show()
-                                    for (timeSlot in viewModel.selectedSlots){
-                                        slots.map{slot->
-                                            if(slot.time == timeSlot.time){
-                                                slot.status = SlotStatus.BOOKED
-                                            }
+            GeneralButton(text = "Update", width = 150, height = 50, modifier = Modifier) {
+                scope.launch {
+                    slotsViewModel.updateBookedSlotsFb(day, context as Activity).collect {
+                        when (it) {
+                            is Resource.Success -> {
+                                isLoading = false
+                                slotsViewModel.updateNotAvailableSlotsFb(day, context as Activity).collect {
+                                    when (it) {
+                                        is Resource.Success -> {
+                                            isLoading = false
+                                            Toast.makeText(context, "Slots Updated", Toast.LENGTH_SHORT).show()
                                         }
-                                    }
-                                    viewModel.selectedSlots.clear()
-                                }
-                                is Resource.Failure -> {
-                                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-            GeneralButton(text = "Add to not available", width = 160, height = 50, modifier = Modifier) {
-                if (viewModel.selectedSlots.isNotEmpty()){
-                    val selectedSlots = viewModel.selectedSlots.map { it.time }
-                    scope.launch {
-                        slotsViewModel.updateNotAvailableSlotsFb(selectedSlots, day,context as Activity).collect{
-                            when(it){
-                                is Resource.Loading -> {
-                                    isLoading = true
-                                }
-                                is Resource.Success -> {
-                                    isLoading = false
-                                    slotsViewModel.updateNotAvailableSlots(selectedSlots, day)
-                                    Toast.makeText(context, "Slots added to not Available", Toast.LENGTH_SHORT).show()
-                                    for (timeSlot in viewModel.selectedSlots){
-                                        slots.map{slot->
-                                            if(slot.time == timeSlot.time){
-                                                slot.status = SlotStatus.NOT_AVAILABLE
-                                            }
+                                        is Resource.Failure-> {
+                                            isLoading = false
+                                            Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
                                         }
+                                        is Resource.Loading -> {
+                                            isLoading = true
+                                        }
+                                        else -> {}
                                     }
-                                    viewModel.selectedSlots.clear()
                                 }
-                                is Resource.Failure -> {
-                                    Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
-                                }
-
                             }
+                            is Resource.Failure -> {
+                                isLoading = false
+                                Toast.makeText(context, it.toString(), Toast.LENGTH_SHORT).show()
+                            }
+                            is Resource.Loading -> {
+                                isLoading = true
+                            }
+                            else -> {}
                         }
                     }
                 }

@@ -11,8 +11,10 @@ import com.google.accompanist.pager.*
 import java.time.LocalDate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.RowofDate
+import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import kotlinx.coroutines.launch
@@ -21,7 +23,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ScheduleScreen(navController: NavController) {
+fun ScheduleScreen(
+    navController: NavController,
+    slotsViewModel: SlotsViewModel = hiltViewModel()
+) {
     val auth = FirebaseAuth.getInstance()
     var isLoading by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState()
@@ -31,6 +36,10 @@ fun ScheduleScreen(navController: NavController) {
 
     if (isLoading) {
         CommonDialog()
+    }
+
+    LaunchedEffect(Unit){
+        slotsViewModel.getEverydaySlots()
     }
 
     LaunchedEffect(pagerState.currentPage) {
@@ -75,6 +84,7 @@ fun ScheduleScreen(navController: NavController) {
                             date = date,
                             navController = navController,
                             barberUid = auth.currentUser?.uid ?: "",
+                            slotsViewModel = slotsViewModel
                         )
                     }
                 }
