@@ -155,5 +155,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.24.13-rc")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
 
 }

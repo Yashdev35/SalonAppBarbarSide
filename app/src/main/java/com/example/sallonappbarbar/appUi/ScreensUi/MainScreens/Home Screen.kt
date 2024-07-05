@@ -63,22 +63,6 @@ fun MainScreen1(
     ) {
     var barberUid by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) {
-        scope.launch {
-            viewModel.getBarberData(context as Activity).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                      barberUid = resource.result.uid!!
-                    }
-                    is Resource.Failure -> {
-                        Toast.makeText(context, "Error fetching data: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
-                    }
-                    is Resource.Loading -> {
-                    }
-                }
-            }
-        }
-    }
     var selectedScreen by remember {mutableStateOf(NavigationItem.Home)}
     Scaffold(
         bottomBar = {

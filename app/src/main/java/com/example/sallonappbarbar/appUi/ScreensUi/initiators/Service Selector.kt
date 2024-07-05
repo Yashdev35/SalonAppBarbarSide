@@ -3,7 +3,9 @@ package com.example.sallonappbarbar.appUi.ScreensUi.initiators
 
 import android.app.Activity
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +19,13 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -31,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,11 +64,15 @@ import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.ServiceCat
+import com.example.sallonappbarbar.data.model.ServiceModel
 import com.example.sallonappbarbar.data.model.aService
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.ui.theme.Purple40
+import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
+import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
@@ -73,22 +82,22 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ServiceTypeItem(
-    serviceType: ServiceType,
-    onServiceSelectedChange: (aService, Boolean) -> Unit
+    serviceType: ServiceCat,
+    onServiceSelectedChange: (ServiceModel, Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 6.dp, end = 6.dp)
+            .padding(start = 16.dp, end = 16.dp)
     ) {
         Text(
-            text = serviceType.serviceTypeHeading,
+            text = serviceType.type,
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Black,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
-        serviceType.aServices.forEach { service ->
+        serviceType.services.forEach { service ->
             var isServiceSelected by remember { mutableStateOf(false) }
             Row(
                 modifier = Modifier
@@ -121,7 +130,7 @@ fun ServiceTypeItem(
 }
 
 @Composable
-fun ServiceStandardAndPriceList(aService : aService) {
+fun ServiceStandardAndPriceList(service : ServiceModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,9 +145,15 @@ fun ServiceStandardAndPriceList(aService : aService) {
             ) {
                 Text(
                     text = "Price",
+                    color = Color.Black,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
                 Text(
-                    text = aService.price,
+                    text = "Rs."+service.price,
+                    color = Color.Black,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
                 )
             }
         Row(
@@ -150,9 +165,15 @@ fun ServiceStandardAndPriceList(aService : aService) {
         ) {
             Text(
                 text = "Time",
+                color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
             )
             Text(
-                text = aService.time,
+                text = service.time+" mins",
+                color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
             )
         }
         }
@@ -160,22 +181,20 @@ fun ServiceStandardAndPriceList(aService : aService) {
 
 @Composable
 fun ServiceCard(
-    aService: aService,
+    service: ServiceModel,
     ) {
     val showPriceAndTimeInputDialog = remember { mutableStateOf(false) }
-    Column {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 4.dp,
                 pressedElevation = 8.dp
             ),
-            colors = CardColors(
+            colors = CardDefaults.cardColors(
                 contentColor = Color.White,
-                containerColor = sallonColor,
-                disabledContainerColor = sallonColor,
-                disabledContentColor = Color.White,
-            )
+                containerColor = Color.White,
+            ), border = BorderStroke(2.dp, sallonColor)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
@@ -183,37 +202,38 @@ fun ServiceCard(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = CenterVertically
                 ) {
                     Text(
-                        text = aService.serviceName,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = service.serviceName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
                     )
                         IconButton(
                             onClick = {
                                 showPriceAndTimeInputDialog.value = true
                             }
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "edit")
+                            Icon(Icons.Default.Edit, contentDescription = "edit",tint= sallonColor)
                         }
                 }
             }
         }
         Spacer(modifier = Modifier.height(2.dp))
         Card(
-            colors = CardColors(
+            colors = CardDefaults.cardColors(
                 contentColor = Color.White,
-                containerColor = sallonColor,
-                disabledContainerColor = sallonColor,
-                disabledContentColor = Color.White,
-            )
+                containerColor = Color.White,
+            ),border = BorderStroke(2.dp, sallonColor)
         ) {
-            ServiceStandardAndPriceList(aService)
+            ServiceStandardAndPriceList(service)
         }
     }
     if(showPriceAndTimeInputDialog.value){
         TimeAndPriceEditorDialog(
-            aService = aService,
+            service = service,
             showPriceAndTimeInputDialog = showPriceAndTimeInputDialog
         )
     }
@@ -221,36 +241,42 @@ fun ServiceCard(
 
 @Composable
 fun TimeAndPriceEditorDialog(
-    aService: aService,
+    service: ServiceModel,
     showPriceAndTimeInputDialog: MutableState<Boolean>,
 ){
     var servicePrice by remember { mutableStateOf("") }
     var serviceTime by remember { mutableStateOf("") }
     AlertDialog(
+        modifier = Modifier.clip(RoundedCornerShape(20.dp)).border(2.dp, sallonColor,RoundedCornerShape(20.dp)).background(Color.White),
         onDismissRequest = { showPriceAndTimeInputDialog.value = false },
         confirmButton = {
             Button(onClick = {
                 if(servicePrice.isNotEmpty()) {
-                    aService.price = "$servicePrice \u20B9"
-                    aService.time = "$serviceTime min"
+                    service.price = servicePrice
+                    service.time = "$serviceTime "
                     servicePrice = ""
                     serviceTime = ""
                     showPriceAndTimeInputDialog.value = false
                 }
-            }) {
-                Text("Add")
+            },colors = ButtonDefaults.buttonColors(containerColor = sallonColor)) {
+                Text("Add",color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp)
             }
         },
         dismissButton = {
             Button(
                 onClick = {
                     showPriceAndTimeInputDialog.value = false
-                }
+                },colors = ButtonDefaults.buttonColors(containerColor = sallonColor)
             ) {
-                Text("Cancel")
+                Text("Cancel",color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp)
             }
         },
-        title = { Text("Add Service Variations")},
+        containerColor = Color.White,
+        title = { Text("Add Service Price and Time", color = Color.Black)},
         text = {
             Column {
                 OutlinedTextField(
@@ -264,6 +290,15 @@ fun TimeAndPriceEditorDialog(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = sallonColor,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = sallonColor,
+                        focusedTextColor = Color.Black
+                        , unfocusedLabelColor = Color.Gray,
+                        cursorColor = sallonColor,
+                        unfocusedTextColor = Color.Gray
                     )
                 )
                 OutlinedTextField(
@@ -277,6 +312,15 @@ fun TimeAndPriceEditorDialog(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Done
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = sallonColor,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = sallonColor,
+                        focusedTextColor = Color.Black
+                        , unfocusedLabelColor = Color.Gray,
+                        cursorColor = sallonColor,
+                        unfocusedTextColor = Color.Gray
                     )
                 )
             }
@@ -286,43 +330,42 @@ fun TimeAndPriceEditorDialog(
 
 @Composable
 fun ServiceSelectorScreen(
-    barberData: BarberModel,
     navController: NavController,
 ) {
     val scrollState = rememberScrollState()
-    var selectedServices by remember { mutableStateOf(emptyList<aService>()) }
+    var selectedServices by remember { mutableStateOf(emptyList<ServiceModel>()) }
     val serviceTypes = listOf(
-        ServiceType(
-            serviceTypeHeading = "Hair Services",
-            aServices = listOf(
-                aService(false, price = "0 ₹", id = 1, serviceTypeHeading = "Hair Service", serviceName = "Hair Cut",time = "0 min"),
-                aService(false, price = "0 ₹", id = 2, serviceTypeHeading = "Hair Service", serviceName = "Hair color", time = "0 min"),
-                aService(false ,price = "0 ₹", id = 3, serviceTypeHeading = "Hair Service", serviceName = "Hair style",time = "0 min"),
+        ServiceCat(
+            type = "Hair Services",
+            services = listOf(
+                ServiceModel(isServiceSelected = false,  id = 1, type = "Hair Service", serviceName = "Hair Cut"),
+                ServiceModel(isServiceSelected = false,  id = 2, type = "Hair Service", serviceName = "Hair color",),
+                ServiceModel(isServiceSelected = false , id = 3, type = "Hair Service", serviceName = "Hair style",),
             )
         ),
-        ServiceType(
-            serviceTypeHeading = "Nail Services",
-            aServices = listOf(
-                aService(false, price = "0 ₹", id = 4, serviceTypeHeading = "Nail Service", serviceName = "Manicure",time = "0 min"),
-                aService(false, price = "0 ₹", id = 5, serviceTypeHeading = "Nail Service", serviceName = "Pedicure",time = "0 min"),
-                aService(false, price = "0 ₹", id = 6, serviceTypeHeading = "Nail Service", serviceName = "Nail Art",time = "0 min"),
+        ServiceCat(
+            type = "Nail Services",
+            services = listOf(
+                ServiceModel(isServiceSelected =false, id = 4, type = "Nail Service", serviceName = "Manicure"),
+                ServiceModel(isServiceSelected =false,  id = 5, type = "Nail Service", serviceName = "Pedicure",),
+                ServiceModel(isServiceSelected =false,  id = 6, type = "Nail Service", serviceName = "Nail Art"),
             )
         ),
-        ServiceType(
-            serviceTypeHeading = "Facial Services",
-            aServices = listOf(
-                aService(false, price = "0 ₹", id = 7, serviceTypeHeading = "Facial Service", serviceName = "Clean Up",time = "0 min"),
-                aService(false, price = "0 ₹", id = 8, serviceTypeHeading = "Facial Service", serviceName = "Facial",time = "0 min"),
-                aService(false, price = "0 ₹", id = 9, serviceTypeHeading = "Facial Service", serviceName = "Bleach",time = "0 min"),
+        ServiceCat(
+            type = "Facial Services",
+            services = listOf(
+                ServiceModel(isServiceSelected =false, id = 7, type = "Facial Service", serviceName = "Clean Up"),
+                ServiceModel(isServiceSelected =false,  id = 8, type = "Facial Service", serviceName = "Facial"),
+                ServiceModel(isServiceSelected =false, id = 9, type = "Facial Service", serviceName = "Bleach"),
             )
 
         )
     )
-    Surface(color = Purple40) {
+    Surface(color = purple_200) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 6.dp, end = 6.dp, top = 5.dp),
+                ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -330,15 +373,18 @@ fun ServiceSelectorScreen(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .background(Color.White)
             ) {
+                item(){Spacer(modifier = Modifier.height(20.dp))}
                 items(serviceTypes) { serviceType ->
                     ServiceTypeItem(serviceType = serviceType) { service, isSelected ->
-                        if (isSelected) {
+                        selectedServices = if (isSelected) {
                             /*List of services selected by the are stored here*/
-                            selectedServices = selectedServices + service
+                            selectedServices + service
                         } else {
-                            selectedServices = selectedServices.filter { it.id != service.id }
+                            selectedServices.filter { it.id != service.id }
                         }
                     }
                 }
@@ -348,23 +394,19 @@ fun ServiceSelectorScreen(
                     key = "services",
                     value = selectedServices
                 )
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    key = "barber",
-                    value = barberData
-                )
                 navController.navigate(Screens.PriceSelector.route)
             }
         }
     }
 }
-fun aServiceSorter(aServices : List<aService>) : List<ServiceType> {
-    val serviceTypes = mutableListOf<ServiceType>()
-    aServices.forEach { service ->
-        val serviceType = serviceTypes.find { it.serviceTypeHeading == service.serviceTypeHeading }
+fun aServiceSorter(services : List<ServiceModel>) : List<ServiceCat> {
+    val serviceTypes = mutableListOf<ServiceCat>()
+    services.forEach { service ->
+        val serviceType = serviceTypes.find { it.type == service.type }
         if (serviceType != null) {
-            serviceType.aServices = serviceType.aServices + service
+            serviceType.services += service
         } else {
-            serviceTypes.add(ServiceType(service.serviceTypeHeading, listOf(service)))
+            serviceTypes.add(ServiceCat(service.type, listOf(service)))
         }
     }
     return serviceTypes
@@ -372,43 +414,39 @@ fun aServiceSorter(aServices : List<aService>) : List<ServiceType> {
 
 @Composable
 fun PriceSelector(
-    barberData: BarberModel,
+//    barberData: BarberModel,
     viewModel: BarberDataViewModel = hiltViewModel(),
     navController: NavController,
-    aServices: List<aService>,
+    services: List<ServiceModel>,
     activity: Activity
 ) {
     var isDialogVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     if (isDialogVisible) {
-        LoadingAnimation()
+        CommonDialog()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFBB86FC)), // Set the background color to purple
+            .background(purple_200), // Set the background color to purple
         contentAlignment = Alignment.TopCenter
     ) {
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
         ) {
             item {
-                Text(
-                    text = "Selected Services",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Price Selector")
             }
-            items(aServices) { service ->
-                ServiceCard(aService = service)
+            items(services) { service ->
+                ServiceCard(service = service)
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
-                Spacer(modifier = Modifier.height(70.dp))
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
 
@@ -419,21 +457,21 @@ fun PriceSelector(
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 4.dp,
                 pressedElevation = 6.dp
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White,
+                contentColor = Color.White
             )
         ) {
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
-                Log.d("Barber", "PriceSelector: $aServices")
+                Log.d("Barber", "PriceSelector: $services")
                 scope.launch(Dispatchers.Main) {
-                    val serviceTypes = aServiceSorter(aServices)
+                    val serviceTypes = aServiceSorter(services)
                     viewModel.addServiceData(serviceTypes, activity).collect {
                         when (it) {
                             is Resource.Success -> {
                                 isDialogVisible = false
                                 activity.showMsg(it.result)
-                                navController.currentBackStackEntry?.savedStateHandle?.set(
-                                    key = "barber",
-                                    value = barberData
-                                )
                                 navController.navigate(Screens.SlotAdderScr.route)
                             }
                             is Resource.Failure -> {

@@ -5,35 +5,47 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import androidx.compose.animation.core.Animatable
-import androidx.compose.material.Card
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
@@ -44,17 +56,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.sallonappbarbar.R
-import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
@@ -62,41 +73,45 @@ import kotlinx.coroutines.delay
 @Composable
 fun CommonDialog() {
 
-    Dialog(onDismissRequest = { }) {
+    Dialog(
+        onDismissRequest = { },
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+    ) {
 
-        Card(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(100.dp)
+                .padding(horizontal = 20.dp)
+                .clip(
+                    RoundedCornerShape(10.dp)
+                )
+                .border(2.dp, sallonColor, RoundedCornerShape(10.dp))
+                .background(Color.White)
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.White),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
+                Text(
+                    text = "Loading",
+                    modifier = Modifier,
+                    fontSize = 24.sp,
+                    color = sallonColor
+                )
+                Spacer(modifier = Modifier.width(40.dp))
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .width(50.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 16.dp, bottom = 16.dp),
+                        .width(50.dp),
                     color = Color(sallonColor.toArgb()),
                     trackColor = Color(purple_200.toArgb()),
                 )
-                Text(
-                    text = "Loading",
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .wrapContentSize()
-                        .padding(30.dp),
-
-                    color = Purple40
-                )
             }
-
         }
     }
-
 
 }
 
@@ -108,6 +123,7 @@ fun LaunchPhotoPicker(singlePhotoPickerLauncher: ManagedActivityResultLauncher<P
     )
 
 }
+
 @Composable
 fun LoadingAnimation(
     modifier: Modifier = Modifier,
@@ -147,10 +163,10 @@ fun LoadingAnimation(
                         animationSpec = infiniteRepeatable(
                             animation = keyframes {
                                 durationMillis = 1200
-                                0.0f at 0 with LinearOutSlowInEasing
-                                1.0f at 300 with LinearOutSlowInEasing
-                                0.0f at 600 with LinearOutSlowInEasing
-                                0.0f at 1200 with LinearOutSlowInEasing
+                                0.0f at 0 using LinearOutSlowInEasing
+                                1.0f at 300 using LinearOutSlowInEasing
+                                0.0f at 600 using LinearOutSlowInEasing
+                                0.0f at 1200 using LinearOutSlowInEasing
                             },
                             repeatMode = RepeatMode.Restart
                         )
@@ -183,6 +199,7 @@ fun LoadingAnimation(
 
     }
 }
+
 @Composable
 fun CircularProgressWithAppLogo() {
     Surface(
@@ -192,7 +209,7 @@ fun CircularProgressWithAppLogo() {
         var isPlaying by remember { mutableStateOf(true) }
         val progress by animateLottieCompositionAsState(
             composition = composition,
-            isPlaying = isPlaying,restartOnPlay = true, iterations = 10, speed = 0.75f
+            isPlaying = isPlaying, restartOnPlay = true, iterations = 10, speed = 0.75f
         )
         Column(
             modifier = Modifier
@@ -201,15 +218,15 @@ fun CircularProgressWithAppLogo() {
                     color = Color.White
                 ),
         ) {
-            Box(modifier = Modifier.fillMaxSize()){
+            Box(modifier = Modifier.fillMaxSize()) {
                 LottieAnimation(
                     composition = composition, progress = { progress }, modifier = Modifier
                         .size(250.dp)
-                        .padding(start = 100.dp, top = 40.dp)
-                    , alignment = Alignment.Center
+                        .padding(start = 100.dp, top = 40.dp), alignment = Alignment.Center
                 )
             }
-        }}
+        }
+    }
 }
 
 @Composable
@@ -288,6 +305,7 @@ fun GoogleAndFacebook() {
         )
     }
 }
+
 @Composable
 fun BackButtonTopAppBar(
     onBackClick: () -> Unit,
@@ -315,7 +333,7 @@ fun BackButtonTopAppBar(
                 modifier = Modifier.background(color = Color.White)
             ) {
                 androidx.compose.material.Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Next",
                     tint = Color.Black,
                     modifier = Modifier.size(24.dp)
@@ -333,8 +351,8 @@ fun BackButtonTopAppBar(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AdvancedSignUpScreenPreview() {
-    CircularProgressWithAppLogo()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AdvancedSignUpScreenPreview() {
+//    CircularProgressWithAppLogo()
+//}

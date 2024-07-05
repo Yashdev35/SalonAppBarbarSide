@@ -22,7 +22,6 @@ import javax.inject.Inject
 class GetBarberDataViewModel @Inject constructor(
     private val repo: FirestoreRepository
 ) : ViewModel(){
-    var selectedSlots = mutableStateListOf<TimeSlot>()
 
     private var _slots = mutableStateOf(Slots("08:00", "22:00"))
     var slots: State<Slots> = _slots
@@ -38,22 +37,22 @@ class GetBarberDataViewModel @Inject constructor(
             is MainEvent2.getBarberNearby -> {}
             is MainEvent2.getBarberPopular -> {}
             is MainEvent2.getServices -> {}
-            is MainEvent2.getSlots -> getSlots(event.day, event.uid)
+//            is MainEvent2.getSlots -> getSlots(event.day, event.uid)
             is MainEvent2.setBooking -> {}
 
             else -> {}
         }
     }
 
-    suspend fun getSlots(day: String, uid: String) {
-        viewModelScope.launch { _slots.value = repo.getTimeSlot(day, uid) }
-    }
+//    suspend fun getSlots(day: String, uid: String) {
+//        viewModelScope.launch { _slots.value = repo.getTimeSlot(day, uid) }
+//    }
 }
 sealed class MainEvent2 {
     data class getBarberPopular(val city: String, val limit: Long) : MainEvent2()
     data class getBarberNearby(val city: String, val limit: Long) : MainEvent2()
     data class getServices(val uid: String) : MainEvent2()
-    data class getSlots(val day: String, val uid: String) : MainEvent2()
+//    data class getSlots(val day: String, val uid: String) : MainEvent2()
     data class setBooking(
         val barberuid: String,
         val useruid: String,

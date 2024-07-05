@@ -17,9 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -96,7 +97,7 @@ fun PhoneNumberScreen(
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { phoneNumber = it },
-                label = { Text("Phone Number", color = Purple80) },
+                label = { Text("Phone Number", color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 40.dp),
@@ -104,10 +105,18 @@ fun PhoneNumberScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
                 ),
-                colors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Purple80, // Change the outline color when focused
-                    unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                    errorBorderColor = purple_200
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = sallonColor,
+                    unfocusedIndicatorColor = sallonColor,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = sallonColor,
+                    unfocusedPlaceholderColor = Color.Gray,
+                    focusedPlaceholderColor = Color.Gray,
+                    focusedLabelColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray
                 ),
             )
         }
@@ -206,7 +215,20 @@ fun OtpVerificationScreen(
                             }
                         }
                     ),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = sallonColor,
+                        unfocusedIndicatorColor = sallonColor,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = sallonColor,
+                        unfocusedPlaceholderColor = Color.Gray,
+                        focusedPlaceholderColor = Color.Gray,
+                        focusedLabelColor = Color.Gray,
+                        unfocusedLabelColor = Color.Gray
+                    )
                 )
             }
         }
@@ -239,7 +261,7 @@ fun OtpVerificationScreen(
                             is Resource.Success -> {
                                 isDialog = false
                                 activity.showMsg(it.result)
-                                navController.navigate(Screens.BarbarsSignUp.route + "/$phoneNumber")
+                                navController.navigate(Screens.BarbarsSignUp.route )
                             }
 
                             is Resource.Failure -> {

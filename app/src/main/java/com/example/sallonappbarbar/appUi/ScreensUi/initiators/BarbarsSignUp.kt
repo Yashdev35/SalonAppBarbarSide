@@ -80,6 +80,8 @@ import com.example.sallonappbarbar.data.model.LocationModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
@@ -91,11 +93,12 @@ import java.util.Locale
 @Composable
 fun AdvancedSignUpScreen(
     navController: NavController,
-    phoneNumber: String? = null,
     activity: Activity,
     viewModel: BarberDataViewModel = hiltViewModel(),
     locationViewModel: LocationViewModel = hiltViewModel()
 ) {
+    val phone = FirebaseAuth.getInstance().currentUser?.phoneNumber.toString()
+
     val context = LocalContext.current
     locationViewModel.startLocationUpdates()
     val location by locationViewModel.getLocationLiveData().observeAsState()
@@ -120,7 +123,6 @@ fun AdvancedSignUpScreen(
 //        Toast.makeText(context,locationDetails.latitude,Toast.LENGTH_SHORT).show()
     }
     val auth = FirebaseAuth.getInstance()
-    val phone = phoneNumber ?: "1234567890"
     var name by remember { mutableStateOf("") }
     var mExpanded by remember { mutableStateOf(false) }
     var mSelectedText by remember { mutableStateOf("") }
@@ -284,7 +286,7 @@ fun AdvancedSignUpScreen(
                         Text(
                             "Select a gender",
                             color = Color.Black,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     },
                     trailingIcon = {
@@ -308,7 +310,7 @@ fun AdvancedSignUpScreen(
                     onDismissRequest = { mExpanded = false },
                     modifier = Modifier
                         .width(with(LocalDensity.current) { mTextFieldSize.width.toDp() })
-                        .background(if (mExpanded) Color(0xFFBB86FC) else Color.Black),
+                        .background(if (mExpanded) Color.White else Color.Black),
                     offset = DpOffset(
                         x = 0.dp,
                         y = with(LocalDensity.current) { textFieldPosition.y.toDp() + mTextFieldSize.height.toDp() }
@@ -461,7 +463,7 @@ fun AdvancedSignUpScreen(
                         val barberModel = BarberModel(
                             name = name,
                             shopName = shopName,
-                            phoneNumber = phoneNumber.toString(),
+                            phoneNumber = phone.toString(),
                             saloonType = mSelectedText,
                             imageUri = selectedImageUri.toString(),
                             shopStreetAddress = streetAddress,
@@ -534,15 +536,15 @@ enum class SalonType(val label: String) {
     HYBRID("Hybrid salon"),
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun AdvancedSignUpScreenPreview() {
-    val navController = rememberNavController()
-    val activity = Activity()
-    AdvancedSignUpScreen(
-        navController = navController,
-        phoneNumber = "1234567890",
-        activity = activity
-    )
-}
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Preview(showBackground = true)
+//@Composable
+//fun AdvancedSignUpScreenPreview() {
+//    val navController = rememberNavController()
+//    val activity = Activity()
+//    AdvancedSignUpScreen(
+//        navController = navController,
+//        phoneNumber = "1234567890",
+//        activity = activity
+//    )
+//}

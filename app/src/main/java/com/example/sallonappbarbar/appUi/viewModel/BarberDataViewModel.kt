@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sallonappbarbar.data.FirestoreRepository
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceType
 import com.example.sallonappbarbar.data.model.Slots
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,17 +19,7 @@ class BarberDataViewModel @Inject constructor(
     private val repo: FirestoreRepository
 ) : ViewModel() {
 
-    var openCloseTime = mutableStateOf(
-        listOf(
-            Slots(day = "Monday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Tuesday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Wednesday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Thursday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Friday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Saturday", StartTime = "10:00", EndTime = "12:00"),
-            Slots(day = "Sunday", StartTime = "10:00", EndTime = "12:00"),
-        )
-    )
+
 
     suspend fun onEvent(event: MainEvent2) {
         when (event) {
@@ -41,7 +32,7 @@ class BarberDataViewModel @Inject constructor(
     suspend fun addUserData(barberModel: BarberModel, imageUri: Uri?, activity: Activity) =
         repo.addUser(barberModel, imageUri)
 
-    suspend fun addServiceData(aServices: List<ServiceType>, activity: Activity) =
+    suspend fun addServiceData(aServices: List<ServiceCat>, activity: Activity) =
         repo.addServices(aServices)
 
 
@@ -54,58 +45,3 @@ sealed class MainEvent {
     data object setSlots : MainEvent2()
 
 }
-
-
-//viewModel.getBarberSlots(activity).collect { resource ->
-//    when (resource) {
-//        is Resource.Success -> {
-//            isLoading = false
-//            val slotsData = resource.result
-//            if (slotsData.isNotEmpty()) {
-//                slots.clear()
-//                slots.addAll(slotsData[0].slots)
-//                Toast.makeText(activity, "Slots Loaded", Toast.LENGTH_LONG).show()
-//                viewModel.getOpenCloseTime(activity).collect { resource ->
-//                    when (resource) {
-//                        is Resource.Success -> {
-//                            isLoading = false
-//                            Toast.makeText(activity, "Time Loaded", Toast.LENGTH_SHORT).show()
-//                            val openCloseTime = resource.result
-//                            val time = openCloseTime.split(" - ")
-//                            if (time.size == 2) {
-//                                openTime = time[0]
-//                                closeTime = time[1]
-//                            } else {
-//                                openTime = "N/A"
-//                                closeTime = "N/A"
-//                            }
-//                        }
-//                        is Resource.Failure -> {
-//                            isLoading = false
-//                            // Handle data fetching error here (e.g., show a toast)
-//                            Toast.makeText(
-//                                activity,
-//                                "Error fetching data: ${resource.exception.message}",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                        is Resource.Loading -> {
-//                            isLoading = true
-//                        }
-//                    }
-//                }
-//            } else {
-//                Toast.makeText(activity, "No slots available", Toast.LENGTH_LONG).show()
-//            }
-//        }
-//        is Resource.Failure -> {
-//            isLoading = false
-//            Toast.makeText(activity, "Error fetching data: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
-//        }
-//        is Resource.Loading -> {
-//            isLoading = true
-//        }
-//    }
-//}
-
-

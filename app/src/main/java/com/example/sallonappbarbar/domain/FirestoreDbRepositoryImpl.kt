@@ -14,11 +14,9 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.toMutableStateList
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.SlotStatus
-import com.example.sallonappbarbar.data.model.ServiceType
+import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceUploaded
 import com.example.sallonappbarbar.data.model.Slots
-import com.example.sallonappbarbar.data.model.TimeSlot
-import com.example.sallonappbarbar.data.model.WorkDay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.SetOptions
@@ -74,16 +72,16 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
 
     override suspend fun addServices(
-        aServices: List<ServiceType>
+        services: List<ServiceCat>
     ): Flow<Resource<String>> = callbackFlow {
         var service = HashMap<String, ServiceUploaded>()
         trySend(Resource.Loading)
-        aServices.forEach(){
+        services.forEach(){
             ServiceType->
-            ServiceType.aServices.forEach(){
+            ServiceType.services.forEach(){
                 service[it.serviceName] = ServiceUploaded(it.price,it.time)
             }
-            barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.serviceTypeHeading).set(service)
+            barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.type).set(service)
                 .addOnSuccessListener {
                     trySend(Resource.Success("Successfully added services"))
                 }.addOnFailureListener {
@@ -99,16 +97,19 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     }
     override suspend fun setSlots(openCloseTime: List<Slots>): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
+        Log.d("slot",openCloseTime.toString())
+
         CoroutineScope(Dispatchers.IO).launch {
             openCloseTime.forEach { slot ->
                 try {
                     barberdb.document(auth.currentUser!!.uid).collection("Slots").document(slot.day)
                         .set(slot).await()
-                    trySend(Resource.Success("All data uploaded successfully")).isSuccess
+                    Log.d("day",slot.day)
                 } catch (e: Exception) {
-                    trySend(Resource.Failure(e)).isSuccess
+                    trySend(Resource.Failure(e))
                 }
             }
+            trySend(Resource.Success("All data uploaded successfully")).isSuccess
         }
 
         awaitClose { close() }
@@ -176,21 +177,25 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getTimeSlot(day: String, uid: String): Slots {
+    override suspend fun getTimeSlot(): List<Slots> {
         return withContext(Dispatchers.IO) {
             try {
-                val documentSnapshot = barberdb.document(auth.currentUser?.uid.toString()).
-                collection("Slots").document(day).get().await()
-                val slots = documentSnapshot.let { document->
+                val querySnapshot = barberdb.document(auth.currentUser?.uid.toString()).
+                collection("Slots").get().await()
+                val listOfSlots = querySnapshot.documents.map { document->
                     Slots(
-                        StartTime = document.getString("startTime").toString(),
-                        EndTime = document.getString("endTime").toString(),
-                        Booked = (document.get("booked") as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf(),
-                        NotAvailable = (document.get("notAvailable") as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf(),
-                        date = document.getString("date").toString()
+
+                            startTime = document.getString("startTime").toString(),
+                        endTime = document.getString("endTime").toString(),
+                        booked = (document.get("booked") as? MutableList<String>) ?: mutableListOf(),
+                        notAvailable = (document.get("notAvailable") as? MutableList<String>) ?: mutableListOf(),
+                        date = document.getString("date").toString(),
+                            day =document.getString("day").toString()
+
                     )
+
                 }
-                slots
+                listOfSlots
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching time slots: ${e.message}", e)
                 throw e

@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.RowofDate
+import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.practicecoding.sallonapp.appui.components.CommonDialog
@@ -27,7 +28,6 @@ fun ScheduleScreen(
     navController: NavController,
     slotsViewModel: SlotsViewModel = hiltViewModel()
 ) {
-    val auth = FirebaseAuth.getInstance()
     var isLoading by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState()
     val weekDayList = getWeekdaysWithDates()
@@ -39,7 +39,7 @@ fun ScheduleScreen(
     }
 
     LaunchedEffect(Unit){
-        slotsViewModel.getEverydaySlots()
+        slotsViewModel.onEvent(SlotsEvent.GetSlots)
     }
 
     LaunchedEffect(pagerState.currentPage) {
@@ -47,48 +47,29 @@ fun ScheduleScreen(
     }
 
     DoubleCard(
-        midCarBody = {
+        midCarBody = {selectedDate=
             daySelection(
-                selectedDate = selectedDate,
-                onDateSelected = { date ->
-                    selectedDate = date
-                    // Launch coroutine to scroll pagerState to the new page
-                    coroutineScope.launch {
-                        val newPageIndex = weekDayList.indexOfFirst { it.containsValue(date) }
-                        if (newPageIndex != -1) {
-                            pagerState.scrollToPage(newPageIndex)
-                        }
-                    }
-                }
+//                selectedDate = selectedDate,
+//                onDateSelected = { date ->
+//                    selectedDate = date
+//                    // Launch coroutine to scroll pagerState to the new page
+//                    coroutineScope.launch {
+//                        val newPageIndex = weekDayList.indexOfFirst { it.containsValue(date) }
+//                        if (newPageIndex != -1) {
+//                            pagerState.scrollToPage(newPageIndex)
+//                        }
+//                    }
+//                }
             )
         },
         navController = navController,
         topAppBar = {},
         bottomAppBar = {},
         mainScreen = {
-            Scaffold {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it)
-                ) {
-                    HorizontalPager(
-                        state = pagerState,
-                        count = weekDayList.size,
-                        modifier = Modifier.weight(1f),
-                        userScrollEnabled = false
-                    ) { page ->
-                        val (day, date) = weekDayList[page].entries.first()
-                        TimeSelection(
-                            day = day,
-                            date = date,
-                            navController = navController,
-                            barberUid = auth.currentUser?.uid ?: "",
-                            slotsViewModel = slotsViewModel
-                        )
-                    }
-                }
-            }
+            TimeSelection(
+                selectedDate,
+                navController
+            )
         }
     )
 }
@@ -103,10 +84,8 @@ fun getWeekdaysWithDates(): List<Map<String, LocalDate>> {
 }
 
 @Composable
-fun daySelection(
-    selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
-): LocalDate {
+fun daySelection(): LocalDate {
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val currentDate = LocalDate.now()
     val monthName = currentDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val year = currentDate.year
@@ -132,10 +111,12 @@ fun daySelection(
                     date = date.dayOfMonth.toString(),
                     day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 ) {
-                    onDateSelected(date)
+                    selectedDate = date
                 }
             }
         }
+
     }
     return selectedDate
+
 }

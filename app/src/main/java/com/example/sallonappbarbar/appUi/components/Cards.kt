@@ -286,7 +286,7 @@ fun HeadingText(
     Column(
         modifier = Modifier
             .wrapContentSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         Text(
