@@ -19,7 +19,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -40,20 +39,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.BottomAppNavigationBar
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.components.OrderCard
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Order
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 @Composable
 fun MainScreen1(
@@ -76,7 +72,7 @@ fun MainScreen1(
             when (selectedScreen) {
                 NavigationItem.Home -> TopScreen(navHostController,context)
                 NavigationItem.Book -> ScheduleScreen(navController = navHostController)
-                NavigationItem.Message -> androidx.compose.material3.Text("Message Screen")  // Placeholder for MessageScreen
+                NavigationItem.Message -> MessageScreen(navHostController) // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
                 NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
             }

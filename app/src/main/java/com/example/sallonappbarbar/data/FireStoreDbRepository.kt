@@ -3,11 +3,13 @@ package com.example.sallonappbarbar.data
 
 import android.net.Uri
 import com.example.sallonappbarbar.data.model.BarberModel
+import com.example.sallonappbarbar.data.model.ChatModel
+import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.Slots
 import kotlinx.coroutines.flow.Flow
 
-interface FirestoreRepository {
+interface FireStoreDbRepository {
     suspend  fun addUser(
         barberModel: BarberModel,
         imageUri: Uri?
@@ -26,4 +28,8 @@ interface FirestoreRepository {
     suspend fun getBarber(uid:String?):BarberModel?
     suspend fun updateBookedSlots(times:List<String>, day:String):Flow<Resource<String>>
     suspend fun updateNotAvailableSlots(times:List<String>, day:String):Flow<Resource<String>>
+
+    suspend fun addChat(message: Message, barberUid: String)
+    suspend fun getChatUser():MutableList<ChatModel>
+    suspend fun messageList(barberUid: String):Flow<List<Message>>
 }

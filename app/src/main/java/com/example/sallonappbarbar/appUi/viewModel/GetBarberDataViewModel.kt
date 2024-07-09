@@ -1,14 +1,11 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
-import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sallonappbarbar.data.FirestoreRepository
-import com.example.sallonappbarbar.data.Resource
+import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.Slots
@@ -20,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GetBarberDataViewModel @Inject constructor(
-    private val repo: FirestoreRepository
+    private val repo: FireStoreDbRepository
 ) : ViewModel(){
 
     private var _slots = mutableStateOf(Slots("08:00", "22:00"))

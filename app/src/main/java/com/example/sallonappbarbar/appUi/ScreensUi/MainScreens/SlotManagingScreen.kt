@@ -1,6 +1,8 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,14 +24,15 @@ import kotlinx.coroutines.launch
 import java.time.format.TextStyle
 import java.util.Locale
 
-@OptIn(ExperimentalPagerApi::class)
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScheduleScreen(
     navController: NavController,
     slotsViewModel: SlotsViewModel = hiltViewModel()
 ) {
     var isLoading by remember { mutableStateOf(false) }
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(pageCount = { 7 })
     val weekDayList = getWeekdaysWithDates()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val coroutineScope = rememberCoroutineScope()

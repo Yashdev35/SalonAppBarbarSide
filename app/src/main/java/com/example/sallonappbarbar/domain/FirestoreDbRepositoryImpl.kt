@@ -1,7 +1,7 @@
 package com.example.sallonappbarbar.domain
 
 import android.content.ContentValues.TAG
-import com.example.sallonappbarbar.data.FirestoreRepository
+import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -12,14 +12,15 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.toMutableStateList
-import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.SlotStatus
+import com.example.sallonappbarbar.data.model.ChatModel
+import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceUploaded
 import com.example.sallonappbarbar.data.model.Slots
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,17 +28,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 
 class FirestoreDbRepositoryImpl @Inject constructor(
-    private val barberdb: CollectionReference,
+    private val barberDb: CollectionReference,
     private val storage: FirebaseStorage,
     private val auth: FirebaseAuth,
     @ApplicationContext private val context: Context
 
-) : FirestoreRepository {
+) : FireStoreDbRepository {
     override suspend fun addUser(barberModel: BarberModel, imageUri: Uri?): Flow<Resource<String>> =
         callbackFlow {
             trySend(Resource.Loading)
@@ -58,7 +57,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 }
 
                 delay(1000)
-                barberdb.document(auth.currentUser?.uid.toString())
+                barberDb.document(auth.currentUser?.uid.toString())
                     .set(barberModel)
                     .addOnSuccessListener {
                         trySend(Resource.Success("Successfully Sign In"))
@@ -81,7 +80,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             ServiceType.services.forEach(){
                 service[it.serviceName] = ServiceUploaded(it.price,it.time)
             }
-            barberdb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.type).set(service)
+            barberDb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.type).set(service)
                 .addOnSuccessListener {
                     trySend(Resource.Success("Successfully added services"))
                 }.addOnFailureListener {
@@ -102,7 +101,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             openCloseTime.forEach { slot ->
                 try {
-                    barberdb.document(auth.currentUser!!.uid).collection("Slots").document(slot.day)
+                    barberDb.document(auth.currentUser!!.uid).collection("Slots").document(slot.day)
                         .set(slot).await()
                     Log.d("day",slot.day)
                 } catch (e: Exception) {
@@ -121,7 +120,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     ): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
         try {
-            val docRef = barberdb.document(auth.currentUser?.uid.toString()).collection("Slots")
+            val docRef = barberDb.document(auth.currentUser?.uid.toString()).collection("Slots")
                 .document(day)
             docRef.get().addOnSuccessListener { document ->
                 val currentBookedSlots =
@@ -152,7 +151,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     ): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
         try {
-            val docRef = barberdb.document(auth.currentUser?.uid.toString()).collection("Slots")
+            val docRef = barberDb.document(auth.currentUser?.uid.toString()).collection("Slots")
                 .document(day)
             docRef.get().addOnSuccessListener { document ->
                 val currentNotAvailableSlots =
@@ -180,7 +179,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     override suspend fun getTimeSlot(): List<Slots> {
         return withContext(Dispatchers.IO) {
             try {
-                val querySnapshot = barberdb.document(auth.currentUser?.uid.toString()).
+                val querySnapshot = barberDb.document(auth.currentUser?.uid.toString()).
                 collection("Slots").get().await()
                 val listOfSlots = querySnapshot.documents.map { document->
                     Slots(
@@ -205,7 +204,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     override suspend fun getBarber(uid: String?): BarberModel? {
         return withContext(Dispatchers.IO) {
             val querySnapshot =
-                barberdb.whereEqualTo("uid", uid)
+                barberDb.whereEqualTo("uid", uid)
                     .limit(1).get().await()
             val barberDocument = querySnapshot.documents.firstOrNull()
             barberDocument?.let { document ->
@@ -231,7 +230,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     }
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
-        val documentReference = barberdb.document(auth.currentUser?.uid.toString())
+        val documentReference = barberDb.document(auth.currentUser?.uid.toString())
         val listener = documentReference.get()
             .addOnSuccessListener { documentSnapshot ->
                 if (documentSnapshot.exists()) {
@@ -271,5 +270,75 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
 
         awaitClose { }
+    }
+    override suspend fun addChat(message: Message, barberUid: String) {
+        try {
+            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$barberUid")
+                .set(
+                    mapOf(
+                        "barberuid" to barberUid,
+                        "useruid" to auth.currentUser?.uid.toString(),
+                        "lastmessage" to message
+                    )
+                ).await()
+            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$barberUid")
+                .collection("Messages").document(message.time).set(message).await()
+        } catch (e: Exception) {
+            Log.d("chat", "Error adding chat: ${e.message}")
+        }
+    }
+
+    override suspend fun getChatUser(): MutableList<ChatModel> {
+        return withContext(Dispatchers.IO) {
+            val querySnapshot = Firebase.firestore.collection("Chats")
+                .whereEqualTo("useruid", auth.currentUser?.uid.toString()).get().await()
+            val chatList = querySnapshot.documents.map { documentSnapshot ->
+                val barberDocument =
+                    barberDb.document(documentSnapshot.getString("barberuid").toString()).get()
+                        .await()
+                val name = barberDocument.getString("name").toString()
+                val image = barberDocument.getString("imageUri")
+                    .toString() // Assuming "image" field contains the URL of the image
+                val message = documentSnapshot.get("lastmessage") as Map<*, *>
+                val lastMessage = Message(
+                    message = message["message"].toString(),
+                    time = message["time"].toString(),
+                    status = message["status"].toString().toBoolean()
+                )
+                ChatModel(
+                    name = name,
+                    image = image, // Add the image URL to ChatModel
+                    message = lastMessage,
+                    uid=documentSnapshot.getString("barberuid").toString()
+                )
+            }.toMutableList()
+            Log.d("userchat", "$chatList")
+            chatList
+        }
+    }
+
+    override suspend fun messageList(barberUid: String): Flow<List<Message>> = callbackFlow {
+        val messageRef = Firebase.firestore.collection("Chats")
+            .document("${auth.currentUser?.uid}+$barberUid")
+            .collection("Messages")
+
+        val subscription = messageRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+            if (firebaseFirestoreException != null) {
+                trySend(emptyList()) // Send an empty list on error
+                return@addSnapshotListener
+            }
+
+            val messageList = querySnapshot?.documents?.map { documentSnapshot ->
+                Message(
+                    message = documentSnapshot.getString("message").toString(),
+                    time = documentSnapshot.getString("time").toString(),
+                    status = documentSnapshot.getBoolean("status")!!
+                )
+            } ?: emptyList()
+
+            trySend(messageList)
+        }
+
+        awaitClose { subscription.remove() }
     }
 }

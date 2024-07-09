@@ -2,21 +2,16 @@ package com.example.sallonappbarbar.appUi.viewModel
 
 import android.app.Activity
 import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.sallonappbarbar.data.FirestoreRepository
+import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ServiceCat
-import com.example.sallonappbarbar.data.model.ServiceType
-import com.example.sallonappbarbar.data.model.Slots
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class BarberDataViewModel @Inject constructor(
-    private val repo: FirestoreRepository
+    private val repo: FireStoreDbRepository
 ) : ViewModel() {
 
 
