@@ -44,8 +44,10 @@ import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.components.OrderCard
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.OrderEvent
+import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.Order
+import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
@@ -53,13 +55,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen1(
-    viewModel: BarberDataViewModel= hiltViewModel(),
+    viewModel: BarberDataViewModel = hiltViewModel(),
+    orderViewModel: OrderViewModel = hiltViewModel(),
     navHostController: NavController,
     context: Context,
-    ) {
-    var barberUid by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
-    var selectedScreen by remember {mutableStateOf(NavigationItem.Home)}
+) {
+    var selectedScreen by remember { mutableStateOf(NavigationItem.Home) }
+
     Scaffold(
         bottomBar = {
             BottomAppNavigationBar(
@@ -70,7 +72,11 @@ fun MainScreen1(
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedScreen) {
-                NavigationItem.Home -> TopScreen(navHostController,context)
+                NavigationItem.Home -> if (orderViewModel.isLoading.value) {
+                    CircularProgressWithAppLogo()
+                } else {
+                    TopScreen(navHostController, context, orderViewModel)
+                }
                 NavigationItem.Book -> ScheduleScreen(navController = navHostController)
                 NavigationItem.Message -> MessageScreen(navHostController) // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
@@ -79,70 +85,27 @@ fun MainScreen1(
         }
     }
 }
+
 @Composable
-fun TopScreen(navController: NavController,context: Context){
+fun TopScreen(
+    navController: NavController,
+    context: Context,
+    orderViewModel: OrderViewModel = hiltViewModel()
+) {
     DoubleCard(
-        midCarBody = {  },
+        midCarBody = { },
         mainScreen = {
-            val pendingOrders = listOf(
-                Order(
-                    imageUrl = "https://example.com/image1.jpg",
-                    orderType = "Haircut",
-                    timeSlot = "10:00 - 10:30",
-                    phoneNumber = "123-456-7890",
-                    customerName = "John Doe"
-                ),
-                Order(
-                    imageUrl = "https://example.com/image2.jpg",
-                    orderType = "Beard Trim",
-                    timeSlot = "11:00 - 11:30",
-                    phoneNumber = "234-567-8901",
-                    customerName = "Jane Smith"
-                ),
-                Order(
-                    imageUrl = "https://example.com/image3.jpg",
-                    orderType = "Shampoo",
-                    timeSlot = "12:00 - 12:30",
-                    phoneNumber = "345-678-9012",
-                    customerName = "Mike Johnson"
-                )
-            )
-
-            val completedOrders = listOf(
-                Order(
-                    imageUrl = "https://example.com/image4.jpg",
-                    orderType = "Haircut",
-                    timeSlot = "09:00 - 09:30",
-                    phoneNumber = "456-789-0123",
-                    customerName = "Emily Davis"
-                ),
-                Order(
-                    imageUrl = "https://example.com/image5.jpg",
-                    orderType = "Beard Trim",
-                    timeSlot = "09:30 - 10:00",
-                    phoneNumber = "567-890-1234",
-                    customerName = "Chris Brown"
-                ),
-                Order(
-                    imageUrl = "https://example.com/image6.jpg",
-                    orderType = "Shampoo",
-                    timeSlot = "10:00 - 10:30",
-                    phoneNumber = "678-901-2345",
-                    customerName = "Patricia Taylor"
-                )
-            )
-
             HomeScreen(
                 activity = context as Activity,
                 navController = navController,
-                pendingOrders = pendingOrders,
-                completedOrders = completedOrders
+                pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
+                acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList()
             )
         }
     )
 }
 @Composable
-fun OrderList(orders: List<Order>, isCompleted: Boolean) {
+fun OrderList(orders: List<OrderModel>, isCompleted: Boolean) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -171,8 +134,8 @@ fun HomeScreen(
     activity: Activity,
     navController: NavController,
     viewModel: BarberDataViewModel = hiltViewModel(),
-    pendingOrders: List<Order>,
-    completedOrders: List<Order>
+    pendingOrders: MutableList<OrderModel>,
+    acceptedOrders: MutableList<OrderModel>
 ) {
     val context = LocalContext.current
     var isBarberShopOpen by remember { mutableStateOf(false) }
@@ -262,7 +225,7 @@ fun HomeScreen(
                 )) { page ->
                 when (page) {
                     0 -> OrderList(orders = pendingOrders, isCompleted = false)
-                    1 -> OrderList(orders = completedOrders, isCompleted = true)
+                    1 -> OrderList(orders = acceptedOrders, isCompleted = true)
                 }
             }
         }

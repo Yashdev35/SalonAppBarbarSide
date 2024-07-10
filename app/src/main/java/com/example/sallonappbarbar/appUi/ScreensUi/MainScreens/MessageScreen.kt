@@ -1,18 +1,15 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -98,17 +95,17 @@ fun MessageList(navHostController: NavController,viewModel: MessageViewModel = h
         mutableStateOf(true)
     }
     val user by remember {
-        mutableStateOf(viewModel.userChat.value)
+        mutableStateOf(viewModel.barberChat.value)
     }
 
     LaunchedEffect(refresh) {
-viewModel.onEvent(MessageEvent.GetChatUser)
+viewModel.onEvent(MessageEvent.GetChatBarber)
     }
-    if (viewModel.userChat.value.isNotEmpty()) {
+    if (viewModel.barberChat.value.isNotEmpty()) {
         Column(modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)) {
-            viewModel.userChat.value.forEach { chatModel ->
+            viewModel.barberChat.value.forEach { chatModel ->
                 MessageItemBox(
                     navHostController = navHostController,
                     message = chatModel.message,

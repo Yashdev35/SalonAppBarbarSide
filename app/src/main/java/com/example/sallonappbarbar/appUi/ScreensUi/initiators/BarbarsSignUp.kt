@@ -461,14 +461,14 @@ fun AdvancedSignUpScreen(
                         shopName.isNotBlank() && aboutUs.isNotBlank() && locationDetails.latitude != null && locationDetails.longitude != null && selectedImageUri != null
                     ) {
                         val barberModel = BarberModel(
-                            name = name,
-                            shopName = shopName,
+                            name = name.trim(),
+                            shopName = shopName.trim(),
                             phoneNumber = phone.toString(),
                             saloonType = mSelectedText,
                             imageUri = selectedImageUri.toString(),
                             shopStreetAddress = streetAddress,
-                            city = city,
-                            state = state,
+                            city = city.trim().replace(" ", "").replaceFirstChar { it.uppercase() },
+                            state = state.trim().replace(" ", "").replaceFirstChar { it.uppercase() },
                             aboutUs = aboutUs,
                             noOfReviews = "0",
                             open = false,

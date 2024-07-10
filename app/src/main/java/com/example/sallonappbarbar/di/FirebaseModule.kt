@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -35,12 +36,16 @@ object FirebaseModule {
 
     @Singleton
     @Provides
+    @Named("BarberData")
     fun providesBarbarData(): CollectionReference = Firebase.firestore.collection("barber")
 
     @Singleton
     @Provides
     fun storageRefrence():FirebaseStorage =FirebaseStorage.getInstance()
 
-
+    @Singleton
+    @Provides
+    @Named("UserData")
+    fun provideUserData(): CollectionReference = Firebase.firestore.collection("users")
 
 }

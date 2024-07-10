@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.ChatScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.MainScreen1
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.SlotAdderScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.AdvancedSignUpScreen
@@ -188,6 +189,18 @@ fun AppNavigation(
             composable(Screens.SlotAdderScr.route) {
                 SlotAdderScreen( navController = navController)
             }
+        composable(Screens.ChatScreen.route, enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }) {
+            val image =
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("image").toString()
+            val name =
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("name").toString()
+            val uid =
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("uid").toString()
+            ChatScreen(image, name,uid,navController)
+        }
         }
 }
 

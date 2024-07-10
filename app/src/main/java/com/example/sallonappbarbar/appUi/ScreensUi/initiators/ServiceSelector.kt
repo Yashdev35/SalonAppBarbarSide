@@ -27,7 +27,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -53,28 +52,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceModel
-import com.example.sallonappbarbar.data.model.aService
-import com.example.sallonappbarbar.data.model.ServiceType
-import com.example.sallonappbarbar.ui.theme.Purple40
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
-import com.practicecoding.sallonapp.appui.components.LoadingAnimation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -252,8 +244,8 @@ fun TimeAndPriceEditorDialog(
         confirmButton = {
             Button(onClick = {
                 if(servicePrice.isNotEmpty()) {
-                    service.price = servicePrice
-                    service.time = "$serviceTime "
+                    service.price = servicePrice.trim()
+                    service.time = serviceTime.trim()
                     servicePrice = ""
                     serviceTime = ""
                     showPriceAndTimeInputDialog.value = false
@@ -281,7 +273,7 @@ fun TimeAndPriceEditorDialog(
             Column {
                 OutlinedTextField(
                     value = servicePrice,
-                    onValueChange = { servicePrice = it },
+                    onValueChange = { servicePrice = it.trim() },
                     label = { Text("Service Price") },
                     singleLine = true,
                     modifier = Modifier
@@ -303,7 +295,7 @@ fun TimeAndPriceEditorDialog(
                 )
                 OutlinedTextField(
                     value = serviceTime,
-                    onValueChange = { serviceTime = it },
+                    onValueChange = { serviceTime = it.trim() },
                     label = { Text("Service Time") },
                     singleLine = true,
                     modifier = Modifier

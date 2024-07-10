@@ -12,8 +12,10 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.data.model.ChatModel
 import com.example.sallonappbarbar.data.model.Message
+import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceUploaded
 import com.example.sallonappbarbar.data.model.Slots
@@ -28,11 +30,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import javax.inject.Named
 
 
 class FirestoreDbRepositoryImpl @Inject constructor(
-    private val barberDb: CollectionReference,
+    @Named("UserData")
+    private val userDb: CollectionReference,
     private val storage: FirebaseStorage,
+    @Named("BarberData")
+    private val barberDb: CollectionReference,
     private val auth: FirebaseAuth,
     @ApplicationContext private val context: Context
 
@@ -271,33 +277,33 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
         awaitClose { }
     }
-    override suspend fun addChat(message: Message, barberUid: String) {
+    override suspend fun addChat(message: Message, useruid: String) {
         try {
-            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$barberUid")
+            Firebase.firestore.collection("Chats").document("$useruid+${auth.currentUser?.uid}")
                 .set(
                     mapOf(
-                        "barberuid" to barberUid,
-                        "useruid" to auth.currentUser?.uid.toString(),
+                        "barberuid" to auth.currentUser?.uid.toString(),
+                        "useruid" to useruid,
                         "lastmessage" to message
                     )
                 ).await()
-            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$barberUid")
+            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$useruid")
                 .collection("Messages").document(message.time).set(message).await()
         } catch (e: Exception) {
             Log.d("chat", "Error adding chat: ${e.message}")
         }
     }
 
-    override suspend fun getChatUser(): MutableList<ChatModel> {
+    override suspend fun getChatBarber(): MutableList<ChatModel> {
         return withContext(Dispatchers.IO) {
             val querySnapshot = Firebase.firestore.collection("Chats")
-                .whereEqualTo("useruid", auth.currentUser?.uid.toString()).get().await()
+                .whereEqualTo("barberuid", auth.currentUser?.uid.toString()).get().await()
             val chatList = querySnapshot.documents.map { documentSnapshot ->
-                val barberDocument =
-                    barberDb.document(documentSnapshot.getString("barberuid").toString()).get()
+                val userDocument =
+                    userDb.document(documentSnapshot.getString("useruid").toString()).get()
                         .await()
-                val name = barberDocument.getString("name").toString()
-                val image = barberDocument.getString("imageUri")
+                val name = userDocument.getString("name").toString()
+                val image = userDocument.getString("imageUri")
                     .toString() // Assuming "image" field contains the URL of the image
                 val message = documentSnapshot.get("lastmessage") as Map<*, *>
                 val lastMessage = Message(
@@ -309,7 +315,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     name = name,
                     image = image, // Add the image URL to ChatModel
                     message = lastMessage,
-                    uid=documentSnapshot.getString("barberuid").toString()
+                    uid=documentSnapshot.getString("useruid").toString()
                 )
             }.toMutableList()
             Log.d("userchat", "$chatList")
@@ -317,9 +323,9 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun messageList(barberUid: String): Flow<List<Message>> = callbackFlow {
+    override suspend fun messageList(userUid: String): Flow<List<Message>> = callbackFlow {
         val messageRef = Firebase.firestore.collection("Chats")
-            .document("${auth.currentUser?.uid}+$barberUid")
+            .document("$userUid+${auth.currentUser?.uid}")
             .collection("Messages")
 
         val subscription = messageRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
@@ -338,7 +344,63 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
             trySend(messageList)
         }
-
         awaitClose { subscription.remove() }
+    }
+    override suspend fun getOrders(onOrderUpdate: (List<OrderModel>) -> Unit) {
+        Firebase.firestore.collection("booking")
+            .whereEqualTo("barberuid", auth.currentUser?.uid.toString())
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.w("FireStoreDbRepository", "listen:error", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshots != null) {
+                    val orders = mutableListOf<OrderModel>()
+                    val scope = CoroutineScope(Dispatchers.IO)
+
+                    scope.launch {
+                        for (documentSnapshot in snapshots.documents) {
+                            val serviceNames = mutableListOf<String>()
+                            val serviceTypes = mutableListOf<String>()
+                            val timesList = mutableListOf<String>()
+                            val userDocument = userDb
+                                .document(documentSnapshot.getString("useruid").toString()).get().await()
+                            val name = userDocument.getString("name").toString()
+                            val image = userDocument.getString("imageUri").toString()
+                            val phoneNo = userDocument.getString("phoneNumber").toString()
+                            val services = documentSnapshot.get("service") as? List<Map<*, *>> ?: emptyList()
+                            for (service in services) {
+                                serviceNames.add(service["serviceName"].toString())
+                                serviceTypes.add(service["type"].toString())
+                            }
+                            val times = documentSnapshot.get("times") as? List<Map<String, Any>> ?: emptyList()
+                            for (time in times) {
+                                timesList.add(time["time"].toString())
+                            }
+                            val paymentMethod = documentSnapshot.get("payment").toString() ?: "Cash"
+                            val orderStatus = when (documentSnapshot.getString("status").toString().lowercase()) {
+                                "declined" -> OrderStatus.DECLINED
+                                "completed" -> OrderStatus.COMPLETED
+                                "accepted" -> OrderStatus.ACCEPTED
+                                else -> OrderStatus.PENDING
+                            }
+                            val orderModel = OrderModel(
+                                imageUrl = image,
+                                orderType = serviceNames,
+                                timeSlot = timesList,
+                                phoneNumber = phoneNo,
+                                customerName = name,
+                                paymentMethod = paymentMethod,
+                                orderStatus = orderStatus
+                            )
+                            orders.add(orderModel)
+                        }
+                        withContext(Dispatchers.Main) {
+                            onOrderUpdate(orders)
+                        }
+                    }
+                }
+            }
     }
 }

@@ -1,17 +1,13 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.model.ChatModel
 import com.example.sallonappbarbar.data.model.Message
@@ -21,14 +17,14 @@ import javax.inject.Inject
 class MessageViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
 ): ViewModel() {
- var userChat = mutableStateOf<List<ChatModel>>(emptyList())
+ var barberChat = mutableStateOf<List<ChatModel>>(emptyList())
     var _messageList = mutableStateListOf<Message>()
     var messageList: SnapshotStateList<Message> = _messageList
 
     suspend fun onEvent(event: MessageEvent) {
         when(event){
             is MessageEvent.AddChat -> addChat(event.message,event.barberuid)
-            is MessageEvent.GetChatUser -> getChatUser()
+            is MessageEvent.GetChatBarber -> getChatBarber()
             is MessageEvent.MessageList -> getmessageList(event.barberuid)
         }
     }
@@ -38,11 +34,11 @@ class MessageViewModel @Inject constructor(
             repo.addChat(message,barberuid)
         }
     }
-    private suspend fun getChatUser(){
+    private suspend fun getChatBarber(){
         viewModelScope.launch {
-          userChat.value=  repo.getChatUser()
+          barberChat.value=  repo.getChatBarber()
         }
-        Log.d("uses",userChat.toString())
+        Log.d("uses",barberChat.toString())
     }
     private suspend fun getmessageList(barberuid:String){
         viewModelScope.launch {
@@ -57,6 +53,6 @@ class MessageViewModel @Inject constructor(
 
 sealed class MessageEvent {
     data class AddChat(val message: Message,val barberuid:String):MessageEvent()
-    data object GetChatUser:MessageEvent()
+    data object GetChatBarber:MessageEvent()
     data class MessageList(val barberuid:String):MessageEvent()
 }

@@ -57,14 +57,13 @@ fun ChatScreen(
 ) {
     BackHandler {
         navController.currentBackStackEntry?.savedStateHandle?.set("navigationTo", NavigationItem.Message)
-        navController.navigate(Screens.MainScreen.route){
+        navController.navigate(Screens.Home.route){
             popUpTo(Screens.ChatScreen.route) {
                 inclusive = true
             }        }
     }
     LaunchedEffect(Unit) {
         viewModel.onEvent(MessageEvent.MessageList(uid))
-
     }
     Box(
         modifier = Modifier

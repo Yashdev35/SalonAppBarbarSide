@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,10 +45,11 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 @Composable
 fun OrderCard(
     imageUrl: String,
-    orderType: String,
-    timeSlot: String,
+    orderType: List<String>,
+    timeSlot: List<String>,
     phoneNumber: String,
     customerName: String,
+    paymentMethod: String = "Cash",
     onAccept: () -> Unit,
     onDecline: () -> Unit,
     accepted: Boolean = false
@@ -92,7 +94,7 @@ fun OrderCard(
                             .padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(0.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -118,14 +120,22 @@ fun OrderCard(
                             }
                         }
                         Text(
-                            text = "Order: $orderType",
+                            text = "Order: ${orderType.joinToString()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = Color.Black,
+                            fontFamily = FontFamily.Serif
                         )
                         Text(
-                            text = "Time Slot: $timeSlot",
+                            text = "Time Slot: ${timeSlot.joinToString()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = Color.Black,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Text(
+                            text = "Payment Method: $paymentMethod",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black,
+                            fontFamily = FontFamily.Serif
                         )
                     }
                 }
@@ -175,7 +185,7 @@ fun OrderCard(
                     ) {
                     Text("Customer Phone Number: $phoneNumber")
                         Text(text ="Customer Name: $customerName")
-                        Text(text = "Order Type: $orderType")
+                        Text(text = "Order Type: ${orderType.joinToString()}")
                 }
                 }
         }
@@ -188,8 +198,8 @@ fun OrderCard(
 fun OrderCardPreview() {
     OrderCard(
         imageUrl = "https://images.unsplash.com/photo-1622838320000-4b3b3b3b3b3b",
-        orderType = "Haircut",
-        timeSlot = "10:00 AM - 11:00 AM",
+        orderType = listOf("Haircut","nail service"),
+        timeSlot = listOf("10:00 AM, 11:00 AM"),
         phoneNumber = "9373182023",
         customerName = "John Doe",
         onAccept = {},

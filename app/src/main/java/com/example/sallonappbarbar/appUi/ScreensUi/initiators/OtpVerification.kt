@@ -50,8 +50,6 @@ import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.AuthViewModel
 import com.example.sallonappbarbar.data.Resource
-import com.example.sallonappbarbar.ui.theme.Purple80
-import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
