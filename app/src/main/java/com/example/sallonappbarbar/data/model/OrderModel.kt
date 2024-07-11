@@ -8,6 +8,8 @@ data class OrderModel(
     val timeSlot: List<String>,
     val phoneNumber: String,
     val customerName: String,
-    val paymentMethod: String = "Cash",
-    val orderStatus: OrderStatus = OrderStatus.PENDING,
+    val paymentMethod: String? = "Cash",
+    var orderStatus: OrderStatus = OrderStatus.PENDING,
+    val orderId: String = "",
+    val date: String = "",
 )

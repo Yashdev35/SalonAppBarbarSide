@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sallonappbarbar.data.FireStoreDbRepository
+import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.Slots
@@ -18,32 +19,43 @@ import javax.inject.Inject
 @HiltViewModel
 class GetBarberDataViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
-) : ViewModel(){
+) : ViewModel() {
 
     private var _slots = mutableStateOf(Slots("08:00", "22:00"))
     var slots: State<Slots> = _slots
 
-    private var barber = mutableStateOf(BarberModel())
-    var _barber: State<BarberModel> = barber
+    private var _barber = mutableStateOf(BarberModel())
+    var barber: State<BarberModel> = _barber
 
-    suspend fun getBarber(uid:String) {
-        viewModelScope.launch { repo.getBarber(uid) }}
-
-    suspend fun onEvent(event: MainEvent2) {
-        when (event) {
-            is MainEvent2.getBarberNearby -> {}
-            is MainEvent2.getBarberPopular -> {}
-            is MainEvent2.getServices -> {}
-//            is MainEvent2.getSlots -> getSlots(event.day, event.uid)
-            is MainEvent2.setBooking -> {}
-
-            else -> {}
-        }
+    suspend fun getBarberWUid(uid: String) {
+        viewModelScope.launch { repo.getBarber(uid) }
     }
 
-//    suspend fun getSlots(day: String, uid: String) {
-//        viewModelScope.launch { _slots.value = repo.getTimeSlot(day, uid) }
-//    }
+    suspend fun getCurrentBarber() {
+        viewModelScope.launch {
+            repo.getBarberData().collect {
+                when (it) {
+                    is Resource.Success -> {
+                        _barber.value = it.result
+                    }
+                    is Resource.Failure -> {
+                        _barber.value = BarberModel()
+                    }
+                    else -> {}
+                }
+            }
+        }
+        suspend fun onEvent(event: MainEvent2) {
+            when (event) {
+                is MainEvent2.getBarberNearby -> {}
+                is MainEvent2.getBarberPopular -> {}
+                is MainEvent2.getServices -> {}
+//            is MainEvent2.getSlots -> getSlots(event.day, event.uid)
+                is MainEvent2.setBooking -> {}
+                else -> {}
+            }
+        }
+    }
 }
 sealed class MainEvent2 {
     data class getBarberPopular(val city: String, val limit: Long) : MainEvent2()

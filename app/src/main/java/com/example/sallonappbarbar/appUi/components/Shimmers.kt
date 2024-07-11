@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -427,74 +429,30 @@ fun ShimmerEffectBarber() {
             .fillMaxSize(),
         color = purple_400
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .height(250.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 15.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .shimmerEffect()
-            ) {
-
-            }
-            Card(
+        DoubleCard(
+            mainScreen = {
+                LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp)),
-                colors = CardColors(Color.White, Color.White, Color.White, Color.White)
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                items(5){
                     Box(
                         modifier = Modifier
-                            .size(width = 200.dp, height = 45.dp)
-                            .padding(start = 15.dp,end=20.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .shimmerEffect()
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(width = 100.dp, height = 45.dp)
-                            .padding(end=15.dp)
-                            .clip(RoundedCornerShape(20.dp))
+                            .height(250.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 15.dp, vertical = 15.dp)
+                            .clip(RoundedCornerShape(16))
                             .shimmerEffect()
                     )
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(width = 150.dp, height = 30.dp)
-                        .padding(start = 15.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .shimmerEffect()
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(width = 100.dp, height = 25.dp)
-                        .padding(start = 15.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .shimmerEffect()
-                )
-                Spacer(modifier = Modifier.height(30.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(width = 300.dp, height = 45.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .clip(RoundedCornerShape(8.dp))
-                        .shimmerEffect()
-                )
+            }},
+            midCarBody = {
+                ShimmerEffectBarberSmall()
+            },
+            topAppBar = {
+                ShimmerEffectProfile()
             }
-
-        }
+            )
     }
 }
 
@@ -519,4 +477,10 @@ fun Modifier.shimmerEffect(): Modifier = composed {
         )
     )
         .onGloballyPositioned { size = it.size }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ShimmerEffectBarberPreview() {
+    ShimmerEffectBarber()
 }

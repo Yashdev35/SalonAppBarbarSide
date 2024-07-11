@@ -354,13 +354,12 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     Log.w("FireStoreDbRepository", "listen:error", e)
                     return@addSnapshotListener
                 }
-
                 if (snapshots != null) {
                     val orders = mutableListOf<OrderModel>()
                     val scope = CoroutineScope(Dispatchers.IO)
-
                     scope.launch {
                         for (documentSnapshot in snapshots.documents) {
+                            val orderId = documentSnapshot.id
                             val serviceNames = mutableListOf<String>()
                             val serviceTypes = mutableListOf<String>()
                             val timesList = mutableListOf<String>()
@@ -378,7 +377,12 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                             for (time in times) {
                                 timesList.add(time["time"].toString())
                             }
-                            val paymentMethod = documentSnapshot.get("payment").toString() ?: "Cash"
+                            val orderDate = documentSnapshot.getString("date").toString()
+                            val paymentMethod = if (documentSnapshot.contains("paymentMethod")) {
+                                documentSnapshot.getString("paymentMethod").toString()
+                            } else {
+                                "Cash"
+                            }
                             val orderStatus = when (documentSnapshot.getString("status").toString().lowercase()) {
                                 "declined" -> OrderStatus.DECLINED
                                 "completed" -> OrderStatus.COMPLETED
@@ -392,7 +396,9 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                                 phoneNumber = phoneNo,
                                 customerName = name,
                                 paymentMethod = paymentMethod,
-                                orderStatus = orderStatus
+                                orderStatus = orderStatus,
+                                orderId = orderId,
+                                date = orderDate
                             )
                             orders.add(orderModel)
                         }
@@ -403,4 +409,23 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 }
             }
     }
+
+    override suspend fun updateOrderStatus(orderId: String, status: String):Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+        try {
+            Firebase.firestore.collection("booking").document(orderId)
+                .update("status", status)
+                .addOnSuccessListener {
+                    trySend(Resource.Success("Order status updated successfully"))
+                }.addOnFailureListener {
+                    trySend(Resource.Failure(it))
+                }
+        } catch (e: Exception) {
+            trySend(Resource.Failure(e))
+        }
+        awaitClose {
+            close()
+        }
+    }
+
 }

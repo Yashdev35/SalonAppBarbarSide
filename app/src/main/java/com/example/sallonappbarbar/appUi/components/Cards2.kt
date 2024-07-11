@@ -2,12 +2,15 @@ package com.example.sallonappbarbar.appUi.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,18 +28,21 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberImagePainter
+import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.vanpra.composematerialdialogs.MaterialDialog
@@ -94,7 +100,9 @@ fun OrderCard(
                             .padding(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(0.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -193,16 +201,51 @@ fun OrderCard(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun OrderCardPreview() {
-    OrderCard(
-        imageUrl = "https://images.unsplash.com/photo-1622838320000-4b3b3b3b3b3b",
-        orderType = listOf("Haircut","nail service"),
-        timeSlot = listOf("10:00 AM, 11:00 AM"),
-        phoneNumber = "9373182023",
-        customerName = "John Doe",
-        onAccept = {},
-        onDecline = {}
-    )
+fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
+    Card(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .height(100.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardColors(
+            contentColor = Color.Black,
+            containerColor = Color.White,
+            disabledContentColor = Color.Black,
+            disabledContainerColor = Color.White
+        ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.salon_app_logo), // replace with your logo resource
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Row {
+                Text(
+                    text = "Today's Pending Orders: ",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                )
+                Text(
+                    text = pendingOrderToday.value.toString(),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+    }
 }

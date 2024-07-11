@@ -43,8 +43,13 @@ import com.example.sallonappbarbar.appUi.components.BottomAppNavigationBar
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.components.OrderCard
+import com.example.sallonappbarbar.appUi.components.PendingNoCard
+import com.example.sallonappbarbar.appUi.components.ProfileWithNotification
+import com.example.sallonappbarbar.appUi.components.ShimmerEffectBarber
+import com.example.sallonappbarbar.appUi.components.ShimmerEffectMainScreen
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.OrderEvent
+import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
@@ -73,7 +78,7 @@ fun MainScreen1(
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedScreen) {
                 NavigationItem.Home -> if (orderViewModel.isLoading.value) {
-                    CircularProgressWithAppLogo()
+                    ShimmerEffectBarber()
                 } else {
                     TopScreen(navHostController, context, orderViewModel)
                 }
@@ -90,10 +95,12 @@ fun MainScreen1(
 fun TopScreen(
     navController: NavController,
     context: Context,
-    orderViewModel: OrderViewModel = hiltViewModel()
+    orderViewModel: OrderViewModel = hiltViewModel(),
 ) {
     DoubleCard(
-        midCarBody = { },
+        midCarBody = {
+            PendingNoCard(pendingOrderToday =orderViewModel.todayOrderNo)
+        },
         mainScreen = {
             HomeScreen(
                 activity = context as Activity,
@@ -101,11 +108,18 @@ fun TopScreen(
                 pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
                 acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList()
             )
+        },
+        topAppBar = {
+            ProfileWithNotification(
+                onProfileClick = { /*TODO*/ },
+                onNotificationClick = { /*TODO*/ })
         }
     )
 }
 @Composable
-fun OrderList(orders: List<OrderModel>, isCompleted: Boolean) {
+fun OrderList(orders: List<OrderModel>, isCompleted: Boolean,
+              orderViewModel: OrderViewModel = hiltViewModel()) {
+    val scope = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -119,8 +133,16 @@ fun OrderList(orders: List<OrderModel>, isCompleted: Boolean) {
                 timeSlot = order.timeSlot,
                 phoneNumber = order.phoneNumber,
                 customerName = order.customerName,
-                onAccept = { /* Handle Accept */ },
-                onDecline = { /* Handle Decline */ },
+                onAccept = {
+                    order.orderStatus = OrderStatus.ACCEPTED
+                    scope.launch{
+                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.ACCEPTED.status)
+                    } },
+                onDecline = {
+                    order.orderStatus = OrderStatus.DECLINED
+                    scope.launch{
+                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.DECLINED.status)
+                    } },
                 accepted = isCompleted
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -218,7 +240,7 @@ fun HomeScreen(
             }
 
             HorizontalPager(state = pagerState, modifier = Modifier
-                .height((screenHeight / 6).dp)
+                .height((screenHeight).dp)
                 .background(Color.White)
                 .border(
                     border = BorderStroke(2.dp, Color(sallonColor.toArgb())),
