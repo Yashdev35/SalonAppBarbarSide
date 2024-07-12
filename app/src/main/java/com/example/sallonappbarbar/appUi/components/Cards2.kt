@@ -34,13 +34,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.Purple80
@@ -58,6 +61,7 @@ fun OrderCard(
     paymentMethod: String = "Cash",
     onAccept: () -> Unit,
     onDecline: () -> Unit,
+    onComplete: () -> Unit,
     accepted: Boolean = false
 ) {
     val showInfoDialog = rememberMaterialDialogState()
@@ -93,7 +97,8 @@ fun OrderCard(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
-                            .border(2.dp, Color.Gray, CircleShape)
+                            .border(2.dp, Color.Gray, CircleShape),
+                        contentScale = ContentScale.FillBounds
                     )
                     Column(
                         modifier = Modifier
@@ -173,12 +178,15 @@ fun OrderCard(
                         }
                     }
                 }else {
-                    Text(
-                        text = "Accepted",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Green,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Button(
+                        onClick = onComplete,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(Purple80.toArgb())
+                        ),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text("Completed", color = Color.Black)
+                    }
                 }
                 MaterialDialog(
                     dialogState = showInfoDialog,
@@ -205,9 +213,9 @@ fun OrderCard(
 fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
     Card(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .height(100.dp),
+            .height(80.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardColors(
             contentColor = Color.Black,
@@ -229,21 +237,23 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
                 contentDescription = "Logo",
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(CircleShape)
                     .background(Color.White)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Row {
                 Text(
                     text = "Today's Pending Orders: ",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                    fontSize = 16.sp
                 )
                 Text(
                     text = pendingOrderToday.value.toString(),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
-                    )
+                    ),                    fontSize = 20.sp
+
                 )
             }
         }

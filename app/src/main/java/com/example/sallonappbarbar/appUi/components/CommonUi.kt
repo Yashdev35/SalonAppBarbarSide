@@ -32,6 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,11 +63,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
@@ -113,6 +117,62 @@ fun CommonDialog() {
         }
     }
 
+}
+@Composable
+fun SuccessfullDialog() {
+    val showDialog= remember { mutableStateOf(true) }
+
+    Dialog(
+        onDismissRequest = {showDialog.value=false },
+        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+    ) {
+        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.success))
+        var isPlaying by remember { mutableStateOf(true) }
+        val progress by animateLottieCompositionAsState(
+            composition = composition,
+            isPlaying = isPlaying,
+            restartOnPlay = true,
+            iterations = 1,  // Play once
+            speed = 1.0f
+        )
+        Surface(
+            modifier = Modifier
+                .clip(RoundedCornerShape(15.dp))
+                .size(300.dp, 300.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = "Slots update Successfully!", color = sallonColor, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top=8.dp))
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier
+                        .size(width = 300.dp, height = 130.dp)
+                    ,
+                    alignment = Alignment.Center
+                )
+
+                    Button(
+                        onClick = {showDialog.value=false},
+                        modifier = Modifier
+                            .background(Color.White)
+                            .border(1.dp, sallonColor, RoundedCornerShape(8.dp))
+
+                        ,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                    ) {
+                        Text(text = "OK", color = sallonColor, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                    }
+
+            }
+        }
+    }
 }
 
 @Composable

@@ -279,7 +279,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     }
     override suspend fun addChat(message: Message, useruid: String) {
         try {
-            Firebase.firestore.collection("Chats").document("$useruid+${auth.currentUser?.uid}")
+            Firebase.firestore.collection("Chats").document("$useruid${auth.currentUser?.uid}")
                 .set(
                     mapOf(
                         "barberuid" to auth.currentUser?.uid.toString(),
@@ -287,7 +287,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                         "lastmessage" to message
                     )
                 ).await()
-            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}+$useruid")
+            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}$useruid")
                 .collection("Messages").document(message.time).set(message).await()
         } catch (e: Exception) {
             Log.d("chat", "Error adding chat: ${e.message}")
@@ -305,6 +305,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 val name = userDocument.getString("name").toString()
                 val image = userDocument.getString("imageUri")
                     .toString() // Assuming "image" field contains the URL of the image
+                val phoneNumber = userDocument.getString("phoneNumber").toString()
                 val message = documentSnapshot.get("lastmessage") as Map<*, *>
                 val lastMessage = Message(
                     message = message["message"].toString(),
@@ -315,7 +316,8 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     name = name,
                     image = image, // Add the image URL to ChatModel
                     message = lastMessage,
-                    uid=documentSnapshot.getString("useruid").toString()
+                    uid=documentSnapshot.getString("useruid").toString(),
+                    phoneNumber = phoneNumber
                 )
             }.toMutableList()
             Log.d("userchat", "$chatList")
@@ -325,7 +327,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
     override suspend fun messageList(userUid: String): Flow<List<Message>> = callbackFlow {
         val messageRef = Firebase.firestore.collection("Chats")
-            .document("$userUid+${auth.currentUser?.uid}")
+            .document("$userUid${auth.currentUser?.uid}")
             .collection("Messages")
 
         val subscription = messageRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->

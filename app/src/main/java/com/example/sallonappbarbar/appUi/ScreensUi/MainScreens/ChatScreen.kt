@@ -1,8 +1,12 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +58,7 @@ fun ChatScreen(
     name: String,
     uid: String,
     navController: NavController,
+    phoneNumber: String,
     viewModel: MessageViewModel = hiltViewModel()
 ) {
     BackHandler {
@@ -75,7 +81,7 @@ fun ChatScreen(
                 .fillMaxSize()
                 .background(purple_200)
         ) {
-            TopBar(image, name)
+            TopBar(image, name,phoneNumber)
             ChatMessages(modifier = Modifier.weight(1f), viewModel)
 
         }
@@ -84,7 +90,8 @@ fun ChatScreen(
 }
 
 @Composable
-fun TopBar(image: String, name: String) {
+fun TopBar(image: String, name: String,phoneNumber: String) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +127,26 @@ fun TopBar(image: String, name: String) {
         Icon(
             imageVector = Icons.Default.Call,
             contentDescription = "Call",
-            tint = sallonColor
+            tint = sallonColor,
+            modifier = Modifier.clickable {
+                val u = Uri.parse("tel:$phoneNumber")
+
+                // Create the intent and set the data for the
+                // intent as the phone number.
+                val i = Intent(Intent.ACTION_DIAL, u)
+                try {
+
+                    // Launch the Phone app's dialer with a phone
+                    // number to dial a call.
+                    context.startActivity(i)
+                } catch (s: SecurityException) {
+
+                    // show() method display the toast with
+                    // exception message.
+                    Toast.makeText(context, "An error occurred", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
         )
     }
 }
