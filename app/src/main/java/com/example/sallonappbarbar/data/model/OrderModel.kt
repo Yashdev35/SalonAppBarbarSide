@@ -10,6 +10,7 @@ data class OrderModel(
     val customerName: String,
     val paymentMethod: String? = "Cash",
     var orderStatus: OrderStatus = OrderStatus.PENDING,
+    var isCancelRequested: Boolean = false,
     val orderId: String = "",
     val date: String = "",
 )

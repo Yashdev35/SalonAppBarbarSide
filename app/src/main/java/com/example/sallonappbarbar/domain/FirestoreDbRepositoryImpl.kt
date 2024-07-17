@@ -35,7 +35,7 @@ import javax.inject.Named
 
 class FirestoreDbRepositoryImpl @Inject constructor(
     @Named("UserData")
-    private val userDb: CollectionReference,
+    private val usersDb: CollectionReference,
     private val storage: FirebaseStorage,
     @Named("BarberData")
     private val barberDb: CollectionReference,
@@ -300,7 +300,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 .whereEqualTo("barberuid", auth.currentUser?.uid.toString()).get().await()
             val chatList = querySnapshot.documents.map { documentSnapshot ->
                 val userDocument =
-                    userDb.document(documentSnapshot.getString("useruid").toString()).get()
+                    usersDb.document(documentSnapshot.getString("useruid").toString()).get()
                         .await()
                 val name = userDocument.getString("name").toString()
                 val image = userDocument.getString("imageUri")
@@ -363,7 +363,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                             val serviceNames = mutableListOf<String>()
                             val serviceTypes = mutableListOf<String>()
                             val timesList = mutableListOf<String>()
-                            val userDocument = userDb
+                            val userDocument = usersDb
                                 .document(documentSnapshot.getString("useruid").toString()).get().await()
                             val name = userDocument.getString("name").toString()
                             val image = userDocument.getString("imageUri").toString()

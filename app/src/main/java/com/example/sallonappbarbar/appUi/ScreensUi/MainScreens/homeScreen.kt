@@ -163,11 +163,6 @@ fun HomeScreen(
     var isBarberShopOpen by remember { mutableStateOf(false) }
     var isOpenOrClose by remember { mutableStateOf("Open") }
     var isLoading by remember { mutableStateOf(false) }
-    var slots: SnapshotStateList<TimeSlot> by mutableStateOf(
-        mutableStateListOf(
-            TimeSlot("9:00", "10:00",SlotStatus.AVAILABLE)
-        )
-    )
     val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
     if (isLoading) {
         CircularProgressWithAppLogo()
@@ -191,7 +186,6 @@ fun HomeScreen(
                     }
                     is Resource.Failure -> {
                         isLoading = false
-                        // Handle data fetching error here (e.g., show a toast)
                         Toast.makeText(activity, "Error fetching data: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
                     }
                     is Resource.Loading -> {
