@@ -4,6 +4,8 @@ package com.example.sallonappbarbar.data
 import android.net.Uri
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ChatModel
+import com.example.sallonappbarbar.data.model.LastChatModel
+import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ServiceCat
@@ -30,8 +32,8 @@ interface FireStoreDbRepository {
     suspend fun updateBookedSlots(times:List<String>, day:String):Flow<Resource<String>>
     suspend fun updateNotAvailableSlots(times:List<String>, day:String):Flow<Resource<String>>
 
-    suspend fun addChat(message: Message, barberUid: String)
-    suspend fun getChatBarber():MutableList<ChatModel>
+    suspend fun addChat(message: LastMessage, barberUid: String,status:Boolean)
+    suspend fun getChatBarber():Flow<MutableList<LastChatModel>>
     suspend fun messageList(barberUid: String):Flow<List<Message>>
     suspend fun getOrders(onOrderUpdate: (List<OrderModel>) -> Unit)
     suspend fun updateOrderStatus(orderId: String, status: String): Flow<Resource<String>>

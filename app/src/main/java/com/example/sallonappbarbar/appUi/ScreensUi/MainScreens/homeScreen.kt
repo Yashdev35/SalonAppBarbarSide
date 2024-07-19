@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -25,20 +27,24 @@ import androidx.compose.material3.TabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.components.BottomAppNavigationBar
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
@@ -46,32 +52,37 @@ import com.example.sallonappbarbar.appUi.components.OrderCard
 import com.example.sallonappbarbar.appUi.components.PendingNoCard
 import com.example.sallonappbarbar.appUi.components.ProfileWithNotification
 import com.example.sallonappbarbar.appUi.components.ShimmerEffectBarber
-import com.example.sallonappbarbar.appUi.components.ShimmerEffectMainScreen
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
-import com.example.sallonappbarbar.appUi.viewModel.OrderEvent
+import com.example.sallonappbarbar.appUi.viewModel.MessageViewModel
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.sallonColor
+import com.google.firestore.v1.StructuredAggregationQuery.Aggregation.Count
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen1(
-    viewModel: BarberDataViewModel = hiltViewModel(),
     orderViewModel: OrderViewModel = hiltViewModel(),
+    chatViewModel: MessageViewModel = hiltViewModel(),
     navHostController: NavController,
     context: Context,
 ) {
     var selectedScreen by remember { mutableStateOf(NavigationItem.Home) }
+    var count by remember {
+        mutableIntStateOf(0)
+    }
 
     Scaffold(
         bottomBar = {
             BottomAppNavigationBar(
                 selectedItem = selectedScreen,
-                onItemSelected = { selectedScreen = it }
+                onItemSelected = { selectedScreen = it },
             )
         }
     ) { paddingValues ->
@@ -80,10 +91,26 @@ fun MainScreen1(
                 NavigationItem.Home -> if (orderViewModel.isLoading.value) {
                     ShimmerEffectBarber()
                 } else {
-                    TopScreen(navHostController, context, orderViewModel)
+                    TopScreen(navHostController, context, orderViewModel,chatViewModel._count.value)
+                    LaunchedEffect(chatViewModel.barberChat.value.size) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            if (chatViewModel.barberChat.value.isNotEmpty()) {
+                                count = 0
+                                for (i in chatViewModel.barberChat.value) {
+                                    if (!i.message.seenbybarber) {
+                                        count++
+                                    }
+                                    if (count > 1) {
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+
                 NavigationItem.Book -> ScheduleScreen(navController = navHostController)
-                NavigationItem.Message -> MessageScreen(navHostController) // Placeholder for MessageScreen
+                NavigationItem.Message -> MessageScreen(navHostController,chatViewModel) // Placeholder for MessageScreen
                 NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
                 NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
             }
@@ -95,18 +122,21 @@ fun MainScreen1(
 fun TopScreen(
     navController: NavController,
     context: Context,
-    orderViewModel: OrderViewModel = hiltViewModel(),
+    orderViewModel: OrderViewModel,
+    count: Int
+
 ) {
     DoubleCard(
         midCarBody = {
-            PendingNoCard(pendingOrderToday =orderViewModel.todayOrderNo)
+            PendingNoCard(pendingOrderToday = orderViewModel.todayOrderNo)
         },
         mainScreen = {
             HomeScreen(
                 activity = context as Activity,
                 navController = navController,
                 pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
-                acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList()
+                acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList(),
+                count = count
             )
         },
         topAppBar = {
@@ -116,9 +146,12 @@ fun TopScreen(
         }
     )
 }
+
 @Composable
-fun OrderList(orders: List<OrderModel>, isCompleted: Boolean,
-              orderViewModel: OrderViewModel = hiltViewModel()) {
+fun OrderList(
+    orders: List<OrderModel>, isCompleted: Boolean,
+    orderViewModel: OrderViewModel = hiltViewModel()
+) {
     val scope = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier
@@ -135,18 +168,23 @@ fun OrderList(orders: List<OrderModel>, isCompleted: Boolean,
                 customerName = order.customerName,
                 onAccept = {
                     order.orderStatus = OrderStatus.ACCEPTED
-                    scope.launch{
+                    scope.launch {
                         orderViewModel.updateOrderStatus(order.orderId, OrderStatus.ACCEPTED.status)
-                    } },
+                    }
+                },
                 onDecline = {
                     order.orderStatus = OrderStatus.DECLINED
-                    scope.launch{
+                    scope.launch {
                         orderViewModel.updateOrderStatus(order.orderId, OrderStatus.DECLINED.status)
-                    } },
+                    }
+                },
                 accepted = isCompleted,
                 onComplete = {
-                    scope.launch{
-                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.COMPLETED.status)
+                    scope.launch {
+                        orderViewModel.updateOrderStatus(
+                            order.orderId,
+                            OrderStatus.COMPLETED.status
+                        )
                     }
                 }
             )
@@ -162,7 +200,8 @@ fun HomeScreen(
     navController: NavController,
     viewModel: BarberDataViewModel = hiltViewModel(),
     pendingOrders: MutableList<OrderModel>,
-    acceptedOrders: MutableList<OrderModel>
+    acceptedOrders: MutableList<OrderModel>,
+    count: Int
 ) {
     val context = LocalContext.current
     var isBarberShopOpen by remember { mutableStateOf(false) }
@@ -170,7 +209,7 @@ fun HomeScreen(
     var isLoading by remember { mutableStateOf(false) }
     var slots: SnapshotStateList<TimeSlot> by mutableStateOf(
         mutableStateListOf(
-            TimeSlot("9:00", "10:00",SlotStatus.AVAILABLE)
+            TimeSlot("9:00", "10:00", SlotStatus.AVAILABLE)
         )
     )
     val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
@@ -193,11 +232,17 @@ fun HomeScreen(
                         isBarberShopOpen = barberData.open!!
                         isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"
                     }
+
                     is Resource.Failure -> {
                         isLoading = false
                         // Handle data fetching error here (e.g., show a toast)
-                        Toast.makeText(activity, "Error fetching data: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            activity,
+                            "Error fetching data: ${resource.exception.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
+
                     is Resource.Loading -> {
                         isLoading = true
                     }
@@ -216,14 +261,16 @@ fun HomeScreen(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            TabRow(selectedTabIndex = pagerState.currentPage,
-                 containerColor = Color(sallonColor.toArgb()),
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color(sallonColor.toArgb()),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(topStart = 20.dp,topEnd = 20.dp))
-                ) {
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            ) {
                 Tab(
-                    text = { Text("Pending Orders",color = Color.White)
-                           },
+                    text = {
+                        Text("Pending Orders", color = Color.White)
+                    },
                     selected = pagerState.currentPage == 0,
                     onClick = {
                         coroutineScope.launch {
@@ -243,17 +290,28 @@ fun HomeScreen(
                 )
             }
 
-            HorizontalPager(state = pagerState, modifier = Modifier
-                .height((screenHeight).dp)
-                .background(Color.White)
-                .border(
-                    border = BorderStroke(2.dp, Color(sallonColor.toArgb())),
-                )) { page ->
+            HorizontalPager(
+                state = pagerState, modifier = Modifier
+                    .height((screenHeight).dp)
+                    .background(Color.White)
+                    .border(
+                        border = BorderStroke(2.dp, Color(sallonColor.toArgb())),
+                    )
+            ) { page ->
                 when (page) {
                     0 -> OrderList(orders = pendingOrders, isCompleted = false)
                     1 -> OrderList(orders = acceptedOrders, isCompleted = true)
                 }
             }
+        }
+        if (count>0) {
+            Icon(
+                painter = painterResource(id = R.drawable.down),
+                contentDescription = "new message",
+                modifier = Modifier.align(
+                    Alignment.BottomCenter
+                ).size(48.dp)
+            )
         }
     }
 }

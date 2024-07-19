@@ -14,6 +14,8 @@ import android.net.Uri
 import android.util.Log
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.data.model.ChatModel
+import com.example.sallonappbarbar.data.model.LastChatModel
+import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ServiceCat
@@ -27,6 +29,7 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -277,53 +280,102 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
         awaitClose { }
     }
-    override suspend fun addChat(message: Message, useruid: String) {
+    override suspend fun addChat(message: LastMessage, useruid: String,status:Boolean) {
         try {
             Firebase.firestore.collection("Chats").document("$useruid${auth.currentUser?.uid}")
                 .set(
                     mapOf(
                         "barberuid" to auth.currentUser?.uid.toString(),
                         "useruid" to useruid,
-                        "lastmessage" to message
+                        "lastmessage" to message,
+
                     )
                 ).await()
+            if(status){
             Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}$useruid")
-                .collection("Messages").document(message.time).set(message).await()
+                .collection("Messages").document(message.time).set(message).await()}
         } catch (e: Exception) {
             Log.d("chat", "Error adding chat: ${e.message}")
         }
     }
 
-    override suspend fun getChatBarber(): MutableList<ChatModel> {
-        return withContext(Dispatchers.IO) {
-            val querySnapshot = Firebase.firestore.collection("Chats")
-                .whereEqualTo("barberuid", auth.currentUser?.uid.toString()).get().await()
-            val chatList = querySnapshot.documents.map { documentSnapshot ->
-                val userDocument =
-                    userDb.document(documentSnapshot.getString("useruid").toString()).get()
-                        .await()
-                val name = userDocument.getString("name").toString()
-                val image = userDocument.getString("imageUri")
-                    .toString() // Assuming "image" field contains the URL of the image
-                val phoneNumber = userDocument.getString("phoneNumber").toString()
-                val message = documentSnapshot.get("lastmessage") as Map<*, *>
-                val lastMessage = Message(
-                    message = message["message"].toString(),
-                    time = message["time"].toString(),
-                    status = message["status"].toString().toBoolean()
-                )
-                ChatModel(
-                    name = name,
-                    image = image, // Add the image URL to ChatModel
-                    message = lastMessage,
-                    uid=documentSnapshot.getString("useruid").toString(),
-                    phoneNumber = phoneNumber
-                )
-            }.toMutableList()
-            Log.d("userchat", "$chatList")
-            chatList
+//    override suspend fun getChatBarber(): MutableList<LastChatModel> {
+//        return withContext(Dispatchers.IO) {
+//            val querySnapshot = Firebase.firestore.collection("Chats")
+//                .whereEqualTo("barberuid", auth.currentUser?.uid.toString()).get().await()
+//            val chatList = querySnapshot.documents.map { documentSnapshot ->
+//                val userDocument =
+//                    userDb.document(documentSnapshot.getString("useruid").toString()).get()
+//                        .await()
+//                val name = userDocument.getString("name").toString()
+//                val image = userDocument.getString("imageUri")
+//                    .toString() // Assuming "image" field contains the URL of the image
+//                val phoneNumber = userDocument.getString("phoneNumber").toString()
+//                val message = documentSnapshot.get("lastmessage") as Map<*, *>
+//                val lastMessage = LastMessage(
+//                    message = message["message"].toString(),
+//                    time = message["time"].toString(),
+//                    status = message["status"].toString().toBoolean(),
+//                    seenbybarber = message["seenbybarber"].toString().toBoolean(),
+//                    seenbyuser = message["seenbyuser"].toString().toBoolean()
+//                )
+//                LastChatModel(
+//                    name = name,
+//                    image = image, // Add the image URL to ChatModel
+//                    message = lastMessage,
+//                    uid=documentSnapshot.getString("useruid").toString(),
+//                    phoneNumber = phoneNumber
+//                )
+//            }.toMutableList()
+//            Log.d("userchat", "$chatList")
+//            chatList
+//        }
+//    }
+
+
+    override suspend fun getChatBarber(): Flow<MutableList<LastChatModel>> = callbackFlow {
+        val listenerRegistration = Firebase.firestore.collection("Chats")
+            .whereEqualTo("barberuid", auth.currentUser?.uid.toString())
+            .addSnapshotListener { querySnapshot, e ->
+                if (e != null) {
+                    close(e)
+                    return@addSnapshotListener
+                }
+
+                if (querySnapshot != null) {
+                    launch {
+                        val chatList = querySnapshot.documents.map { documentSnapshot ->
+                            val userDocument = userDb.document(documentSnapshot.getString("useruid").toString()).get().await()
+                            val name = userDocument.getString("name").toString()
+                            val image = userDocument.getString("imageUri").toString()
+                            val phoneNumber = userDocument.getString("phoneNumber").toString()
+                            val message = documentSnapshot.get("lastmessage") as Map<*, *>
+                            val lastMessage = LastMessage(
+                                message = message["message"].toString(),
+                                time = message["time"].toString(),
+                                status = message["status"].toString().toBoolean(),
+                                seenbybarber = message["seenbybarber"].toString().toBoolean(),
+                                seenbyuser = message["seenbyuser"].toString().toBoolean()
+                            )
+                            LastChatModel(
+                                name = name,
+                                image = image,
+                                message = lastMessage,
+                                uid = documentSnapshot.getString("useruid").toString(),
+                                phoneNumber = phoneNumber
+                            )
+                        }.toMutableList()
+
+                        trySend(chatList).isSuccess
+                    }
+                }
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
         }
-    }
+    }.flowOn(Dispatchers.IO)
+
 
     override suspend fun messageList(userUid: String): Flow<List<Message>> = callbackFlow {
         val messageRef = Firebase.firestore.collection("Chats")
