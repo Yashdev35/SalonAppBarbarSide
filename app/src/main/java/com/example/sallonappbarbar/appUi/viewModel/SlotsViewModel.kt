@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
@@ -7,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.Slots
@@ -34,6 +34,7 @@ class SlotsViewModel @Inject constructor(
     )
 
     var isLoading = mutableStateOf(false)
+    var isSuccessfulDialog = mutableStateOf(false)
 
 //     val slotsList = mutableStateListOf<Slots>()
 
@@ -41,7 +42,6 @@ class SlotsViewModel @Inject constructor(
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
     ).map { day -> mutableStateOf(SlotsDay(day, mutableListOf())) }
 
-    val listOfDays = _days.map { it }
     var selectedSlots = mutableStateListOf<TimeSlot>()
 
     fun onEvent(event: SlotsEvent) {
@@ -51,23 +51,9 @@ class SlotsViewModel @Inject constructor(
         }
     }
 
-//    fun getEverydaySlots() {
-//        _days.forEach { day ->
-//            viewModelScope.launch {
-//                val slots = repo.getTimeSlot(day.value.day, "")
-//                if (day.value.slots.isEmpty()) {
-//                    day.value.slots.add(slots)
-//                } else {
-//                    day.value.slots[0] = slots
-//                }
-//            }
-//        }
-//    }
-
+    @SuppressLint("SuspiciousIndentation")
     private fun getSlots(){
         viewModelScope.launch {
-//            openCloseTime.clear()
-//            openCloseTime.addAll(repo.getTimeSlot())
             val newSlot=repo.getTimeSlot()
             for(slot in newSlot)
             openCloseTime.find { it.day == slot.day }
@@ -80,29 +66,6 @@ class SlotsViewModel @Inject constructor(
         }
     }
 
-
-//    fun addBookedSlots(timeSlot: TimeSlot, day: String) {
-//        _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.Booked?.add(timeSlot.time)
-//    }
-
-//    fun removeBookedSlots(timeSlot: TimeSlot, day: String) {
-//        _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.Booked?.remove(timeSlot.time)
-//    }
-//
-//    fun addNotAvailableSlots(timeSlot: TimeSlot, day: String) {
-//        _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.NotAvailable?.add(timeSlot.time)
-//    }
-//
-//    fun removeNotAvailableSlots(timeSlot: TimeSlot, day: String) {
-//        _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.NotAvailable?.remove(
-//            timeSlot.time
-//        )
-//    }
-
-//    fun addSlot(slots: Slots) {
-//        _slotsList.add(slots)
-//    }
-
     private fun setSlots(navController: NavController, context: Context) {
         viewModelScope.launch {
             repo.setSlots(openCloseTime).collect {
@@ -112,20 +75,6 @@ class SlotsViewModel @Inject constructor(
         }
     }
 
-//    suspend fun updateBookedSlotsFb(day: String, activity: Activity): Flow<Resource<String>> {
-//        val bookedTimes =
-//            _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.Booked?.toList()
-//                ?: listOf()
-//        return repo.updateBookedSlots(bookedTimes, day)
-//    }
-//
-//    suspend fun updateNotAvailableSlotsFb(day: String, activity: Activity): Flow<Resource<String>> {
-//        val notAvailableTimes =
-//            _days.find { it.value.day == day }?.value?.slots?.getOrNull(0)?.NotAvailable?.toList()
-//                ?: listOf()
-//        return repo.updateNotAvailableSlots(notAvailableTimes, day)
-//    }
-
     private fun onComplete(it: Resource<String>, navController: NavController, context: Context) {
         when (it) {
             is Resource.Loading -> {
@@ -133,16 +82,16 @@ class SlotsViewModel @Inject constructor(
             }
             is Resource.Success -> {
                 isLoading.value = false
-
-                navController.navigate(Screens.Home.route) {
-                    popUpTo(Screens.SlotAdderScr.route) {
-                        inclusive = true
-                    }
-                }
+//                isSuccessfulDialog.value=true
+//                navController.navigate(Screens.Home.route) {
+//                    popUpTo(Screens.SlotAdderScr.route) {
+//                        inclusive = true
+//                    }
+//                }
             }
             is Resource.Failure -> {
                 isLoading.value = false
-                Toast.makeText(context, "Error: ${it}", Toast.LENGTH_SHORT)
+                Toast.makeText(context, "Error: $it", Toast.LENGTH_SHORT)
                     .show()
             }
         }

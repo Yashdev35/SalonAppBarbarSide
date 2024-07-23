@@ -199,7 +199,9 @@ fun AppNavigation(
                 navController.previousBackStackEntry?.savedStateHandle?.get<String>("name").toString()
             val uid =
                 navController.previousBackStackEntry?.savedStateHandle?.get<String>("uid").toString()
-            ChatScreen(image, name,uid,navController)
+            val phoneNumber =
+                navController.previousBackStackEntry?.savedStateHandle?.get<String>("phoneNumber").toString()
+            ChatScreen(image, name,uid,navController,phoneNumber)
         }
         }
 }

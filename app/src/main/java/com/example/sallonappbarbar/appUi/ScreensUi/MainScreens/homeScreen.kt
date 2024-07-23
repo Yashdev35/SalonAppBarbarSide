@@ -143,7 +143,12 @@ fun OrderList(orders: List<OrderModel>, isCompleted: Boolean,
                     scope.launch{
                         orderViewModel.updateOrderStatus(order.orderId, OrderStatus.DECLINED.status)
                     } },
-                accepted = isCompleted
+                accepted = isCompleted,
+                onComplete = {
+                    scope.launch{
+                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.COMPLETED.status)
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -179,7 +184,6 @@ fun HomeScreen(
                 when (resource) {
                     is Resource.Success -> {
                         isLoading = false
-                        Toast.makeText(activity, "Data Loaded", Toast.LENGTH_SHORT).show()
                         val barberData = resource.result
                         isBarberShopOpen = barberData.open!!
                         isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"

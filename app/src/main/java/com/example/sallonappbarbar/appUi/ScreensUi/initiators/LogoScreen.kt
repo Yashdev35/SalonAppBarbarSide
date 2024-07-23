@@ -60,22 +60,40 @@ fun LogoScreen(
                         Log.d("DEBUG", "Slot snapshot empty: ${slotSnapshot.isEmpty}")
 
                         if (!slotSnapshot.isEmpty) {
-                            navController.navigate(Screens.Home.route)
+                            navController.navigate(Screens.Home.route){
+                                navController.popBackStack()
+                            }
+
                         } else {
-                            navController.navigate(Screens.SlotAdderScr.route)
+                            navController.navigate(Screens.SlotAdderScr.route){
+                                navController.popBackStack()
+                            }
+
                         }
                     } else {
-                        navController.navigate(Screens.SelecterScr.route)
+                        navController.navigate(Screens.SelecterScr.route){
+                            navController.popBackStack()
+                        }
+
                     }
                 } else {
-                    navController.navigate(Screens.BarbarsSignUp.route)
+                    navController.navigate(Screens.BarbarsSignUp.route){
+                        navController.popBackStack()
+                    }
+
                 }
             } catch (e: Exception) {
                 Log.e("ERROR", "Error fetching data", e)
-                navController.navigate(Screens.BarbarsSignUp.route)
+                navController.navigate(Screens.BarbarsSignUp.route){
+                    navController.popBackStack()
+                }
+
             }
         } else {
-            navController.navigate(Screens.OnBoardingScreenes.route)
+            navController.navigate(Screens.OnBoardingScreenes.route){
+                navController.popBackStack()
+            }
+
         }
 
     }
