@@ -43,6 +43,7 @@ import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.viewModel.MessageEvent
 import com.example.sallonappbarbar.appUi.viewModel.MessageViewModel
+import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
@@ -201,14 +202,14 @@ fun DateSeparator(date: String) {
 @Composable
 fun ChatBubble(message: String, time: String, isSent: Boolean) {
     Row(
-        horizontalArrangement = if (isSent) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = if (!isSent) Arrangement.End else Arrangement.Start,
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = if (isSent) {
+                start = if (!isSent) {
                     54.dp
                 } else 16.dp,
-                end = if (isSent) {
+                end = if (!isSent) {
                     16.dp
                 } else {
                     54.dp
@@ -218,8 +219,8 @@ fun ChatBubble(message: String, time: String, isSent: Boolean) {
         Column(
             modifier = Modifier
                 .background(
-                    color = if (isSent) sallonColor else purple_200,
-                    shape = if (isSent) RoundedCornerShape(
+                    color = if (!isSent) sallonColor else purple_200,
+                    shape = if (!isSent) RoundedCornerShape(
                         16.dp,
                         0.dp,
                         16.dp,
@@ -230,7 +231,7 @@ fun ChatBubble(message: String, time: String, isSent: Boolean) {
         ) {
             Text(
                 text = message,
-                color = if (isSent) Color.White else Color.Black,
+                color = if (!isSent) Color.White else Color.Black,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -247,7 +248,6 @@ fun ChatBubble(message: String, time: String, isSent: Boolean) {
 @Composable
 fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
     var textState by remember { mutableStateOf("") }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,7 +256,6 @@ fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         OutlinedTextField(
-
             value = textState,
             onValueChange = { textState = it },
             modifier = Modifier
@@ -281,10 +280,9 @@ fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
                 val currentDate = Date()
                 val dateFormat = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
                 val formattedDate = dateFormat.format(currentDate)
-                val message = Message(true, textState, formattedDate)
+                val message = LastMessage(false, textState, formattedDate,true,false)
                 CoroutineScope(Dispatchers.IO).launch {
                     viewModel.onEvent(MessageEvent.AddChat(message,uid))
-
                 }
                 textState=""
             }

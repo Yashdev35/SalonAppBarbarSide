@@ -32,7 +32,7 @@ import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
-fun MessageScreen(navHostController: NavController) {
+fun MessageScreen(navHostController: NavController,viewModel: MessageViewModel ) {
     val context = LocalContext.current
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
@@ -80,7 +80,7 @@ fun MessageScreen(navHostController: NavController) {
         },
         mainScreen = {
             if(selectedTabIndex == 0) {
-                MessageList(navHostController)
+                MessageList(navHostController, viewModel)
             }
         },
         topAppBar = {
@@ -90,7 +90,7 @@ fun MessageScreen(navHostController: NavController) {
 }
 
 @Composable
-fun MessageList(navHostController: NavController,viewModel: MessageViewModel = hiltViewModel()){
+fun MessageList(navHostController: NavController,viewModel: MessageViewModel ){
     var refresh by remember {
         mutableStateOf(true)
     }
@@ -98,9 +98,9 @@ fun MessageList(navHostController: NavController,viewModel: MessageViewModel = h
         mutableStateOf(viewModel.barberChat.value)
     }
 
-    LaunchedEffect(refresh) {
-viewModel.onEvent(MessageEvent.GetChatBarber)
-    }
+//    LaunchedEffect(refresh) {
+//viewModel.onEvent(MessageEvent.GetChatBarber)
+//    }
     if (viewModel.barberChat.value.isNotEmpty()) {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -112,7 +112,8 @@ viewModel.onEvent(MessageEvent.GetChatBarber)
                     image = chatModel.image,
                     name = chatModel.name,
                     uid = chatModel.uid,
-                    phoneNumber = chatModel.phoneNumber
+                    phoneNumber = chatModel.phoneNumber,
+                    viewModel = viewModel
                 )
             }
         }

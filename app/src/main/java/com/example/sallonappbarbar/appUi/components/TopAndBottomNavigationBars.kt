@@ -2,7 +2,6 @@ package com.example.sallonappbarbar.appUi.components
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,50 +14,42 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.twotone.List
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.twotone.List
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
 import com.exyte.animatednavbar.animation.indendshape.Height
 
 
-enum class NavigationItem(val icon: ImageVector, val iconName:String) {
-    Home(Icons.Default.Home,"Home"),
-    Book(Icons.AutoMirrored.TwoTone.List,"Booking"),
-    Message(Icons.AutoMirrored.Filled.Send,"Chats"),
-    Profile(Icons.Default.Person,"Profile"),
-    Review(Icons.Default.Favorite,"Review")
+enum class NavigationItem(var icon: ImageVector, val iconName: String) {
+    Home(Icons.Default.Home, "Home"),
+    Book(Icons.AutoMirrored.TwoTone.List, "Booking"),
+    Message(Icons.AutoMirrored.Filled.Send, "Chats"),
+    Review(Icons.Default.Favorite, "Review"),
+    Profile(Icons.Default.Person, "Profile")
 }
 
 fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
@@ -73,12 +64,13 @@ fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
 @Composable
 fun BottomAppNavigationBar(
     selectedItem: NavigationItem,
-    onItemSelected: (NavigationItem) -> Unit
+    onItemSelected: (NavigationItem) -> Unit,
 ) {
     val bottomBarItems = NavigationItem.entries.toTypedArray()
     AnimatedNavigationBar(
         modifier = Modifier
-            .height(65.dp).background(Color.White)
+            .height(65.dp)
+            .background(Color.White)
 //            .clip(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)).border(0.5.dp, color = Color.LightGray)
             .fillMaxWidth(),
         selectedIndex = selectedItem.ordinal,
