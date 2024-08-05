@@ -367,7 +367,11 @@ fun UpdateBarberInfoScreen(
                     long = viewModel.barber.value.long,
                 )
                 isLoading = true
+                if (selectedImageUri == null) {
+                    selectedImageUri = imageUri
+                }
                 viewModel.onEvent(BarberEvent.updateBarber(updatedBarber, selectedImageUri!!, context,navController))
+                Log.d("UpdateBarberInfoScreen", "UpdateBarberInfoScreen: $updatedBarber")
             }
         }
     }

@@ -171,6 +171,7 @@ fun OrderList(
                 timeSlot = order.timeSlot,
                 phoneNumber = order.phoneNumber,
                 customerName = order.customerName,
+                date = order.date,
                 onAccept = {
                     order.orderStatus = OrderStatus.ACCEPTED
                     scope.launch {

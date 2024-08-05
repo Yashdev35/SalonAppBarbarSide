@@ -56,6 +56,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 fun OrderCard(
     imageUrl: String,
     orderType: List<String>,
+    date :String,
     timeSlot: List<String>,
     phoneNumber: String,
     customerName: String,
@@ -135,6 +136,12 @@ fun OrderCard(
                         }
                         Text(
                             text = "Order: ${orderType.joinToString()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Text(
+                            text = "Date: $date",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
                             fontFamily = FontFamily.Serif
@@ -338,4 +345,22 @@ fun ReviewCard(
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun OrderCardPreview() {
+    OrderCard(
+        imageUrl = "",
+        orderType = listOf("Haircut"),
+        date = "2021-09-12",
+        timeSlot = listOf("10:00 AM - 11:00 AM"),
+        phoneNumber = "1234567890",
+        customerName = "John Doe",
+        onAccept = { /*TODO*/ },
+        onDecline = { /*TODO*/ },
+        onComplete = { /*TODO*/ },
+        accepted = false,
+        paymentMethod = "Cash"
+    )
 }
