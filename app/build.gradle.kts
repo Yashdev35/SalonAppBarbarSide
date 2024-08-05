@@ -161,4 +161,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")
+    // Extended Icons
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
+import com.example.sallonappbarbar.data.model.ReviewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -20,6 +21,22 @@ class OrderViewModel @Inject constructor(
     private val _orderList = mutableStateOf<List<OrderModel>>(emptyList())
     val orderList: State<List<OrderModel>> = _orderList
 
+    private val _reviewList = mutableStateOf<List<ReviewModel>>(emptyList())
+    val reviewList: State<List<ReviewModel>> = _reviewList
+
+    private val _averageRating = mutableStateOf(0.0)
+    val averageRating: State<Double> = _averageRating
+
+    private fun getAverageRating() {
+        var totalRating = 0.0
+        var totalReview = 0
+        for (review in _reviewList.value) {
+            totalRating += review.rating
+            totalReview++
+        }
+        _averageRating.value = totalRating / totalReview
+    }
+
     private val _acceptedOrderList = mutableStateOf<List<OrderModel>>(emptyList())
     val acceptedOrderList: State<List<OrderModel>> = _acceptedOrderList
 
@@ -29,7 +46,9 @@ class OrderViewModel @Inject constructor(
     var isLoading = mutableStateOf(false)
 
     init {
-        viewModelScope.launch { getOrders() }
+        viewModelScope.launch {
+            getOrders()
+        }
     }
     suspend fun onEvent(event: OrderEvent) {
         when(event) {
@@ -52,6 +71,16 @@ class OrderViewModel @Inject constructor(
                 }
             }
             isLoading.value = false
+            viewModelScope.launch{
+                getReviews()
+            }
+        }
+    }
+    private suspend fun getReviews() {
+        repo.getReviews{reviews ->
+            _reviewList.value = reviews
+            Log.d("reviewViewModel", "getReviews: ${_reviewList.value}")
+            getAverageRating()
         }
     }
     suspend fun updateOrderStatus(orderId: String, status: String) {

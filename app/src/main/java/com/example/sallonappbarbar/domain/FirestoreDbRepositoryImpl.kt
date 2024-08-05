@@ -12,15 +12,21 @@ import javax.inject.Inject
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.data.model.LastChatModel
 import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.data.model.OrderModel
+import com.example.sallonappbarbar.data.model.ReviewModel
+import com.example.sallonappbarbar.data.model.Service
 import com.example.sallonappbarbar.data.model.ServiceCat
+import com.example.sallonappbarbar.data.model.ServiceModel
 import com.example.sallonappbarbar.data.model.ServiceUploaded
 import com.example.sallonappbarbar.data.model.Slots
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -32,6 +38,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import javax.inject.Named
 
 
@@ -45,7 +52,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 
 ) : FireStoreDbRepository {
-    override suspend fun addUser(barberModel: BarberModel, imageUri: Uri?): Flow<Resource<String>> =
+    override suspend fun addBarber(barberModel: BarberModel, imageUri: Uri?): Flow<Resource<String>> =
         callbackFlow {
             trySend(Resource.Loading)
             CoroutineScope(Dispatchers.IO).launch {
@@ -78,17 +85,67 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun updateBarberInfo(
+        barberModel: BarberModel,
+        imageUri: Uri?
+    ): Flow<Resource<String>> = callbackFlow {
+        trySend(Resource.Loading)
+        CoroutineScope(Dispatchers.IO).launch {
+            val randomInt = (0..10000).random()
+            if (imageUri != null) {
+                val storageRef = storage.reference.child("profile_image/${auth.currentUser?.uid}$randomInt.jpg")
+                try {
+                    storageRef.putFile(imageUri).await()
+                    val downloadImage = storageRef.downloadUrl.await()
+                    barberModel.imageUri = downloadImage.toString()
+                } catch (e: Exception) {
+                    trySend(Resource.Failure(e))
+                    close()
+                    return@launch
+                }
+            } else {
+                barberModel.imageUri = "https://firebasestorage.googleapis.com/v0/b/sallon-app-6139e.appspot.com/o/salon_app_logo.png?alt=media&token=0909deb8-b9a8-415a-b4b6-292aa2729636"
+            }
+            val updates = mutableMapOf<String, Any?>()
+
+            barberModel.name?.takeIf { it.isNotEmpty() }?.let { updates["name"] = it }
+            barberModel.shopName?.takeIf { it.isNotEmpty() }?.let { updates["shopName"] = it }
+            barberModel.phoneNumber?.takeIf { it.isNotEmpty() }?.let { updates["phoneNumber"] = it }
+            barberModel.saloonType?.takeIf { it.isNotEmpty() }?.let { updates["saloonType"] = it }
+            barberModel.shopStreetAddress?.takeIf { it.isNotEmpty() }?.let { updates["shopStreetAddress"] = it }
+            barberModel.city?.takeIf { it.isNotEmpty() }?.let { updates["city"] = it }
+            barberModel.state?.takeIf { it.isNotEmpty() }?.let { updates["state"] = it }
+            barberModel.aboutUs?.takeIf { it.isNotEmpty() }?.let { updates["aboutUs"] = it }
+            barberModel.noOfReviews?.takeIf { it.isNotEmpty() }?.let { updates["noOfReviews"] = it }
+            barberModel.imageUri?.takeIf { it.isNotEmpty() }?.let { updates["imageUri"] = it }
+            barberModel.open?.let { updates["open"] = it }
+            barberModel.rating?.let { updates["rating"] = it }
+            barberModel.lat?.let { updates["lat"] = it }
+            barberModel.long?.let { updates["long"] = it }
+
+            barberDb.document(auth.currentUser?.uid.toString())
+                .update(updates)
+                .addOnSuccessListener {
+                    trySend(Resource.Success("Successfully Updated"))
+                }.addOnFailureListener { e ->
+                    trySend(Resource.Failure(e))
+                }
+
+        }
+        awaitClose { close() }
+    }
+
     override suspend fun addServices(
         services: List<ServiceCat>
     ): Flow<Resource<String>> = callbackFlow {
         var service = HashMap<String, ServiceUploaded>()
         trySend(Resource.Loading)
-        services.forEach(){
-            ServiceType->
-            ServiceType.services.forEach(){
-                service[it.serviceName] = ServiceUploaded(it.price,it.time)
+        services.forEach() { ServiceType ->
+            ServiceType.services.forEach() {
+                service[it.serviceName] = ServiceUploaded(it.price, it.time,it.id)
             }
-            barberDb.document(auth.currentUser!!.uid).collection("Services").document(ServiceType.type).set(service)
+            barberDb.document(auth.currentUser!!.uid).collection("Services")
+                .document(ServiceType.type).set(service)
                 .addOnSuccessListener {
                     trySend(Resource.Success("Successfully added services"))
                 }.addOnFailureListener {
@@ -96,31 +153,77 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     Log.d("TAGerr", "addServices: ${it.message}")
                 }
             service.clear()
-
         }
         awaitClose {
             close()
         }
     }
-    override suspend fun setSlots(openCloseTime: List<Slots>): Flow<Resource<String>> = callbackFlow {
+
+    override suspend fun getServices(): Flow<Resource<List<ServiceCat>>> = callbackFlow {
         trySend(Resource.Loading)
-        Log.d("slot",openCloseTime.toString())
 
-        CoroutineScope(Dispatchers.IO).launch {
-            openCloseTime.forEach { slot ->
-                try {
-                    barberDb.document(auth.currentUser!!.uid).collection("Slots").document(slot.day)
-                        .set(slot).await()
-                    Log.d("day",slot.day)
-                } catch (e: Exception) {
-                    trySend(Resource.Failure(e))
+        barberDb.document(auth.currentUser!!.uid).collection("Services")
+            .get()
+            .addOnSuccessListener { documents ->
+                val serviceCats = mutableListOf<ServiceCat>()
+
+                for (document in documents) {
+                    val type = document.id
+                    val servicesMap = document.data as? Map<String, HashMap<String, Any>>
+
+                    if (servicesMap != null) {
+                        val services = servicesMap.map { (serviceName, serviceData) ->
+                            val id = when (val rawId = serviceData["id"]) {
+                                is String -> rawId.toIntOrNull() ?: 0
+                                is Long -> rawId.toInt()
+                                is Int -> rawId
+                                is Double -> rawId.toInt()
+                                else -> 0
+                            }
+                            ServiceModel(
+                                serviceName = serviceName,
+                                id = id,
+                                price = serviceData["servicePrice"] as? String ?: "0",
+                                time = serviceData["serviceDuration"] as? String ?: "00:00",
+                                type = type,
+                                isServiceSelected = true
+                            )
+                        }
+                        serviceCats.add(ServiceCat(type = type, services = services))
+                    }
                 }
+                trySend(Resource.Success(serviceCats))
+                Log.d("TAG", "getServices: $serviceCats")
             }
-            trySend(Resource.Success("All data uploaded successfully")).isSuccess
-        }
+            .addOnFailureListener { exception ->
+                trySend(Resource.Failure(exception))
+                Log.d("TAGerr", "getServices: ${exception.message}")
+            }
 
-        awaitClose { close() }
+        awaitClose {
+            close()
+        }
     }
+    override suspend fun setSlots(openCloseTime: List<Slots>): Flow<Resource<String>> =
+        callbackFlow {
+            trySend(Resource.Loading)
+            Log.d("slot", openCloseTime.toString())
+
+            CoroutineScope(Dispatchers.IO).launch {
+                openCloseTime.forEach { slot ->
+                    try {
+                        barberDb.document(auth.currentUser!!.uid).collection("Slots")
+                            .document(slot.day)
+                            .set(slot).await()
+                        Log.d("day", slot.day)
+                    } catch (e: Exception) {
+                        trySend(Resource.Failure(e))
+                    }
+                }
+                trySend(Resource.Success("All data uploaded successfully")).isSuccess
+            }
+            awaitClose { close() }
+        }
 
     override suspend fun updateBookedSlots(
         times: List<String>,
@@ -145,7 +248,8 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     }.addOnFailureListener {
                         trySend(Resource.Failure(it))
                     }
-            } }catch (e: Exception) {
+            }
+        } catch (e: Exception) {
             trySend(Resource.Failure(e))
         }
         awaitClose {
@@ -176,28 +280,32 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     }.addOnFailureListener {
                         trySend(Resource.Failure(it))
                     }
-            } }catch (e: Exception) {
-                trySend(Resource.Failure(e))
             }
-            awaitClose {
-                close()
-            }
+        } catch (e: Exception) {
+            trySend(Resource.Failure(e))
         }
+        awaitClose {
+            close()
+        }
+    }
 
     override suspend fun getTimeSlot(): List<Slots> {
         return withContext(Dispatchers.IO) {
             try {
-                val querySnapshot = barberDb.document(auth.currentUser?.uid.toString()).
-                collection("Slots").get().await()
-                val listOfSlots = querySnapshot.documents.map { document->
+                val querySnapshot =
+                    barberDb.document(auth.currentUser?.uid.toString()).collection("Slots").get()
+                        .await()
+                val listOfSlots = querySnapshot.documents.map { document ->
                     Slots(
 
-                            startTime = document.getString("startTime").toString(),
+                        startTime = document.getString("startTime").toString(),
                         endTime = document.getString("endTime").toString(),
-                        booked = (document.get("booked") as? MutableList<String>) ?: mutableListOf(),
-                        notAvailable = (document.get("notAvailable") as? MutableList<String>) ?: mutableListOf(),
+                        booked = (document.get("booked") as? MutableList<String>)
+                            ?: mutableListOf(),
+                        notAvailable = (document.get("notAvailable") as? MutableList<String>)
+                            ?: mutableListOf(),
                         date = document.getString("date").toString(),
-                            day =document.getString("day").toString()
+                        day = document.getString("day").toString()
 
                     )
 
@@ -209,6 +317,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
         }
     }
+
     override suspend fun getBarber(uid: String?): BarberModel? {
         return withContext(Dispatchers.IO) {
             val querySnapshot =
@@ -232,10 +341,11 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                     lat = document.getDouble("lat")!!.toDouble(),
                     long = document.getDouble("long")!!.toDouble(),
                     open = document.getBoolean("open")!!,
-                    )
+                )
             }
         }
     }
+
     override suspend fun getBarberData(): Flow<Resource<BarberModel>> = callbackFlow {
         trySend(Resource.Loading)
         val documentReference = barberDb.document(auth.currentUser?.uid.toString())
@@ -279,7 +389,8 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
         awaitClose { }
     }
-    override suspend fun addChat(message: LastMessage, useruid: String,status:Boolean) {
+
+    override suspend fun addChat(message: LastMessage, useruid: String, status: Boolean) {
         try {
             Firebase.firestore.collection("Chats").document("$useruid${auth.currentUser?.uid}")
                 .set(
@@ -287,11 +398,12 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                         "barberuid" to auth.currentUser?.uid.toString(),
                         "useruid" to useruid,
                         "lastmessage" to message,
-                        )
+                    )
                 ).await()
-            if(status){
-            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}$useruid")
-                .collection("Messages").document(message.time).set(message).await()}
+            if (status) {
+                Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}$useruid")
+                    .collection("Messages").document(message.time).set(message).await()
+            }
         } catch (e: Exception) {
             Log.d("chat", "Error adding chat: ${e.message}")
         }
@@ -309,7 +421,9 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                 if (querySnapshot != null) {
                     launch {
                         val chatList = querySnapshot.documents.map { documentSnapshot ->
-                            val userDocument = usersDb.document(documentSnapshot.getString("useruid").toString()).get().await()
+                            val userDocument =
+                                usersDb.document(documentSnapshot.getString("useruid").toString())
+                                    .get().await()
                             val name = userDocument.getString("name").toString()
                             val image = userDocument.getString("imageUri").toString()
                             val phoneNumber = userDocument.getString("phoneNumber").toString()
@@ -346,24 +460,26 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             .document("$userUid${auth.currentUser?.uid}")
             .collection("Messages")
 
-        val subscription = messageRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
-            if (firebaseFirestoreException != null) {
-                trySend(emptyList()) // Send an empty list on error
-                return@addSnapshotListener
+        val subscription =
+            messageRef.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+                if (firebaseFirestoreException != null) {
+                    trySend(emptyList()) // Send an empty list on error
+                    return@addSnapshotListener
+                }
+
+                val messageList = querySnapshot?.documents?.map { documentSnapshot ->
+                    Message(
+                        message = documentSnapshot.getString("message").toString(),
+                        time = documentSnapshot.getString("time").toString(),
+                        status = documentSnapshot.getBoolean("status")!!
+                    )
+                } ?: emptyList()
+
+                trySend(messageList)
             }
-
-            val messageList = querySnapshot?.documents?.map { documentSnapshot ->
-                Message(
-                    message = documentSnapshot.getString("message").toString(),
-                    time = documentSnapshot.getString("time").toString(),
-                    status = documentSnapshot.getBoolean("status")!!
-                )
-            } ?: emptyList()
-
-            trySend(messageList)
-        }
         awaitClose { subscription.remove() }
     }
+
     override suspend fun getOrders(onOrderUpdate: (List<OrderModel>) -> Unit) {
         Firebase.firestore.collection("booking")
             .whereEqualTo("barberuid", auth.currentUser?.uid.toString())
@@ -382,16 +498,19 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                             val serviceTypes = mutableListOf<String>()
                             val timesList = mutableListOf<String>()
                             val userDocument = usersDb
-                                .document(documentSnapshot.getString("useruid").toString()).get().await()
+                                .document(documentSnapshot.getString("useruid").toString()).get()
+                                .await()
                             val name = userDocument.getString("name").toString()
                             val image = userDocument.getString("imageUri").toString()
                             val phoneNo = userDocument.getString("phoneNumber").toString()
-                            val services = documentSnapshot.get("service") as? List<Map<*, *>> ?: emptyList()
+                            val services =
+                                documentSnapshot.get("service") as? List<Map<*, *>> ?: emptyList()
                             for (service in services) {
                                 serviceNames.add(service["serviceName"].toString())
                                 serviceTypes.add(service["type"].toString())
                             }
-                            val times = documentSnapshot.get("times") as? List<Map<String, Any>> ?: emptyList()
+                            val times = documentSnapshot.get("times") as? List<Map<String, Any>>
+                                ?: emptyList()
                             for (time in times) {
                                 timesList.add(time["time"].toString())
                             }
@@ -401,12 +520,13 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                             } else {
                                 "Cash"
                             }
-                            val orderStatus = when (documentSnapshot.getString("status").toString().lowercase()) {
-                                "declined" -> OrderStatus.DECLINED
-                                "completed" -> OrderStatus.COMPLETED
-                                "accepted" -> OrderStatus.ACCEPTED
-                                else -> OrderStatus.PENDING
-                            }
+                            val orderStatus =
+                                when (documentSnapshot.getString("status").toString().lowercase()) {
+                                    "declined" -> OrderStatus.DECLINED
+                                    "completed" -> OrderStatus.COMPLETED
+                                    "accepted" -> OrderStatus.ACCEPTED
+                                    else -> OrderStatus.PENDING
+                                }
                             val orderModel = OrderModel(
                                 imageUrl = image,
                                 orderType = serviceNames,
@@ -428,7 +548,10 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun updateOrderStatus(orderId: String, status: String):Flow<Resource<String>> = callbackFlow {
+    override suspend fun updateOrderStatus(
+        orderId: String,
+        status: String
+    ): Flow<Resource<String>> = callbackFlow {
         trySend(Resource.Loading)
         try {
             Firebase.firestore.collection("booking").document(orderId)
@@ -446,4 +569,75 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getReviews(onReviewUpdate: (List<ReviewModel>) -> Unit){
+        Firebase.firestore.collection("booking")
+            .whereEqualTo("barberuid", auth.currentUser?.uid.toString())
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.w("FireStoreDbRepository", "listen:error", e)
+                    return@addSnapshotListener
+                }
+                if (snapshots != null) {
+                    val reviews = mutableListOf<ReviewModel>()
+                    val scope = CoroutineScope(Dispatchers.IO)
+                    scope.launch {
+                        for (documentSnapshot in snapshots.documents) {
+                            val orderId = documentSnapshot.id
+                            val userDocument = usersDb
+                                .document(documentSnapshot.getString("useruid").toString()).get()
+                                .await()
+                            val userDp = userDocument.getString("imageUri").toString()
+                            val userName = userDocument.getString("name").toString()
+                            val review = documentSnapshot.get("review") as? Map<*, *>
+                            if (review != null) {
+                                val reviewText = review["reviewText"]?.toString() ?: ""
+                                val rating = review["rating"]?.toString()?.toDoubleOrNull() ?: 0.0
+                                val reviewModel = ReviewModel(
+                                    rating = rating,
+                                    reviewText = reviewText,
+                                    orderId = orderId,
+                                    userDp = userDp,
+                                    userName = userName
+                                )
+                                reviews.add(reviewModel)
+                            } else {
+                          Log.d("review", "No review found for order: $orderId")
+                            }
+                        }
+                        withContext(Dispatchers.Main) {
+                            onReviewUpdate(reviews)
+                        }
+                    }
+                }
+            }
+    }
+
+    override suspend fun updateSlotTimes(day: String, newStartTime: String, newEndTime: String): Flow<Resource<String>> =
+        callbackFlow {
+            trySend(Resource.Loading)
+            try {
+                val slotDocument = barberDb.document(auth.currentUser!!.uid)
+                    .collection("Slots")
+                    .document(day)
+
+                val snapshot = slotDocument.get().await()
+                if (snapshot.exists()) {
+                    val slot = snapshot.toObject(Slots::class.java)
+                    if (slot != null) {
+                        slot.startTime = newStartTime
+                        slot.endTime = newEndTime
+                        slot.date = LocalDate.now().toString()
+                        slotDocument.set(slot).await()
+                        trySend(Resource.Success("Slot updated successfully"))
+                    } else {
+                        trySend(Resource.Failure(Exception("Slot not found")))
+                    }
+                } else {
+                    trySend(Resource.Failure(Exception("Slot not found")))
+                }
+            } catch (e: Exception) {
+                trySend(Resource.Failure(e))
+            }
+            awaitClose { close() }
+        }
 }

@@ -25,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.model.Slots
@@ -53,17 +56,23 @@ import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 @Composable
 fun SlotAdderScreen(
     navController: NavController,
-    viewModel: SlotsViewModel = hiltViewModel()
+    allBarberInfoViewModel: AllBarberInfoViewModel = hiltViewModel(),
+    viewModel: SlotsViewModel = hiltViewModel(),
+    isUpdating: Boolean = false
 ) {
     val context = LocalContext.current
-    var isDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+
+    var isDialog by remember { mutableStateOf(false) }
+
     if (isDialog) {
         AlertDialog(
             modifier = Modifier
@@ -73,10 +82,19 @@ fun SlotAdderScreen(
             onDismissRequest = { },
             confirmButton = {
                 Button(onClick = {
-                    viewModel.onEvent(SlotsEvent.SetSlots(navController, context))
+                    scope.launch {
+                        if (isUpdating) {
+                            navController.navigate(Screens.Home.route) {
+                                popUpTo(Screens.SlotAdderScr.route) { inclusive = true }
+                            }
+                     } else {
+                            viewModel.onEvent(SlotsEvent.SetSlots(navController, context))
+                        }
+                    }
                 }, colors = ButtonDefaults.buttonColors(containerColor = sallonColor)) {
                     Text(
-                        "Add", color = Color.White,
+                        if (isUpdating) "Done" else "Add",
+                        color = Color.White,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp
                     )
@@ -84,9 +102,8 @@ fun SlotAdderScreen(
             },
             dismissButton = {
                 Button(
-                    onClick = {
-
-                    }, colors = ButtonDefaults.buttonColors(containerColor = sallonColor)
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = sallonColor)
                 ) {
                     Text(
                         "Cancel", color = Color.White,
@@ -99,8 +116,9 @@ fun SlotAdderScreen(
             title = { Text("Confirmation", color = Color.Black) },
             text = {
                 Column {
+                    val message = if (isUpdating) "Do you want to update the slots?" else "Are you sure you want to add these slots. If any slots are empty then default time is added and you can change the slot later."
                     Text(
-                        text = "Are you sure you want to add these slots. If any slots are empty then default time is added and you can change the slot later.",
+                        text = message,
                         color = Color.Black
                     )
                 }
@@ -120,7 +138,6 @@ fun SlotAdderScreen(
     ) {
         BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Opening and Closing Time")
         Spacer(modifier = Modifier.height(16.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -134,10 +151,11 @@ fun SlotAdderScreen(
                     .verticalScroll(scrollState)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
-                viewModel.openCloseTime.forEach { weekDay ->
-                    DayCard(slot = weekDay, viewModel)
+                allBarberInfoViewModel.openCloseTime.forEach { weekDay ->
+                    DayCard(slot = weekDay, viewModel, isUpdating = isUpdating, allBarberInfoViewModel = allBarberInfoViewModel)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+                Spacer(modifier = Modifier.height(80.dp))
             }
             Button(
                 modifier = Modifier
@@ -164,16 +182,33 @@ fun SlotAdderScreen(
 }
 
 @Composable
-fun DayCard(slot: Slots, viewModel: SlotsViewModel) {
-    val openTimeDialog = rememberMaterialDialogState()
+fun DayCard(
+    slot: Slots,
+    viewModel: SlotsViewModel,
+    allBarberInfoViewModel: AllBarberInfoViewModel,
+    isUpdating: Boolean
+) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val openTimeDialog = rememberMaterialDialogState()
+
+    // Using state to hold the initial values
     var openTime by remember { mutableStateOf("") }
     var closeTime by remember { mutableStateOf("") }
 
-
+    var isLoading by remember { viewModel.isLoading }
+    LaunchedEffect(slot, isUpdating) {
+        if (isUpdating) {
+            // Find the matching slot in allBarberInfoViewModel
+            val index = allBarberInfoViewModel.openCloseTime.indexOfFirst { it.day == slot.day }
+            if (index != -1) {
+                openTime = allBarberInfoViewModel.openCloseTime[index].startTime
+                closeTime = allBarberInfoViewModel.openCloseTime[index].endTime
+            }
+        }
+    }
 
     Card(
-
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -181,12 +216,10 @@ fun DayCard(slot: Slots, viewModel: SlotsViewModel) {
         colors = CardDefaults.cardColors(
             contentColor = Color.White,
             containerColor = Color.White,
-        ), border = BorderStroke(2.dp, sallonColor)
+        ),
+        border = BorderStroke(2.dp, sallonColor)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -203,22 +236,23 @@ fun DayCard(slot: Slots, viewModel: SlotsViewModel) {
                     )
                 ) {
                     Text(
-                        if (openTime == "") "Add Time" else "Change Time",
+                        if (openTime.isEmpty()) "Add Time" else "Change Time",
                         color = Color.White,
                         modifier = Modifier.padding(1.dp)
                     )
                 }
             }
             Spacer(modifier = Modifier.height(1.dp))
-            if (openTime != "") {
+            if (openTime.isNotEmpty()) {
                 Text(
-                    text = "$openTime -${closeTime}",
+                    text = "$openTime - $closeTime",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black
                 )
             }
-
         }
+
+        // Time Picker Dialog
         MaterialDialog(
             shape = RoundedCornerShape(20.dp),
             border = BorderStroke(2.dp, sallonColor),
@@ -228,38 +262,33 @@ fun DayCard(slot: Slots, viewModel: SlotsViewModel) {
                     val openTimeParts = openTime.split(":").map { it.toInt() }
                     val closeTimeParts = closeTime.split(":").map { it.toInt() }
 
-                    val openTimeMinutes = openTimeParts[1]
-                    val closeTimeMinutes = closeTimeParts[1]
-                    val openTimeHours = openTimeParts[0]
-                    val closeTimeHours = closeTimeParts[0]
-                    val normalizedOpenTime = openTimeHours * 60 + openTimeMinutes
-                    val normalizedCloseTime =
-                        if (closeTimeHours == 0 && closeTimeMinutes == 0) 1440 else closeTimeHours * 60 + closeTimeMinutes
+                    val normalizedOpenTime = openTimeParts[0] * 60 + openTimeParts[1]
+                    val normalizedCloseTime = if (closeTimeParts[0] == 0 && closeTimeParts[1] == 0) {
+                        1440 // Midnight
+                    } else {
+                        closeTimeParts[0] * 60 + closeTimeParts[1]
+                    }
 
                     if (normalizedOpenTime < normalizedCloseTime) {
-                        if ((openTimeMinutes == 0 || openTimeMinutes == 30) && (closeTimeMinutes == 0 || closeTimeMinutes == 30)) {
-                            val index = viewModel.openCloseTime.indexOfFirst { it.day == slot.day }
-                            viewModel.openCloseTime[index].startTime = openTime
-                            viewModel.openCloseTime[index].endTime = closeTime
-                            Toast.makeText(
-                                context,
-                                (viewModel.openCloseTime[0]).toString(),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        if ((openTimeParts[1] == 0 || openTimeParts[1] == 30) && (closeTimeParts[1] == 0 || closeTimeParts[1] == 30)) {
+                            if (!isUpdating) {
+                                val index = viewModel.openCloseTime.indexOfFirst { it.day == slot.day }
+                                if (index != -1) {
+                                    viewModel.openCloseTime[index].startTime = openTime
+                                    viewModel.openCloseTime[index].endTime = closeTime
+                                    Toast.makeText(context, "Times Updated", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                scope.launch {
+                                    viewModel.onEvent(SlotsEvent.updateSlotTimes(slot.day, openTime, closeTime, context))
+                                }
+                            }
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Please select only 30 or 00 in minute",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Please select only 30 or 00 in minutes", Toast.LENGTH_SHORT).show()
                             openTimeDialog.show()
                         }
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Close time should be greater than open time",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Close time should be greater than open time", Toast.LENGTH_SHORT).show()
                         openTimeDialog.show()
                     }
                 }
@@ -310,6 +339,7 @@ fun DayCard(slot: Slots, viewModel: SlotsViewModel) {
         }
     }
 }
+
 
 //fun getDatesOfWeek(): Map<DayOfWeek, LocalDate> {
 //    val today = LocalDate.now()

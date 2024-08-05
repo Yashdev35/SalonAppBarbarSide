@@ -1,6 +1,7 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,24 +26,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.DoubleCard
+import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.ServiceViewModel
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
-fun ProfileScreen(viewModel: GetBarberDataViewModel = hiltViewModel()){
-    DoubleCard(midCarBody = { PhotoWithName() }, mainScreen = { ProfileScreenList() }, topAppBar = { BackButtonTopAppBar(
-        onBackClick = { /*TODO*/ },
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: GetBarberDataViewModel = hiltViewModel(),
+    allBarberInfoViewModel: AllBarberInfoViewModel = hiltViewModel()
+){
+    DoubleCard(
+        midCarBody = { PhotoWithName(viewModel) },
+        mainScreen = { ProfileScreenList(
+            navController = navController
+        ) },
+        topAppBar = { BackButtonTopAppBar(
+        onBackClick = { navController.navigate(Screens.Home.route){
+            navController.popBackStack()
+        } },
         title = "Profile"
     )})
 }
 @Composable
-fun ProfileScreenList(){
+fun ProfileScreenList(
+    navController: NavController,
+){
     val profileList = listOf(
         Pair( R.drawable.salon_app_logo,"My Profile"),
-        Pair( R.drawable.salon_app_logo,"My Booking History"),
+        Pair( R.drawable.salon_app_logo,"Edit Shop"),
         Pair( R.drawable.salon_app_logo,"Favorite's Saloon"),
         Pair( R.drawable.salon_app_logo,"Privacy Policy"),
         Pair( R.drawable.salon_app_logo,"About Us"),
@@ -53,14 +71,35 @@ fun ProfileScreenList(){
         .padding(22.dp)
         .verticalScroll(rememberScrollState())) {
 
-        ShowingList(image = R.drawable.salon_app_logo, text = "My Profile"){}
-        ShowingList(image = R.drawable.salon_app_logo, text ="My Booking History"){}
-        ShowingList(image = R.drawable.salon_app_logo, text = "Favorite's Saloon"){}
-        ShowingList(image = R.drawable.salon_app_logo, text = "Privacy Policy"){}
+        ShowingList(image = R.drawable.img, text = "Update Profile"){
+            navController.navigate(Screens.UpdateProfile.route)
+        }
+        ShowingList(image = R.drawable.salon_app_logo, text ="Edit Services"){
+            val isUpdatingService = true
+            navController.currentBackStackEntry?.savedStateHandle?.set(
+                key = "isUpdatingService",
+                value = isUpdatingService
+            )
+            navController.navigate(Screens.SelecterScr.route)
+        }
+        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Service Prices"){
+            val isUpdatingService = true
+            navController.currentBackStackEntry?.savedStateHandle?.set(
+                key = "isUpdatingService",
+                value = isUpdatingService
+            )
+            navController.navigate(Screens.PriceSelector.route)
+        }
+        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Slot Timings"){
+            val isUpdatingSlotTime = true
+            navController.currentBackStackEntry?.savedStateHandle?.set(
+                key = "isUpdatingSlotTime",
+                value = isUpdatingSlotTime
+            )
+            navController.navigate(Screens.SlotAdderScr.route)
+        }
         ShowingList(image = R.drawable.salon_app_logo, text ="About Us"){}
         ShowingList(image = R.drawable.salon_app_logo, text ="Log Out"){}
-
-
     }
 }
 
@@ -69,8 +108,7 @@ fun PhotoWithName(viewModel: GetBarberDataViewModel= hiltViewModel()){
     Column(modifier = Modifier
         , horizontalAlignment = Alignment.CenterHorizontally) {
         Image(painter =  rememberAsyncImagePainter(
-            model = "https://firebasestorage.googleapis.com/v0/b/sallon-app-6139e.appspot.com/o/profile_image%2FptNTxkdC31NBaSQbJT5cnQQHO2u2.jpg?alt=media&token=ed411c18-99ad-4db2-94ab-23e1c9b2b1b6"
-        //viewModel._barber.value.imageUri
+            model = viewModel.barber.value.imageUri
         ), contentDescription ="userImage", modifier = Modifier
             .size(100.dp)
             .clip(CircleShape) )
@@ -87,7 +125,13 @@ fun PhotoWithName(viewModel: GetBarberDataViewModel= hiltViewModel()){
 
 @Composable
 fun ShowingList(image:Int,text:String,onClick:()->Unit){
-    Row(verticalAlignment = Alignment.CenterVertically){
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically,
+        ){
         Image(painter = painterResource(id =  image), contentDescription = text, modifier = Modifier
             .size(40.dp)
             .clip(CircleShape))
