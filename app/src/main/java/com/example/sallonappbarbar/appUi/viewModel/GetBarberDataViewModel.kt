@@ -56,6 +56,11 @@ class GetBarberDataViewModel @Inject constructor(
                         _isLoading.value = false
                     }
                     is Resource.Failure -> {
+                        getCurrentBarber()
+                        navController.navigate(Screens.Home.route) {
+                            navController.popBackStack()
+                        }
+                        _isLoading.value = false
                         Toast.makeText(context, "Failed to Update Info", Toast.LENGTH_SHORT).show()
                     }
                     else -> {}
