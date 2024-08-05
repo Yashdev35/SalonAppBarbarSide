@@ -14,18 +14,9 @@ class BarberDataViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
 ) : ViewModel() {
 
-
-
-    suspend fun onEvent(event: MainEvent2) {
-        when (event) {
-            is MainEvent.setSlots -> {}
-            else -> {}
-        }
-    }
-
     suspend fun getBarberData(activity: Activity) = repo.getBarberData()
     suspend fun addUserData(barberModel: BarberModel, imageUri: Uri?, activity: Activity) =
-        repo.addUser(barberModel, imageUri)
+        repo.addBarber(barberModel, imageUri)
 
     suspend fun addServiceData(aServices: List<ServiceCat>, activity: Activity) =
         repo.addServices(aServices)
@@ -33,10 +24,11 @@ class BarberDataViewModel @Inject constructor(
 
 }
 
-sealed class MainEvent {
-    data class getBarberPopular(val city: String, val limit: Long) : MainEvent2()
-    data class getBarberNearby(val city: String, val limit: Long) : MainEvent2()
-    data class getServices(val uid: String) : MainEvent2()
-    data object setSlots : MainEvent2()
 
-}
+//sealed class MainEvent {
+//    data class getBarberPopular(val city: String, val limit: Long) : BarberEvent()
+//    data class getBarberNearby(val city: String, val limit: Long) : BarberEvent()
+//    data class getServices(val uid: String) : BarberEvent()
+//    data object setSlots : BarberEvent()
+//
+//}

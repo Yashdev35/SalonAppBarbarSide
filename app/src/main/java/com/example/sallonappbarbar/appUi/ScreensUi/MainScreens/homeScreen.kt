@@ -1,8 +1,6 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
-import android.app.Activity
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -28,12 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,25 +48,25 @@ import com.example.sallonappbarbar.appUi.components.OrderCard
 import com.example.sallonappbarbar.appUi.components.PendingNoCard
 import com.example.sallonappbarbar.appUi.components.ProfileWithNotification
 import com.example.sallonappbarbar.appUi.components.ShimmerEffectBarber
-import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.MessageViewModel
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
-import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
-import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.sallonColor
-import com.google.firestore.v1.StructuredAggregationQuery.Aggregation.Count
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
+import java.time.Duration
 
 @Composable
 fun MainScreen1(
     orderViewModel: OrderViewModel = hiltViewModel(),
     chatViewModel: MessageViewModel = hiltViewModel(),
     navHostController: NavController,
+    barberDataViewModel: GetBarberDataViewModel = hiltViewModel(),
     context: Context,
 ) {
     var selectedScreen by remember { mutableStateOf(NavigationItem.Home) }
@@ -83,6 +79,7 @@ fun MainScreen1(
             BottomAppNavigationBar(
                 selectedItem = selectedScreen,
                 onItemSelected = { selectedScreen = it },
+                messageCount = chatViewModel._count.value
             )
         }
     ) { paddingValues ->
@@ -91,7 +88,13 @@ fun MainScreen1(
                 NavigationItem.Home -> if (orderViewModel.isLoading.value) {
                     ShimmerEffectBarber()
                 } else {
-                    TopScreen(navHostController, context, orderViewModel,chatViewModel._count.value)
+                    TopScreen(
+                        barberDataViewModel,
+                        navHostController,
+                        context,
+                        orderViewModel,
+                        chatViewModel._count.value
+                    )
                     LaunchedEffect(chatViewModel.barberChat.value.size) {
                         CoroutineScope(Dispatchers.IO).launch {
                             if (chatViewModel.barberChat.value.isNotEmpty()) {
@@ -111,8 +114,8 @@ fun MainScreen1(
 
                 NavigationItem.Book -> ScheduleScreen(navController = navHostController)
                 NavigationItem.Message -> MessageScreen(navHostController,chatViewModel) // Placeholder for MessageScreen
-                NavigationItem.Profile -> ProfileScreen() // Placeholder for ProfileScreen
-                NavigationItem.Review -> androidx.compose.material3.Text("Review Screen")  // Placeholder for ReviewScreen
+                NavigationItem.Profile -> ProfileScreen(navHostController) // Placeholder for ProfileScreen
+                NavigationItem.Review -> ReviewScreen()  // Placeholder for ReviewScreen
             }
         }
     }
@@ -120,19 +123,21 @@ fun MainScreen1(
 
 @Composable
 fun TopScreen(
+    barViewModel: GetBarberDataViewModel = hiltViewModel(),
     navController: NavController,
     context: Context,
     orderViewModel: OrderViewModel,
     count: Int
-
 ) {
+    if (barViewModel.isLoading.value) {
+        ShimmerEffectBarber()
+    }
     DoubleCard(
         midCarBody = {
             PendingNoCard(pendingOrderToday = orderViewModel.todayOrderNo)
         },
         mainScreen = {
             HomeScreen(
-                activity = context as Activity,
                 navController = navController,
                 pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
                 acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList(),
@@ -196,22 +201,13 @@ fun OrderList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    activity: Activity,
     navController: NavController,
-    viewModel: BarberDataViewModel = hiltViewModel(),
     pendingOrders: MutableList<OrderModel>,
     acceptedOrders: MutableList<OrderModel>,
     count: Int
 ) {
     val context = LocalContext.current
-    var isBarberShopOpen by remember { mutableStateOf(false) }
-    var isOpenOrClose by remember { mutableStateOf("Open") }
     var isLoading by remember { mutableStateOf(false) }
-    var slots: SnapshotStateList<TimeSlot> by mutableStateOf(
-        mutableStateListOf(
-            TimeSlot("9:00", "10:00", SlotStatus.AVAILABLE)
-        )
-    )
     val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
     if (isLoading) {
         CircularProgressWithAppLogo()
@@ -224,30 +220,6 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         scope.launch {
-            viewModel.getBarberData(activity).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        isLoading = false
-                        val barberData = resource.result
-                        isBarberShopOpen = barberData.open!!
-                        isOpenOrClose = if (isBarberShopOpen) "Open" else "Close"
-                    }
-
-                    is Resource.Failure -> {
-                        isLoading = false
-                        // Handle data fetching error here (e.g., show a toast)
-                        Toast.makeText(
-                            activity,
-                            "Error fetching data: ${resource.exception.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                    is Resource.Loading -> {
-                        isLoading = true
-                    }
-                }
-            }
         }
     }
 
@@ -303,15 +275,6 @@ fun HomeScreen(
                     1 -> OrderList(orders = acceptedOrders, isCompleted = true)
                 }
             }
-        }
-        if (count>0) {
-            Icon(
-                painter = painterResource(id = R.drawable.down),
-                contentDescription = "new message",
-                modifier = Modifier.align(
-                    Alignment.BottomCenter
-                ).size(48.dp)
-            )
         }
     }
 }

@@ -10,8 +10,8 @@ data class TimeSlot(val time:  String, val date: String, var status: SlotStatus)
 
 @Parcelize
 data class Slots(
-    var startTime: String,
-    var endTime: String,
+    var startTime: String = "",
+    var endTime: String = "",
     var booked: MutableList<String>? = mutableListOf(),
     val notAvailable: MutableList<String>? = mutableListOf(),
     var date: String= LocalDate.now().toString(),

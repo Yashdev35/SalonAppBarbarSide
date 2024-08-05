@@ -29,6 +29,7 @@ data class ServiceType(
 data class ServiceUploaded(
     val servicePrice: String,
     val serviceDuration: String,
+    val id: Int,
 )
 
 @Parcelize
@@ -37,9 +38,8 @@ data class ServiceModel(
     var isServiceSelected: Boolean,
     var price: String="0",
     var time :String="00:00",
-    val id: Int,
+    val id: Int = 0,
     val type:String
-
 ): Parcelable
 
 @Parcelize

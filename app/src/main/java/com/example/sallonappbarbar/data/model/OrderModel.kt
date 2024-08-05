@@ -10,6 +10,14 @@ data class OrderModel(
     val customerName: String,
     val paymentMethod: String? = "Cash",
     var orderStatus: OrderStatus = OrderStatus.PENDING,
+    var isCancelRequested: Boolean = false,
     val orderId: String = "",
     val date: String = "",
+)
+data class ReviewModel(
+    var rating: Double = 0.0,
+    var reviewText: String = "",
+    val orderId: String = "",
+    val userDp: String = "",
+    val userName: String = "",
 )

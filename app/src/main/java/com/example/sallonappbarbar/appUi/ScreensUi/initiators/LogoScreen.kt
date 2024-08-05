@@ -68,13 +68,11 @@ fun LogoScreen(
                             navController.navigate(Screens.SlotAdderScr.route){
                                 navController.popBackStack()
                             }
-
                         }
                     } else {
                         navController.navigate(Screens.SelecterScr.route){
                             navController.popBackStack()
                         }
-
                     }
                 } else {
                     navController.navigate(Screens.BarbarsSignUp.route){

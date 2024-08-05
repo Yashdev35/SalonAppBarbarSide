@@ -48,6 +48,7 @@ import coil.compose.rememberImagePainter
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
+import com.practicecoding.sallonapp.appui.components.RatingBar
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 
@@ -256,6 +257,85 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
 
                 )
             }
+        }
+    }
+}
+@Composable
+fun ReviewCard(
+    imageUri: String,
+    reviewRating: Double,
+    username: String,
+    reviewText: String,
+    orderID: String
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .border(
+                BorderStroke(2.dp, Color(sallonColor.toArgb())),  // Purple border color
+                shape = RoundedCornerShape(8.dp)
+            ),
+        colors = CardColors(
+            contentColor = Color.Black,
+            containerColor = Color.White,
+            disabledContentColor = Color.Black,
+            disabledContainerColor = Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = rememberImagePainter(imageUri),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, Color.Black, CircleShape),  // Border around the image
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = username,
+                            color = Color.Black,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+                        RatingBar(
+                            rating = reviewRating,
+                            onRatingChanged = { /* Do nothing */ }
+                        )
+
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = reviewText,
+                color = Color.Black,
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

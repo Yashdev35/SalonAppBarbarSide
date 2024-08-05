@@ -20,8 +20,6 @@ data class BarberModel(
         var lat:Double? = 0.0,
         var long:Double? =0.0,
         val uid:String? = "",
-        //var aServices:List<aService>? = emptyList()
     ): Parcelable
-
 
 

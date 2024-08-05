@@ -1,6 +1,7 @@
 package com.example.sallonappbarbar.appUi.components
 
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,10 +34,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.exyte.animatednavbar.AnimatedNavigationBar
@@ -50,7 +55,6 @@ enum class NavigationItem(var icon: ImageVector, val iconName: String) {
     Message(Icons.AutoMirrored.Filled.Send, "Chats"),
     Review(Icons.Default.Favorite, "Review"),
     Profile(Icons.Default.Person, "Profile")
-
 }
 
 fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
@@ -66,6 +70,7 @@ fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
 fun BottomAppNavigationBar(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
+    messageCount: Int = 0
 ) {
     val bottomBarItems = NavigationItem.entries.toTypedArray()
     AnimatedNavigationBar(
@@ -82,6 +87,7 @@ fun BottomAppNavigationBar(
         indentAnimation = Height(tween(durationMillis = 300)),
     ) {
         bottomBarItems.forEach { item ->
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -92,20 +98,56 @@ fun BottomAppNavigationBar(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = "Icon",
-                        modifier = Modifier
-                            .size(42.dp)
-                            .padding(top = 10.dp),
-                        tint = if (selectedItem == item) Color.White else Color.Gray
-                    )
+                    Box{
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = "Icon",
+                            modifier = Modifier
+                                .size(42.dp)
+                                .padding(top = 10.dp),
+                            tint = if (selectedItem == item) Color.White else Color.Gray
+                        )
+                        if (item == NavigationItem.Message && messageCount > 0) {
+                            CircleWithMessageCount(messageCount = messageCount)
+                        }
+                    }
                     Text(
                         text = item.iconName, modifier = Modifier,
                         color = if (selectedItem == item) Color.White else Color.Gray
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CircleWithMessageCount(
+    messageCount: Int
+) {
+    Box(
+        modifier = Modifier
+            .size(20.dp) // Adjust size as needed
+            .background(Color.White, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        if (messageCount > 0) {
+            Canvas(
+                modifier = Modifier.size(50.dp) // Ensure the canvas size matches the Box
+            ) {
+                drawCircle(
+                    color = Color.Green, // Change color as needed
+                    radius = 6.5.dp.toPx(), // Adjust radius to fit within the Box
+                    center = Offset(size.width / 2, size.height / 2) // Center the circle
+                )
+            }
+            Text(
+                text = messageCount.toString(),
+                color = Color.Black,
+                fontSize = 12.sp, // Adjust text size as needed
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }
@@ -191,4 +233,10 @@ fun TransparentTopAppBar(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CircleWithMessageCountPreview(){
+BottomAppNavigationBar(selectedItem = NavigationItem.Home, onItemSelected = {}, messageCount = 5)
 }

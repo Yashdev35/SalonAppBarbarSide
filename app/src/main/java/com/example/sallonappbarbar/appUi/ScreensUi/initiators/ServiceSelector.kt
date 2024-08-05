@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -58,7 +59,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.utils.showMsg
+import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.DisplayBarberEvent
+import com.example.sallonappbarbar.appUi.viewModel.ServiceViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.ServiceCat
 import com.example.sallonappbarbar.data.model.ServiceModel
@@ -70,56 +74,6 @@ import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
-
-@Composable
-fun ServiceTypeItem(
-    serviceType: ServiceCat,
-    onServiceSelectedChange: (ServiceModel, Boolean) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp)
-    ) {
-        Text(
-            text = serviceType.type,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Black,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
-        serviceType.services.forEach { service ->
-            var isServiceSelected by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier
-                    .padding(start = 6.dp, end = 6.dp)
-                    .clip(MaterialTheme.shapes.medium),
-                verticalAlignment = CenterVertically
-            ) {
-                Checkbox(
-                    checked = isServiceSelected,
-                    onCheckedChange = { isChecked ->
-                        isServiceSelected = isChecked
-                        service.isServiceSelected = isChecked
-                        onServiceSelectedChange(service, isChecked)
-                    },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = sallonColor,
-                        uncheckedColor = Color.Black
-                    )
-                )
-                Text(
-                    text = service.serviceName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 8.dp),
-                    color = Color.Black,
-                    fontSize = 12.sp
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun ServiceStandardAndPriceList(service : ServiceModel) {
@@ -239,7 +193,10 @@ fun TimeAndPriceEditorDialog(
     var servicePrice by remember { mutableStateOf("") }
     var serviceTime by remember { mutableStateOf("") }
     AlertDialog(
-        modifier = Modifier.clip(RoundedCornerShape(20.dp)).border(2.dp, sallonColor,RoundedCornerShape(20.dp)).background(Color.White),
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .border(2.dp, sallonColor, RoundedCornerShape(20.dp))
+            .background(Color.White),
         onDismissRequest = { showPriceAndTimeInputDialog.value = false },
         confirmButton = {
             Button(onClick = {
@@ -319,45 +276,54 @@ fun TimeAndPriceEditorDialog(
         }
     )
 }
-
 @Composable
 fun ServiceSelectorScreen(
     navController: NavController,
+    isUpdatingService: Boolean = false,
+    viewModel: AllBarberInfoViewModel = hiltViewModel()
 ) {
     val scrollState = rememberScrollState()
     var selectedServices by remember { mutableStateOf(emptyList<ServiceModel>()) }
+
+    // Prepopulate selected services if updating
+    if (isUpdatingService && selectedServices.isEmpty()) {
+        selectedServices = viewModel.serviceList.value.flatMap { serviceCat ->
+            serviceCat.services.filter { it.isServiceSelected }
+        }
+    }
+
     val serviceTypes = listOf(
         ServiceCat(
             type = "Hair Services",
             services = listOf(
-                ServiceModel(isServiceSelected = false,  id = 1, type = "Hair Service", serviceName = "Hair Cut"),
-                ServiceModel(isServiceSelected = false,  id = 2, type = "Hair Service", serviceName = "Hair color",),
-                ServiceModel(isServiceSelected = false , id = 3, type = "Hair Service", serviceName = "Hair style",),
+                ServiceModel(isServiceSelected = false, id = 1, type = "Hair Service", serviceName = "Hair Cut"),
+                ServiceModel(isServiceSelected = false, id = 2, type = "Hair Service", serviceName = "Hair Color"),
+                ServiceModel(isServiceSelected = false, id = 3, type = "Hair Service", serviceName = "Hair Style"),
             )
         ),
         ServiceCat(
             type = "Nail Services",
             services = listOf(
-                ServiceModel(isServiceSelected =false, id = 4, type = "Nail Service", serviceName = "Manicure"),
-                ServiceModel(isServiceSelected =false,  id = 5, type = "Nail Service", serviceName = "Pedicure",),
-                ServiceModel(isServiceSelected =false,  id = 6, type = "Nail Service", serviceName = "Nail Art"),
+                ServiceModel(isServiceSelected = false, id = 4, type = "Nail Service", serviceName = "Manicure"),
+                ServiceModel(isServiceSelected = false, id = 5, type = "Nail Service", serviceName = "Pedicure"),
+                ServiceModel(isServiceSelected = false, id = 6, type = "Nail Service", serviceName = "Nail Art"),
             )
         ),
         ServiceCat(
             type = "Facial Services",
             services = listOf(
-                ServiceModel(isServiceSelected =false, id = 7, type = "Facial Service", serviceName = "Clean Up"),
-                ServiceModel(isServiceSelected =false,  id = 8, type = "Facial Service", serviceName = "Facial"),
-                ServiceModel(isServiceSelected =false, id = 9, type = "Facial Service", serviceName = "Bleach"),
+                ServiceModel(isServiceSelected = false, id = 7, type = "Facial Service", serviceName = "Clean Up"),
+                ServiceModel(isServiceSelected = false, id = 8, type = "Facial Service", serviceName = "Facial"),
+                ServiceModel(isServiceSelected = false, id = 9, type = "Facial Service", serviceName = "Bleach"),
             )
-
         )
     )
+
     Surface(color = purple_200) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                ,
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -369,16 +335,19 @@ fun ServiceSelectorScreen(
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(Color.White)
             ) {
-                item(){Spacer(modifier = Modifier.height(20.dp))}
+                item { Spacer(modifier = Modifier.height(20.dp)) }
                 items(serviceTypes) { serviceType ->
-                    ServiceTypeItem(serviceType = serviceType) { service, isSelected ->
-                        selectedServices = if (isSelected) {
-                            /*List of services selected by the are stored here*/
-                            selectedServices + service
-                        } else {
-                            selectedServices.filter { it.id != service.id }
+                    ServiceTypeItem(
+                        serviceType = serviceType,
+                        selectedServices = selectedServices,
+                        onServiceSelectedChange = { service, isSelected ->
+                            if (isSelected) {
+                                selectedServices = selectedServices + service
+                            } else {
+                                selectedServices = selectedServices.filter { it.id != service.id }
+                            }
                         }
-                    }
+                    )
                 }
             }
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
@@ -386,7 +355,60 @@ fun ServiceSelectorScreen(
                     key = "services",
                     value = selectedServices
                 )
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    key = "isUpdatingServiceFSSScr",
+                    value = isUpdatingService
+                )
                 navController.navigate(Screens.PriceSelector.route)
+            }
+        }
+    }
+}
+
+@Composable
+fun ServiceTypeItem(
+    serviceType: ServiceCat,
+    selectedServices: List<ServiceModel>,
+    onServiceSelectedChange: (ServiceModel, Boolean) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp)
+    ) {
+        Text(
+            text = serviceType.type,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
+        serviceType.services.forEach { service ->
+            val isServiceSelected = selectedServices.any { it.id == service.id }
+
+            Row(
+                modifier = Modifier
+                    .padding(start = 6.dp, end = 6.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                verticalAlignment = CenterVertically
+            ) {
+                Checkbox(
+                    checked = isServiceSelected,
+                    onCheckedChange = { isChecked ->
+                        onServiceSelectedChange(service, isChecked)
+                    },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = sallonColor,
+                        uncheckedColor = Color.Black
+                    )
+                )
+                Text(
+                    text = service.serviceName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp),
+                    color = Color.Black,
+                    fontSize = 12.sp
+                )
             }
         }
     }
@@ -406,12 +428,20 @@ fun aServiceSorter(services : List<ServiceModel>) : List<ServiceCat> {
 
 @Composable
 fun PriceSelector(
-//    barberData: BarberModel,
     viewModel: BarberDataViewModel = hiltViewModel(),
     navController: NavController,
     services: List<ServiceModel>,
-    activity: Activity
+    activity: Activity,
+    isUpdatingService: Boolean = false,
+    isUpdatingServiceFSSScr: Boolean = false,
+    serviceViewModel: ServiceViewModel = hiltViewModel()
 ) {
+    val tempServiceList = mutableListOf<ServiceModel>()
+    serviceViewModel.serviceList.value.forEach { serviceCat ->
+        serviceCat.services.forEach { service ->
+            tempServiceList.add(service)
+        }
+    }
     var isDialogVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -433,12 +463,22 @@ fun PriceSelector(
             item {
                 BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Price Selector")
             }
-            items(services) { service ->
-                ServiceCard(service = service)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
+            if(isUpdatingService){
+                items(tempServiceList) { service ->
+                    ServiceCard(service = service)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+            }else {
+                items(services) { service ->
+                    ServiceCard(service = service)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
             }
         }
 
@@ -456,15 +496,46 @@ fun PriceSelector(
             )
         ) {
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
-                Log.d("Barber", "PriceSelector: $services")
+                if(isUpdatingService){
+                    Log.d("Barber", "PriceSelector: $tempServiceList")
+                }else{
+                    Log.d("Barber", "PriceSelector: $services")
+                }
                 scope.launch(Dispatchers.Main) {
-                    val serviceTypes = aServiceSorter(services)
+                    if (isUpdatingService) {
+                        val tServiceTypes = aServiceSorter(tempServiceList)
+                        viewModel.addServiceData(tServiceTypes, activity).collect {
+                            when (it) {
+                                is Resource.Success -> {
+                                    isDialogVisible = false
+                                    activity.showMsg(it.result)
+                                        navController.navigate(Screens.Home.route) {
+                                            navController.popBackStack()
+                                        }
+                                }
+                                is Resource.Failure -> {
+                                    isDialogVisible = false
+                                    activity.showMsg(it.exception.toString())
+                                }
+                                Resource.Loading -> {
+                                    isDialogVisible = true
+                                }
+                            }
+                        }
+                    } else {
+                        val serviceTypes = aServiceSorter(services)
                     viewModel.addServiceData(serviceTypes, activity).collect {
                         when (it) {
                             is Resource.Success -> {
                                 isDialogVisible = false
                                 activity.showMsg(it.result)
-                                navController.navigate(Screens.SlotAdderScr.route)
+                                if(isUpdatingServiceFSSScr) {
+                                    navController.navigate(Screens.Home.route) {
+                                        navController.popBackStack()
+                                    }
+                                }else{
+                                    navController.navigate(Screens.SlotAdderScr.route)
+                                }
                             }
                             is Resource.Failure -> {
                                 isDialogVisible = false
@@ -474,6 +545,7 @@ fun PriceSelector(
                                 isDialogVisible = true
                             }
                         }
+                    }
                     }
                 }
             }

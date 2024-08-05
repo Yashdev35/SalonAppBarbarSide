@@ -84,7 +84,6 @@ fun ChatScreen(
         ) {
             TopBar(image, name,phoneNumber)
             ChatMessages(modifier = Modifier.weight(1f), viewModel)
-
         }
         MessageInput(uid)
     }
@@ -249,7 +248,6 @@ fun ChatBubble(message: String, time: String, isSent: Boolean) {
 @Composable
 fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
     var textState by remember { mutableStateOf("") }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -258,7 +256,6 @@ fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         OutlinedTextField(
-
             value = textState,
             onValueChange = { textState = it },
             modifier = Modifier
@@ -286,7 +283,6 @@ fun MessageInput(uid: String, viewModel: MessageViewModel = hiltViewModel()) {
                 val message = LastMessage(false, textState, formattedDate,true,false)
                 CoroutineScope(Dispatchers.IO).launch {
                     viewModel.onEvent(MessageEvent.AddChat(message,uid))
-
                 }
                 textState=""
             }

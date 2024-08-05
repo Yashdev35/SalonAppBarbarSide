@@ -48,7 +48,7 @@ import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
-import com.practicecoding.sallonapp.appui.components.SuccessfullDialog
+import com.practicecoding.sallonapp.appui.components.SuccessfulDialog
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.vanpra.composematerialdialogs.title
@@ -130,7 +130,7 @@ fun TimeSelection(
             CommonDialog()
         }
         if (slotsViewModel.isSuccessfulDialog.value) {
-            SuccessfullDialog()
+            SuccessfulDialog()
         }
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -231,7 +231,7 @@ fun TimeSelection(
                                     } else if (slot.status == SlotStatus.BOOKED) {
                                         slotsViewModel.selectedSlots.clear()
                                         slotsViewModel.selectedSlots.add(slot)
-showDialog=true
+                                        showDialog=true
                                         dialogName="Unbooked"
                                     }else{
                                         slotsViewModel.selectedSlots.clear()

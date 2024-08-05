@@ -32,9 +32,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarHalf
+import androidx.compose.material.icons.rounded.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -58,25 +62,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.sallonappbarbar.R
-import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.ReviewCard
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
 
 @Composable
 fun CommonDialog() {
-
     Dialog(
         onDismissRequest = { },
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
@@ -119,7 +122,7 @@ fun CommonDialog() {
 
 }
 @Composable
-fun SuccessfullDialog() {
+fun SuccessfulDialog() {
     val showDialog= remember { mutableStateOf(true) }
 
     Dialog(
@@ -410,9 +413,53 @@ fun BackButtonTopAppBar(
         )
     }
 }
+@Composable
+fun RatingBar(
+    modifier: Modifier = Modifier,
+    rating: Double = 0.0,
+    stars: Int = 5,
+    onRatingChanged: (Double) -> Unit,
+    starsColor: Color = Color.Yellow
+) {
 
-//@Preview(showBackground = true)
-//@Composable
-//fun AdvancedSignUpScreenPreview() {
-//    CircularProgressWithAppLogo()
-//}
+    var isHalfStar = (rating % 1) != 0.0
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        for (index in 1..stars) {
+            Icon(
+                imageVector =
+                if (index <= rating) {
+                    Icons.Rounded.Star
+                } else {
+                    if (isHalfStar) {
+                        isHalfStar = false
+                        Icons.Rounded.StarHalf
+                    } else {
+                        Icons.Rounded.StarOutline
+                    }
+                },
+                contentDescription = null,
+                tint = starsColor,
+                modifier = modifier
+                    .clickable { onRatingChanged(index.toDouble()) }
+            )
+        }
+        Text(
+            text = rating.toString(),
+            modifier = Modifier.padding(start = 8.dp),
+            color = Color.Black,
+            fontSize = 16.sp
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AdvancedSignUpScreenPreview() {
+    ReviewCard(imageUri = "", reviewRating = 4.0, username = "Adolf Hitler", reviewText = "Gas the jews", orderID = "sd")
+}

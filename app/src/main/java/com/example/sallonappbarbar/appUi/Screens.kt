@@ -16,4 +16,5 @@ sealed class Screens(
     object SlotAdderScr : Screens("slotAdderScreen")
     object MainScreen:Screens("main_screen")
     object ChatScreen:Screens("chat_screen")
+    object UpdateProfile:Screens("update_profile")
 }

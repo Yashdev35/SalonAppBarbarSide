@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.sallonappbarbar.data.FireStoreDbRepository
-import com.example.sallonappbarbar.data.model.ChatModel
 import com.example.sallonappbarbar.data.model.LastChatModel
 import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message

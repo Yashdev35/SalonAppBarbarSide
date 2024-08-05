@@ -1,19 +1,21 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
+import androidx.compose.runtime.State
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.data.model.SlotsDay
 import com.example.sallonappbarbar.data.model.TimeSlot
-import com.practicecoding.sallonapp.appui.components.SuccessfullDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,8 +25,7 @@ class SlotsViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
 ) : ViewModel() {
 
-
-    val openCloseTime = mutableStateListOf(// setting the slots for only open and close time screen
+     private val _openCloseTime = mutableStateListOf(
         Slots(day = "Monday", startTime = "10:00", endTime = "22:00"),
         Slots(day = "Tuesday", startTime = "10:00", endTime = "22:00"),
         Slots(day = "Wednesday", startTime = "10:00", endTime = "22:00"),
@@ -33,54 +34,64 @@ class SlotsViewModel @Inject constructor(
         Slots(day = "Saturday", startTime = "10:00", endTime = "22:00"),
         Slots(day = "Sunday", startTime = "10:00", endTime = "22:00")
     )
+    var openCloseTime : SnapshotStateList<Slots> = _openCloseTime
 
     var isLoading = mutableStateOf(false)
     var isSuccessfulDialog = mutableStateOf(false)
 
-//     val slotsList = mutableStateListOf<Slots>()
-
-    private val _days = listOf(
-        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-    ).map { day -> mutableStateOf(SlotsDay(day, mutableListOf())) }
-
     var selectedSlots = mutableStateListOf<TimeSlot>()
 
-    fun onEvent(event: SlotsEvent) {
+    suspend fun onEvent(event: SlotsEvent) {
         when (event) {
             is SlotsEvent.SetSlots -> setSlots(event.navController, event.context)
             is SlotsEvent.GetSlots -> getSlots()
+            is SlotsEvent.updateSlotTimes -> updateSlotTimes(event.day,event.newStartTime,event.newEndTime,event.context)
         }
     }
 
-
-
-    private fun getSlots(){
+    @SuppressLint("SuspiciousIndentation")
+    private suspend fun getSlots(){
         viewModelScope.launch {
             val newSlot=repo.getTimeSlot()
             for(slot in newSlot)
-            openCloseTime.find { it.day == slot.day }
+            _openCloseTime.find { it.day == slot.day }
                 ?.let { slots ->
-                    val index = openCloseTime.indexOf(slots)
+                    val index = _openCloseTime.indexOf(slots)
                     if (index != -1) {
-                        openCloseTime[index]=slot
+                        _openCloseTime[index]=slot
                     }
                 }
         }
     }
 
-
-
-
-    private fun setSlots(navController: NavController, context: Context) {
+    private suspend fun setSlots(navController: NavController, context: Context) {
         viewModelScope.launch {
-            repo.setSlots(openCloseTime).collect {
+            repo.setSlots(_openCloseTime).collect {
                 onComplete(it, navController, context)
-
             }
         }
     }
-
-
+    private suspend fun updateSlotTimes(day: String, newStartTime: String, newEndTime: String, context: Context) {
+        viewModelScope.launch {
+            repo.updateSlotTimes(day, newStartTime, newEndTime).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        Toast.makeText(context, "Slot updated successfully", Toast.LENGTH_SHORT).show()
+                        // Update local state
+                        val index = _openCloseTime.indexOfFirst { it.day == day }
+                        if (index != -1) {
+                            _openCloseTime[index] = _openCloseTime[index].copy(startTime = newStartTime, endTime = newEndTime)
+                        }
+                    }
+                    is Resource.Failure -> {
+                        Toast.makeText(context, "Failed to update slot: ${resource.exception.message}", Toast.LENGTH_SHORT).show()
+                        Log.d("SlotsViewModel", "Failed to update slot: ${resource.exception.message}")
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
 
     private fun onComplete(it: Resource<String>, navController: NavController, context: Context) {
         when (it) {
@@ -89,12 +100,6 @@ class SlotsViewModel @Inject constructor(
             }
             is Resource.Success -> {
                 isLoading.value = false
-//                isSuccessfulDialog.value=true
-//                navController.navigate(Screens.Home.route) {
-//                    popUpTo(Screens.SlotAdderScr.route) {
-//                        inclusive = true
-//                    }
-//                }
             }
             is Resource.Failure -> {
                 isLoading.value = false
@@ -108,4 +113,5 @@ class SlotsViewModel @Inject constructor(
 sealed class SlotsEvent {
     data class SetSlots(val navController: NavController, val context: Context) : SlotsEvent()
     data object GetSlots : SlotsEvent()
+    data class updateSlotTimes(val day: String,val newStartTime: String,val newEndTime: String,val context: Context) : SlotsEvent()
 }

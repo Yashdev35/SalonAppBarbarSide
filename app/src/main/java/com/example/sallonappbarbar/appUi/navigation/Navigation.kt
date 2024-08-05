@@ -1,6 +1,7 @@
 package com.example.sallonappbarbar.appUi.navigation
 
 import android.app.Activity
+import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
@@ -14,6 +15,7 @@ import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.ChatScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.MainScreen1
+import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.UpdateBarberInfoScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.SlotAdderScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.AdvancedSignUpScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.PriceSelector
@@ -162,17 +164,27 @@ fun AppNavigation(
             }
 
             composable(Screens.SelecterScr.route) {
-                ServiceSelectorScreen( navController)
+                val isUpdatingService =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("isUpdatingService")
+                        ?: false
+                ServiceSelectorScreen( navController, isUpdatingService)
             }
             composable(Screens.PriceSelector.route) {
                 val services =
                     navController.previousBackStackEntry?.savedStateHandle?.get<List<ServiceModel>>("services")
                         ?: emptyList()
-
+                val isUpdatingServiceFSSScr =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("isUpdatingServiceFSSScr")
+                        ?: false
+                val isUpdatingService =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("isUpdatingService")
+                        ?: false
                 PriceSelector(
                     navController = navController,
                     services = services,
-                    activity = context as Activity
+                    activity = context as Activity,
+                    isUpdatingServiceFSSScr = isUpdatingServiceFSSScr,
+                    isUpdatingService = isUpdatingService
                 )
             }
             composable(Screens.Home.route,
@@ -187,7 +199,11 @@ fun AppNavigation(
                 )
             }
             composable(Screens.SlotAdderScr.route) {
-                SlotAdderScreen( navController = navController)
+                val isUpdatingSlotTime =
+                    navController.previousBackStackEntry?.savedStateHandle?.get<Boolean>("isUpdatingSlotTime")
+                        ?: false
+                Log.d("SlotAdderScr", "AppNavigation: $isUpdatingSlotTime")
+                SlotAdderScreen( navController = navController, isUpdating = isUpdatingSlotTime)
             }
         composable(Screens.ChatScreen.route, enterTransition = { enterTransition },
             exitTransition = { exitTransition },
@@ -202,6 +218,12 @@ fun AppNavigation(
             val phoneNumber =
                 navController.previousBackStackEntry?.savedStateHandle?.get<String>("phoneNumber").toString()
             ChatScreen(image, name,uid,navController,phoneNumber)
+        }
+        composable(Screens.UpdateProfile.route, enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }) {
+            UpdateBarberInfoScreen(navController = navController)
         }
         }
 }
