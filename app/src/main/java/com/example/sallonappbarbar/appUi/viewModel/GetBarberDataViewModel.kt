@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.BarberModel
@@ -33,6 +34,9 @@ class GetBarberDataViewModel @Inject constructor(
 
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
+
+    var navigationItem = mutableStateOf(NavigationItem.Home)
+
 
     init {
         viewModelScope.launch { getCurrentBarber() }

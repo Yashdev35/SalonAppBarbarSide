@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,11 +21,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.MessageItemBox
+import com.example.sallonappbarbar.appUi.components.NavigationItem
+import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.MessageEvent
 import com.example.sallonappbarbar.appUi.viewModel.MessageViewModel
 import com.example.sallonappbarbar.ui.theme.purple_200
@@ -32,16 +37,19 @@ import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
-fun MessageScreen(navHostController: NavController,viewModel: MessageViewModel ) {
+fun MessageScreen(navHostController: NavController,viewModel: MessageViewModel,barberDataViewModel: GetBarberDataViewModel ) {
     val context = LocalContext.current
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-
+    BackHandler {
+        barberDataViewModel.navigationItem.value= NavigationItem.Home
+    }
     DoubleCard(
         midCarBody = {
             TabRow(
                 selectedTabIndex = selectedTabIndex,
                 backgroundColor = sallonColor,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                modifier = Modifier.padding(horizontal = 20.dp),
+
             ) {
                 Tab(
                     selected = selectedTabIndex == 0,
@@ -84,7 +92,12 @@ fun MessageScreen(navHostController: NavController,viewModel: MessageViewModel )
             }
         },
         topAppBar = {
-            BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Message")
+            Text( text = "Message",
+                modifier = Modifier
+                    .padding(40.dp, 26.dp),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold)
         },
     )
 }

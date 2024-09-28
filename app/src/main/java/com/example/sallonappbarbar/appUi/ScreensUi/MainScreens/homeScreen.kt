@@ -17,7 +17,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -55,6 +54,7 @@ import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CircularProgressWithAppLogo
+import com.practicecoding.sallonapp.appui.components.CommonDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,7 +69,7 @@ fun MainScreen1(
     barberDataViewModel: GetBarberDataViewModel = hiltViewModel(),
     context: Context,
 ) {
-    var selectedScreen by remember { mutableStateOf(NavigationItem.Home) }
+//    var selectedScreen by remember { mutableStateOf(barberDataViewModel.navigationItem.value) }
     var count by remember {
         mutableIntStateOf(0)
     }
@@ -77,34 +77,33 @@ fun MainScreen1(
     Scaffold(
         bottomBar = {
             BottomAppNavigationBar(
-                selectedItem = selectedScreen,
-                onItemSelected = { selectedScreen = it },
-                messageCount = chatViewModel._count.value
+                selectedItem = barberDataViewModel.navigationItem.value,
+                onItemSelected = { barberDataViewModel.navigationItem.value = it },
+                messageCount = chatViewModel._count.intValue
             )
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            when (selectedScreen) {
-                NavigationItem.Home -> if (orderViewModel.isLoading.value) {
-                    ShimmerEffectBarber()
-                } else {
-                    TopScreen(
-                        barberDataViewModel,
-                        navHostController,
-                        context,
-                        orderViewModel,
-                        chatViewModel._count.value
-                    )
-                    LaunchedEffect(chatViewModel.barberChat.value.size) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            if (chatViewModel.barberChat.value.isNotEmpty()) {
-                                count = 0
-                                for (i in chatViewModel.barberChat.value) {
-                                    if (!i.message.seenbybarber) {
-                                        count++
-                                    }
-                                    if (count > 1) {
-                                        break
+            when (barberDataViewModel.navigationItem.value) {
+                NavigationItem.Home -> {
+                    barberDataViewModel.navigationItem.value = NavigationItem.Home
+                    if (orderViewModel.isLoading.value) {
+                        ShimmerEffectBarber()
+                    } else {
+                        TopScreen(
+                            orderViewModel,
+                        )
+                        LaunchedEffect(chatViewModel.barberChat.value.size) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                if (chatViewModel.barberChat.value.isNotEmpty()) {
+                                    count = 0
+                                    for (i in chatViewModel.barberChat.value) {
+                                        if (!i.message.seenbybarber) {
+                                            count++
+                                        }
+                                        if (count > 1) {
+                                            break
+                                        }
                                     }
                                 }
                             }
@@ -112,10 +111,22 @@ fun MainScreen1(
                     }
                 }
 
-                NavigationItem.Book -> ScheduleScreen(navController = navHostController)
-                NavigationItem.Message -> MessageScreen(navHostController,chatViewModel) // Placeholder for MessageScreen
-                NavigationItem.Profile -> ProfileScreen(navHostController) // Placeholder for ProfileScreen
-                NavigationItem.Review -> ReviewScreen()  // Placeholder for ReviewScreen
+                NavigationItem.Book -> {
+                    barberDataViewModel.navigationItem.value=NavigationItem.Book
+                    ScheduleScreen(navController = navHostController,barberDataViewModel)
+                }
+                NavigationItem.Message -> {
+                    barberDataViewModel.navigationItem.value=NavigationItem.Message
+                    MessageScreen(navHostController, chatViewModel,barberDataViewModel)
+                }
+                NavigationItem.Profile -> {
+                    barberDataViewModel.navigationItem.value=NavigationItem.Profile
+                    ProfileScreen(navHostController,barberDataViewModel)
+                }
+                NavigationItem.Review -> {
+                    barberDataViewModel.navigationItem.value=NavigationItem.Review
+                    ReviewScreen(barberDataViewModel)
+                }
             }
         }
     }
@@ -123,25 +134,19 @@ fun MainScreen1(
 
 @Composable
 fun TopScreen(
-    barViewModel: GetBarberDataViewModel = hiltViewModel(),
-    navController: NavController,
-    context: Context,
     orderViewModel: OrderViewModel,
-    count: Int
 ) {
-    if (barViewModel.isLoading.value) {
-        ShimmerEffectBarber()
-    }
+
     DoubleCard(
         midCarBody = {
-            PendingNoCard(pendingOrderToday = orderViewModel.todayOrderNo)
+            PendingNoCard(pendingOrderToday = orderViewModel.todayPendingOrderNo,
+                acceptedOrderToday = orderViewModel.todayAcceptedOrderNo)
         },
         mainScreen = {
             HomeScreen(
-                navController = navController,
                 pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
                 acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList(),
-                count = count
+                orderViewModel = orderViewModel
             )
         },
         topAppBar = {
@@ -154,9 +159,10 @@ fun TopScreen(
 
 @Composable
 fun OrderList(
-    orders: List<OrderModel>, isCompleted: Boolean,
-    orderViewModel: OrderViewModel = hiltViewModel()
+    orders: List<OrderModel>, isAccepted: Boolean,
+    orderViewModel: OrderViewModel
 ) {
+
     val scope = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier
@@ -184,7 +190,7 @@ fun OrderList(
                         orderViewModel.updateOrderStatus(order.orderId, OrderStatus.DECLINED.status)
                     }
                 },
-                accepted = isCompleted,
+                accepted = isAccepted,
                 onComplete = {
                     scope.launch {
                         orderViewModel.updateOrderStatus(
@@ -202,27 +208,16 @@ fun OrderList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    navController: NavController,
     pendingOrders: MutableList<OrderModel>,
     acceptedOrders: MutableList<OrderModel>,
-    count: Int
+    orderViewModel: OrderViewModel
 ) {
-    val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
-    val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
-    if (isLoading) {
-        CircularProgressWithAppLogo()
+    if(orderViewModel.isLoading.value){
+        CommonDialog("Updating")
     }
-
-    val scope = rememberCoroutineScope()
-
+    val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -272,8 +267,8 @@ fun HomeScreen(
                     )
             ) { page ->
                 when (page) {
-                    0 -> OrderList(orders = pendingOrders, isCompleted = false)
-                    1 -> OrderList(orders = acceptedOrders, isCompleted = true)
+                    0 -> OrderList(orders = pendingOrders, isAccepted = false,orderViewModel)
+                    1 -> OrderList(orders = acceptedOrders, isAccepted = true,orderViewModel)
                 }
             }
         }

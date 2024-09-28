@@ -63,11 +63,7 @@ fun ChatScreen(
     viewModel: MessageViewModel = hiltViewModel()
 ) {
     BackHandler {
-        navController.currentBackStackEntry?.savedStateHandle?.set("navigationTo", NavigationItem.Message)
-        navController.navigate(Screens.Home.route){
-            popUpTo(Screens.ChatScreen.route) {
-                inclusive = true
-            }        }
+        navController.popBackStack()
     }
     LaunchedEffect(Unit) {
         viewModel.onEvent(MessageEvent.MessageList(uid))

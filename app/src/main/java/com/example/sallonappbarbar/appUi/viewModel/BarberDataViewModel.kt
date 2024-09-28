@@ -2,7 +2,9 @@ package com.example.sallonappbarbar.appUi.viewModel
 
 import android.app.Activity
 import android.net.Uri
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.model.BarberModel
 import com.example.sallonappbarbar.data.model.ServiceCat
@@ -13,7 +15,6 @@ import javax.inject.Inject
 class BarberDataViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
 ) : ViewModel() {
-
     suspend fun getBarberData(activity: Activity) = repo.getBarberData()
     suspend fun addUserData(barberModel: BarberModel, imageUri: Uri?, activity: Activity) =
         repo.addBarber(barberModel, imageUri)

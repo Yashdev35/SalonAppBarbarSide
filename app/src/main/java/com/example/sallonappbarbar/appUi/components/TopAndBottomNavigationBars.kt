@@ -129,25 +129,18 @@ fun CircleWithMessageCount(
         modifier = Modifier
             .size(20.dp) // Adjust size as needed
             .background(Color.White, CircleShape),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.CenterEnd
     ) {
         if (messageCount > 0) {
             Canvas(
-                modifier = Modifier.size(50.dp) // Ensure the canvas size matches the Box
+                modifier = Modifier.size(50.dp).align(Alignment.TopEnd) // Ensure the canvas size matches the Box
             ) {
                 drawCircle(
-                    color = Color.Green, // Change color as needed
+                    color = sallonColor, // Change color as needed
                     radius = 6.5.dp.toPx(), // Adjust radius to fit within the Box
                     center = Offset(size.width / 2, size.height / 2) // Center the circle
                 )
             }
-            Text(
-                text = messageCount.toString(),
-                color = Color.Black,
-                fontSize = 12.sp, // Adjust text size as needed
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
         }
     }
 }

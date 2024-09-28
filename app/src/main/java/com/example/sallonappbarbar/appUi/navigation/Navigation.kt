@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.NavigatorState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
@@ -22,6 +23,7 @@ import com.example.sallonappbarbar.appUi.ScreensUi.initiators.PriceSelector
 import com.example.sallonappbarbar.appUi.ScreensUi.initiators.ServiceSelectorScreen
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.HeadingText
+import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.data.model.ServiceModel
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.screens.initiatorScreens.LogoScreen
@@ -36,7 +38,7 @@ fun AppNavigation(
 ) {
     val enterTransition =
         slideInHorizontally(
-            initialOffsetX = { 1000 },
+            initialOffsetX = { it },
             animationSpec = spring(
                 stiffness = Spring.StiffnessVeryLow,
                 dampingRatio = Spring.DampingRatioLowBouncy
@@ -45,7 +47,7 @@ fun AppNavigation(
 
     val exitTransition =
         slideOutHorizontally(
-            targetOffsetX = { -1000 },
+            targetOffsetX = { -it },
             animationSpec = spring(
                 stiffness = Spring.StiffnessVeryLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
@@ -54,7 +56,7 @@ fun AppNavigation(
 
     val popEnterTransition =
         slideInHorizontally(
-            initialOffsetX = { -1000 },
+            initialOffsetX = { -it },
             animationSpec = spring(
                 stiffness = Spring.StiffnessVeryLow,
                 dampingRatio = Spring.DampingRatioLowBouncy
@@ -63,7 +65,7 @@ fun AppNavigation(
 
     val popExitTransition =
         slideOutHorizontally(
-            targetOffsetX = { 1000 },
+            targetOffsetX = { it },
             animationSpec = spring(
                 stiffness = Spring.StiffnessVeryLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
@@ -193,9 +195,9 @@ fun AppNavigation(
                 popEnterTransition = { popEnterTransition },
                 popExitTransition = { popExitTransition }
             ) {
-                MainScreen1(
+               MainScreen1(
                     navHostController = navController,
-                    context = context
+                    context = context,
                 )
             }
             composable(Screens.SlotAdderScr.route) {

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
@@ -56,7 +55,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 fun OrderCard(
     imageUrl: String,
     orderType: List<String>,
-    date :String,
+    date: String,
     timeSlot: List<String>,
     phoneNumber: String,
     customerName: String,
@@ -79,7 +78,7 @@ fun OrderCard(
             disabledContainerColor = Color.White,
             disabledContentColor = Color.White,
             containerColor = Color.White
-            ),
+        ),
         border = BorderStroke(1.2.dp, Color(sallonColor.toArgb()))
     ) {
         Row(
@@ -94,7 +93,7 @@ fun OrderCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = rememberImagePainter(data = imageUrl),
+                        painter = rememberAsyncImagePainter(model = imageUrl),
                         contentDescription = null,
                         modifier = Modifier
                             .size(64.dp)
@@ -121,8 +120,8 @@ fun OrderCard(
                             )
                             IconButton(
                                 onClick = {
-                            showInfoDialog.show()
-                                          },
+                                    showInfoDialog.show()
+                                },
                                 modifier = Modifier
                                     .zIndex(1f)
                                     .padding(start = 8.dp)
@@ -160,7 +159,7 @@ fun OrderCard(
                         )
                     }
                 }
-                if(!accepted){
+                if (!accepted) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -185,7 +184,7 @@ fun OrderCard(
                             Text("Decline", color = Color.Black)
                         }
                     }
-                }else {
+                } else {
                     Button(
                         onClick = onComplete,
                         colors = ButtonDefaults.buttonColors(
@@ -207,18 +206,18 @@ fun OrderCard(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                    Text("Customer Phone Number: $phoneNumber")
-                        Text(text ="Customer Name: $customerName")
+                        Text("Customer Phone Number: $phoneNumber")
+                        Text(text = "Customer Name: $customerName")
                         Text(text = "Order Type: ${orderType.joinToString()}")
+                    }
                 }
-                }
-        }
+            }
         }
     }
 }
 
 @Composable
-fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
+fun PendingNoCard(pendingOrderToday: MutableState<Int>, acceptedOrderToday: MutableState<Int>) {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -249,24 +248,47 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>) {
                     .background(Color.White)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Row {
-                Text(
-                    text = "Today's Pending Orders: ",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = pendingOrderToday.value.toString(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold
-                    ),                    fontSize = 20.sp
+            Column {
+                Row {
+                    Text(
+                        text = "Today's Pending Orders: ",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = pendingOrderToday.value.toString(),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        ), fontSize = 20.sp
 
-                )
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row {
+                    Text(
+                        text = "Today's Accepted Orders: ",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(top=0.5.dp)
+
+                    )
+                    Text(
+                        text = acceptedOrderToday.value.toString(),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        ), fontSize = 20.sp,
+
+
+                    )
+                }
             }
+
         }
     }
 }
+
 @Composable
 fun ReviewCard(
     imageUri: String,
@@ -300,7 +322,7 @@ fun ReviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = rememberImagePainter(imageUri),
+                    painter = rememberAsyncImagePainter(imageUri),
                     contentDescription = "Profile Picture",
                     modifier = Modifier
                         .size(50.dp)

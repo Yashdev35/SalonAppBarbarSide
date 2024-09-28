@@ -33,8 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarHalf
-import androidx.compose.material.icons.rounded.StarOutline
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -79,7 +78,7 @@ import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
 
 @Composable
-fun CommonDialog() {
+fun CommonDialog(text:String="Loading") {
     Dialog(
         onDismissRequest = { },
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
@@ -104,7 +103,7 @@ fun CommonDialog() {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Loading",
+                    text = text,
                     modifier = Modifier,
                     fontSize = 24.sp,
                     color = sallonColor
@@ -438,9 +437,9 @@ fun RatingBar(
                 } else {
                     if (isHalfStar) {
                         isHalfStar = false
-                        Icons.Rounded.StarHalf
+                        Icons.Rounded.Star
                     } else {
-                        Icons.Rounded.StarOutline
+                        Icons.Rounded.Star
                     }
                 },
                 contentDescription = null,

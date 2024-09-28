@@ -2,6 +2,8 @@ package com.example.sallonappbarbar.appUi.viewModel
 
 import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,25 +26,24 @@ class OrderViewModel @Inject constructor(
     private val _reviewList = mutableStateOf<List<ReviewModel>>(emptyList())
     val reviewList: State<List<ReviewModel>> = _reviewList
 
-    private val _averageRating = mutableStateOf(0.0)
+    private val _averageRating = mutableDoubleStateOf(0.0)
     val averageRating: State<Double> = _averageRating
 
-    private fun getAverageRating() {
-        var totalRating = 0.0
-        var totalReview = 0
-        for (review in _reviewList.value) {
-            totalRating += review.rating
-            totalReview++
-        }
-        _averageRating.value = totalRating / totalReview
-    }
 
     private val _acceptedOrderList = mutableStateOf<List<OrderModel>>(emptyList())
     val acceptedOrderList: State<List<OrderModel>> = _acceptedOrderList
 
     private val _pendingOrderList = mutableStateOf<List<OrderModel>>(emptyList())
     val pendingOrderList: State<List<OrderModel>> = _pendingOrderList
-    var todayOrderNo = mutableStateOf(0)
+
+    private val _completeOrderList = mutableStateOf<List<OrderModel>>(emptyList())
+    val completeOrderList: State<List<OrderModel>> = _completeOrderList
+
+    private val _cancelledOrderList = mutableStateOf<List<OrderModel>>(emptyList())
+    val cancelledOrderList: State<List<OrderModel>> = _cancelledOrderList
+
+    var todayPendingOrderNo = mutableIntStateOf(0)
+    var todayAcceptedOrderNo = mutableIntStateOf(0)
     var isLoading = mutableStateOf(false)
 
     init {
@@ -50,6 +51,8 @@ class OrderViewModel @Inject constructor(
             getOrders()
         }
     }
+
+
     suspend fun onEvent(event: OrderEvent) {
         when(event) {
             is OrderEvent.GetOrderList -> getOrders()
@@ -59,21 +62,30 @@ class OrderViewModel @Inject constructor(
     }
 
     private suspend fun getOrders() {
+        val localDate = LocalDate.now().toString()
         isLoading.value = true
         repo.getOrders { orders ->
             _orderList.value = orders
-            _acceptedOrderList.value = orders.filter { it.orderStatus == OrderStatus.ACCEPTED }
-            _pendingOrderList.value = orders.filter { it.orderStatus == OrderStatus.PENDING }
-            todayOrderNo.value = 0
+            _acceptedOrderList.value = orders.filter { it.orderStatus == OrderStatus.ACCEPTED&&it.date >= localDate }
+            _pendingOrderList.value = orders.filter { it.orderStatus == OrderStatus.PENDING &&it.date >= localDate}
+            _completeOrderList.value = orders.filter { it.orderStatus == OrderStatus.COMPLETED }
+            _cancelledOrderList.value = orders.filter { it.orderStatus == OrderStatus.DECLINED||it.date < localDate }
+            todayPendingOrderNo.intValue = 0
+            todayAcceptedOrderNo.intValue = 0
             for (pendingOrder in _pendingOrderList.value) {
-                if (pendingOrder.date == LocalDate.now().toString()) {
-                    todayOrderNo.value++
+                if (pendingOrder.date == localDate) {
+                    todayPendingOrderNo.intValue++
+                }
+            }
+            for (acceptedOrder in _acceptedOrderList.value) {
+                if (acceptedOrder.date == localDate) {
+                    todayAcceptedOrderNo.intValue++
                 }
             }
             isLoading.value = false
-            viewModelScope.launch{
-                getReviews()
-            }
+//            viewModelScope.launch{
+//                getReviews()
+//            }
         }
     }
     private suspend fun getReviews() {
@@ -83,33 +95,38 @@ class OrderViewModel @Inject constructor(
             getAverageRating()
         }
     }
+
+    private fun getAverageRating() {
+        var totalRating = 0.0
+        var totalReview = 0
+        for (review in _reviewList.value) {
+            totalRating += review.rating
+            totalReview++
+        }
+        _averageRating.doubleValue = totalRating / totalReview
+    }
     suspend fun updateOrderStatus(orderId: String, status: String) {
+        isLoading.value=true
         repo.updateOrderStatus(orderId, status).collect(){
             when(it){
                 is Resource.Success -> {
                     Log.d("OrderViewModel", "updateOrderStatus: Success")
-                    todayOrderNo.value = 0
-                    Log.d("OrderViewModel", "updateOrderStatus: ${LocalDate.now()}")
-                    for (pendingOrder in _pendingOrderList.value) {
-                        if (pendingOrder.date == LocalDate.now().toString()) {
-                            todayOrderNo.value++
-                            Log.d("OrderViewModel", "updateOrderStatus: ${todayOrderNo.value}")
-                        }
-                    }
+                    isLoading.value=false
                 }
                 is Resource.Failure -> {
                     Log.d("OrderViewModel", "updateOrderStatus: Error")
+                    isLoading.value=false
                 }
-                else -> {}
+                else -> {isLoading.value=false}
             }
         }
     }
 }
 
 sealed class OrderEvent {
-    object GetOrderList : OrderEvent()
-    object UpdateOrderStatus : OrderEvent()
-    object GetPendingOrderList : OrderEvent()
+    data object GetOrderList : OrderEvent()
+    data object UpdateOrderStatus : OrderEvent()
+    data object GetPendingOrderList : OrderEvent()
 }
 
 enum class OrderStatus(val status: String) {

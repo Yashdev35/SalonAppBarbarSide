@@ -538,7 +538,7 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                                 orderId = orderId,
                                 date = orderDate
                             )
-                            orders.add(orderModel)
+                            orders.add(0,orderModel)
                         }
                         withContext(Dispatchers.Main) {
                             onOrderUpdate(orders)

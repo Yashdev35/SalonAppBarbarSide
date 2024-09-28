@@ -3,6 +3,7 @@ package com.example.sallonappbarbar.appUi.ScreensUi.initiators
 
 import android.app.Activity
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -436,6 +437,11 @@ fun PriceSelector(
     isUpdatingServiceFSSScr: Boolean = false,
     serviceViewModel: ServiceViewModel = hiltViewModel()
 ) {
+    BackHandler {
+        if(isUpdatingService){
+                navController.popBackStack()
+        }
+    }
     val tempServiceList = mutableListOf<ServiceModel>()
     serviceViewModel.serviceList.value.forEach { serviceCat ->
         serviceCat.services.forEach { service ->

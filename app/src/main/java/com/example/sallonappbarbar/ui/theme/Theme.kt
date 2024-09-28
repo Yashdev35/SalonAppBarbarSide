@@ -57,7 +57,7 @@ fun SallonAppbarbarTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = 0xFFECE4F6.toInt()
+            window.statusBarColor = 0xFFe9ecef.toInt()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }

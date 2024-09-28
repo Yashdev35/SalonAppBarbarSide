@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,50 +33,56 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.DoubleCard
+import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
-import com.example.sallonappbarbar.appUi.viewModel.ServiceViewModel
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
+    barberDataViewModel: GetBarberDataViewModel,
     viewModel: GetBarberDataViewModel = hiltViewModel(),
     allBarberInfoViewModel: AllBarberInfoViewModel = hiltViewModel()
-){
+) {
+    BackHandler {
+        barberDataViewModel.navigationItem.value= NavigationItem.Home
+    }
     DoubleCard(
         midCarBody = { PhotoWithName(viewModel) },
-        mainScreen = { ProfileScreenList(
-            navController = navController
-        ) },
-        topAppBar = { BackButtonTopAppBar(
-        onBackClick = { navController.navigate(Screens.Home.route){
-            navController.popBackStack()
-        } },
-        title = "Profile"
-    )})
+        mainScreen = {
+            ProfileScreenList(
+                navController = navController
+            )
+        },
+        topAppBar = {
+         Text(
+                text = "Profile",
+                modifier = Modifier
+                    .padding(40.dp, 26.dp),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+             color=Color.Black
+            )
+        })
 }
+
 @Composable
 fun ProfileScreenList(
     navController: NavController,
-){
-    val profileList = listOf(
-        Pair( R.drawable.salon_app_logo,"My Profile"),
-        Pair( R.drawable.salon_app_logo,"Edit Shop"),
-        Pair( R.drawable.salon_app_logo,"Favorite's Saloon"),
-        Pair( R.drawable.salon_app_logo,"Privacy Policy"),
-        Pair( R.drawable.salon_app_logo,"About Us"),
-        Pair( R.drawable.salon_app_logo,"Log Out"),
-    )
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(22.dp)
-        .verticalScroll(rememberScrollState())) {
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(22.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
 
-        ShowingList(image = R.drawable.img, text = "Update Profile"){
+        ShowingList(image = R.drawable.salon_app_logo, text = "Update Profile") {
             navController.navigate(Screens.UpdateProfile.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text ="Edit Services"){
+        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Services") {
             val isUpdatingService = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingService",
@@ -82,7 +90,7 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.SelecterScr.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Service Prices"){
+        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Service Prices") {
             val isUpdatingService = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingService",
@@ -90,7 +98,7 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.PriceSelector.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Slot Timings"){
+        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Slot Timings") {
             val isUpdatingSlotTime = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingSlotTime",
@@ -98,20 +106,24 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.SlotAdderScr.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text ="About Us"){}
-        ShowingList(image = R.drawable.salon_app_logo, text ="Log Out"){}
+        ShowingList(image = R.drawable.salon_app_logo, text = "About Us") {}
+        ShowingList(image = R.drawable.salon_app_logo, text = "Log Out") {}
     }
 }
 
 @Composable
-fun PhotoWithName(viewModel: GetBarberDataViewModel= hiltViewModel()){
-    Column(modifier = Modifier
-        , horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(painter =  rememberAsyncImagePainter(
-            model = viewModel.barber.value.imageUri
-        ), contentDescription ="userImage", modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape) )
+fun PhotoWithName(viewModel: GetBarberDataViewModel = hiltViewModel()) {
+    Column(
+        modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = rememberAsyncImagePainter(
+                model = viewModel.barber.value.imageUri
+            ), contentDescription = "userImage", modifier = Modifier
+                .size(70.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.FillBounds
+        )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = viewModel.barber.value.name.toString(),
@@ -124,21 +136,23 @@ fun PhotoWithName(viewModel: GetBarberDataViewModel= hiltViewModel()){
 }
 
 @Composable
-fun ShowingList(image:Int,text:String,onClick:()->Unit){
+fun ShowingList(image: Int, text: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
-        ){
-        Image(painter = painterResource(id =  image), contentDescription = text, modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape))
+    ) {
+        Image(
+            painter = painterResource(id = image), contentDescription = text, modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+        )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text=text, color = Color.Black)
+        Text(text = text, color = Color.Black)
     }
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(2.dp))
     HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(2.dp))
 }
