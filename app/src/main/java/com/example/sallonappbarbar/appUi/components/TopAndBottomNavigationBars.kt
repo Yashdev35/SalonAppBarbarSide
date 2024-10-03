@@ -70,7 +70,7 @@ fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
 fun BottomAppNavigationBar(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
-    messageCount: Int = 0
+    messageCount: Boolean = false
 ) {
     val bottomBarItems = NavigationItem.entries.toTypedArray()
     AnimatedNavigationBar(
@@ -107,7 +107,7 @@ fun BottomAppNavigationBar(
                                 .padding(top = 10.dp),
                             tint = if (selectedItem == item) Color.White else Color.Gray
                         )
-                        if (item == NavigationItem.Message && messageCount > 0) {
+                        if (item == NavigationItem.Message && messageCount ) {
                             CircleWithMessageCount(messageCount = messageCount)
                         }
                     }
@@ -123,7 +123,7 @@ fun BottomAppNavigationBar(
 
 @Composable
 fun CircleWithMessageCount(
-    messageCount: Int
+    messageCount: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -131,7 +131,7 @@ fun CircleWithMessageCount(
             .background(Color.White, CircleShape),
         contentAlignment = Alignment.CenterEnd
     ) {
-        if (messageCount > 0) {
+        if (messageCount) {
             Canvas(
                 modifier = Modifier.size(50.dp).align(Alignment.TopEnd) // Ensure the canvas size matches the Box
             ) {
@@ -231,5 +231,5 @@ fun TransparentTopAppBar(
 @Preview(showBackground = true)
 @Composable
 fun CircleWithMessageCountPreview(){
-BottomAppNavigationBar(selectedItem = NavigationItem.Home, onItemSelected = {}, messageCount = 5)
+BottomAppNavigationBar(selectedItem = NavigationItem.Home, onItemSelected = {}, messageCount = false)
 }

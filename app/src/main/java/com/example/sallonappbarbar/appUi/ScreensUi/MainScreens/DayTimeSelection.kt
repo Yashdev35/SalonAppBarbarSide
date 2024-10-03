@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.sallonappbarbar.appUi.components.AlertDialogBox
 import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.model.TimeSlot
@@ -50,6 +50,7 @@ import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
+import com.practicecoding.sallonapp.appui.components.Purple200Button
 import com.practicecoding.sallonapp.appui.components.SuccessfulDialog
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -134,10 +135,12 @@ fun TimeSelection(
         if (slotsViewModel.isSuccessfulDialog.value) {
             SuccessfulDialog()
         }
+
+
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .padding(top=16.dp, start = 16.dp,end=16.dp)
+                    .padding(top = 16.dp, start = 16.dp, end = 16.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -206,26 +209,6 @@ fun TimeSelection(
                                 timeFormatter = timeFormatter,
                                 isSelected = slotsViewModel.selectedSlots.contains(slot),
                                 onClick = {
-                                    /* when (slot.status) {
-                                         SlotStatus.AVAILABLE -> {
-                                             if (viewModel.selectedSlots.contains(slot)) {
-                                                 viewModel.selectedSlots.remove(slot)
-                                             } else if(viewModel.selectedSlots.size>0&&viewModel.selectedSlots[0].date!=date.toString()){
-                                                 showDialog=true
-                                                 dialogMessage = "You can select Slot for only one day"
-                                             }else {
-                                                 viewModel.selectedSlots.add(slot)
-                                             }
-                                         }
-                                         SlotStatus.BOOKED, SlotStatus.NOT_AVAILABLE -> {
-                                             showDialog = true
-                                             dialogMessage = if (slot.status == SlotStatus.BOOKED) {
-                                                 "This slot is already booked."
-                                             } else {
-                                                 "This slot is not available."
-                                             }
-                                         }
-                                     }*/
                                     if (slot.status == SlotStatus.AVAILABLE) {
                                         slotsViewModel.selectedSlots.clear()
                                         slotsViewModel.selectedSlots.add(slot)
@@ -233,22 +216,14 @@ fun TimeSelection(
                                     } else if (slot.status == SlotStatus.BOOKED) {
                                         slotsViewModel.selectedSlots.clear()
                                         slotsViewModel.selectedSlots.add(slot)
-                                        showDialog=true
-                                        dialogName="Unbooked"
-                                    }else{
+                                        showDialog = true
+                                        dialogName = "Unbooked"
+                                    } else {
                                         slotsViewModel.selectedSlots.clear()
                                         slotsViewModel.selectedSlots.add(slot)
-                                        showDialog=true
-                                        dialogName="Available"
+                                        showDialog = true
+                                        dialogName = "Available"
                                     }
-//                                    else {
-//                                        showDialog = true
-//                                        dialogMessage = if (slot.status == SlotStatus.BOOKED) {
-//                                            "This slot is already booked."
-//                                        } else {
-//                                            "This slot is not available."
-//                                        }
-//                                    }
                                 }
                             )
                         }
@@ -257,8 +232,17 @@ fun TimeSelection(
 
                 MaterialDialog(
                     dialogState = addSlotDialog,
+                    properties = DialogProperties(
+                        dismissOnClickOutside = false,
+                        dismissOnBackPress = false
+                    ),
+                    shape = RoundedCornerShape(15.dp),
+                    border = BorderStroke(1.dp, sallonColor),
                     buttons = {
-                        positiveButton(text = "Booked slots") {
+                        positiveButton(
+                            text = "Booked slots",
+                            textStyle = androidx.compose.ui.text.TextStyle(color = sallonColor)
+                        ) {
                             scope.launch {
 
                                 bookedTimes.add(
@@ -282,7 +266,10 @@ fun TimeSelection(
                                 slotsViewModel.selectedSlots.clear()
                             }
                         }
-                        positiveButton(text = "Not Available slots") {
+                        positiveButton(
+                            text = "Not Available slots",
+                            textStyle = androidx.compose.ui.text.TextStyle(color = sallonColor)
+                        ) {
                             scope.launch {
 
                                 notAvailableTimes.add(
@@ -307,74 +294,16 @@ fun TimeSelection(
                                 // }
                             }
                         }
-                        negativeButton(text = "Cancel") {
+                        negativeButton(
+                            text = "Cancel",
+                            textStyle = androidx.compose.ui.text.TextStyle(color = sallonColor)
+                        ) {
                             slotsViewModel.selectedSlots.clear()
                         }
                     }
                 ) {
                     title(text = "Add Slot to")
                 }
-                AnimatedVisibility(
-                    showDialog, enter = fadeIn(animationSpec = tween(500)),
-                    exit = fadeOut(animationSpec = tween(500))
-                ) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text("Selection Error") },
-                        text = { Text(dialogMessage) },
-                        confirmButton = {
-                            Button(onClick = { showDialog = false
-                                if(dialogName=="Unbooked") {
-                                    bookedTimes.remove(
-                                        LocalTime.parse(
-                                            slotsViewModel.selectedSlots[0].time,
-                                            timeFormatter
-                                        )
-                                    )
-                                    slotsViewModel.openCloseTime.find { it.day == dayNameFull.toString() }
-                                        ?.let { slot ->
-                                            val index = slotsViewModel.openCloseTime.indexOf(slot)
-                                            if (index != -1) {
-                                                slotsViewModel.openCloseTime[index].booked?.remove(
-                                                    slotsViewModel.selectedSlots[0].time
-                                                )
-                                            }
-                                        }
-                                }
-                                else{
-                                    notAvailableTimes.remove(
-                                        LocalTime.parse(
-                                            slotsViewModel.selectedSlots[0].time,
-                                            timeFormatter
-                                        )
-                                    )
-                                    slotsViewModel.openCloseTime.find { it.day == dayNameFull.toString() }
-                                        ?.let { slot ->
-                                            val index = slotsViewModel.openCloseTime.indexOf(slot)
-                                            if (index != -1) {
-                                                slotsViewModel.openCloseTime[index].notAvailable?.remove(
-                                                    slotsViewModel.selectedSlots[0].time
-                                                )
-                                            }
-                                        }
-                                }
-                                slotsViewModel.selectedSlots.clear()
-                                dialogName=""
-                            }) {
-                                Text(dialogName)
-                            }
-                        },
-                        properties = DialogProperties(
-                            dismissOnBackPress = false,
-                            dismissOnClickOutside = false
-                        ),
-                        dismissButton = {
-                            Button(onClick = { showDialog = false }) {Text("Cancel")}
-                        }
-
-                    )
-                }
-
                 Text(
                     text = "Tap the respective day above to edit the slots of that day.",
                     color = Color.Black,
@@ -387,8 +316,7 @@ fun TimeSelection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    ,
+                    .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -398,6 +326,63 @@ fun TimeSelection(
                     }
                 }
             }
+        }
+        AnimatedVisibility(
+            showDialog, enter = fadeIn(animationSpec = tween(500)),
+            exit = fadeOut(animationSpec = tween(500))
+        ) {
+            AlertDialogBox(
+                title = "Reselection",
+                message = "",
+                onConfirmButton = {
+                    Purple200Button(onClick = {
+                        showDialog = false
+                        if (dialogName == "Unbooked") {
+                            bookedTimes.remove(
+                                LocalTime.parse(
+                                    slotsViewModel.selectedSlots[0].time,
+                                    timeFormatter
+                                )
+                            )
+                            slotsViewModel.openCloseTime.find { it.day == dayNameFull.toString() }
+                                ?.let { slot ->
+                                    val index = slotsViewModel.openCloseTime.indexOf(slot)
+                                    if (index != -1) {
+                                        slotsViewModel.openCloseTime[index].booked?.remove(
+                                            slotsViewModel.selectedSlots[0].time
+                                        )
+                                    }
+                                }
+                        } else {
+                            notAvailableTimes.remove(
+                                LocalTime.parse(
+                                    slotsViewModel.selectedSlots[0].time,
+                                    timeFormatter
+                                )
+                            )
+                            slotsViewModel.openCloseTime.find { it.day == dayNameFull.toString() }
+                                ?.let { slot ->
+                                    val index = slotsViewModel.openCloseTime.indexOf(slot)
+                                    if (index != -1) {
+                                        slotsViewModel.openCloseTime[index].notAvailable?.remove(
+                                            slotsViewModel.selectedSlots[0].time
+                                        )
+                                    }
+                                }
+                        }
+                        slotsViewModel.selectedSlots.clear()
+                    }, text = dialogName)
+                },
+                onDismissRequest = { showDialog = false },
+                onDismissButton = {
+                    Purple200Button(
+                        onClick = {
+                            slotsViewModel.selectedSlots.clear()
+                            showDialog = false
+                        },
+                        text = "Cancel"
+                    )
+                })
         }
     }
 }

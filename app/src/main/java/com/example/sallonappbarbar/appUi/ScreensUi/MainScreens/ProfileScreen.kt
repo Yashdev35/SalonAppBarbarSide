@@ -17,6 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,14 +38,15 @@ import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
+import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     barberDataViewModel: GetBarberDataViewModel,
+    orderViewModel: OrderViewModel,
     viewModel: GetBarberDataViewModel = hiltViewModel(),
-    allBarberInfoViewModel: AllBarberInfoViewModel = hiltViewModel()
 ) {
     BackHandler {
         barberDataViewModel.navigationItem.value= NavigationItem.Home
@@ -52,7 +55,7 @@ fun ProfileScreen(
         midCarBody = { PhotoWithName(viewModel) },
         mainScreen = {
             ProfileScreenList(
-                navController = navController
+                navController = navController,orderViewModel
             )
         },
         topAppBar = {
@@ -71,16 +74,25 @@ fun ProfileScreen(
 @Composable
 fun ProfileScreenList(
     navController: NavController,
+    orderViewModel: OrderViewModel
 ) {
+    val completedOrderList by orderViewModel.completedOrderList.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(22.dp)
+            .padding(12.dp)
             .verticalScroll(rememberScrollState())
     ) {
 
         ShowingList(image = R.drawable.salon_app_logo, text = "Update Profile") {
             navController.navigate(Screens.UpdateProfile.route)
+        }
+        ShowingList(image = R.drawable.salon_app_logo, text = "Booking History") {
+            navController.currentBackStackEntry?.savedStateHandle?.set(
+                "completedOrderList",
+                completedOrderList
+            )
+            navController.navigate(Screens.BookingHistory.route)
         }
         ShowingList(image = R.drawable.salon_app_logo, text = "Edit Services") {
             val isUpdatingService = true
@@ -109,8 +121,8 @@ fun ProfileScreenList(
         ShowingList(image = R.drawable.salon_app_logo, text = "About Us") {}
         ShowingList(image = R.drawable.salon_app_logo, text = "Log Out") {}
     }
-}
 
+}
 @Composable
 fun PhotoWithName(viewModel: GetBarberDataViewModel = hiltViewModel()) {
     Column(
@@ -136,23 +148,17 @@ fun PhotoWithName(viewModel: GetBarberDataViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun ShowingList(image: Int, text: String, onClick: () -> Unit) {
+fun ShowingList(image:Int,text:String,onClick:()->Unit){
     Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-            .clickable { onClick() },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            painter = painterResource(id = image), contentDescription = text, modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
+        modifier = Modifier.clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically){
+        Image(painter = painterResource(id =  image), contentDescription = text, modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape))
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = text, color = Color.Black)
+        Text(text=text, color = Color.Black)
     }
-    Spacer(modifier = Modifier.height(2.dp))
+    Spacer(modifier = Modifier.height(6.dp))
     HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
-    Spacer(modifier = Modifier.height(2.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 }

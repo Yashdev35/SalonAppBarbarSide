@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
+import android.os.Parcelable
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -12,7 +13,12 @@ import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ReviewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -20,32 +26,28 @@ import javax.inject.Inject
 class OrderViewModel @Inject constructor(
     private val repo: FireStoreDbRepository
 ): ViewModel() {
-    private val _orderList = mutableStateOf<List<OrderModel>>(emptyList())
-    val orderList: State<List<OrderModel>> = _orderList
+    private val _orderList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val orderList: StateFlow<MutableList<OrderModel>> = _orderList.asStateFlow()
+    private val _acceptedOrderList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val acceptedOrderList: StateFlow<MutableList<OrderModel>> = _acceptedOrderList.asStateFlow()
+    private val _pendingOrderList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val pendingOrderList: StateFlow<MutableList<OrderModel>> = _pendingOrderList.asStateFlow()
+    private val _completedOrderList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val completedOrderList: StateFlow<MutableList<OrderModel>> = _completedOrderList.asStateFlow()
+    private val _cancelledOrderList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val cancelledOrderList: StateFlow<MutableList<OrderModel>> = _cancelledOrderList.asStateFlow()
 
-    private val _reviewList = mutableStateOf<List<ReviewModel>>(emptyList())
-    val reviewList: State<List<ReviewModel>> = _reviewList
+    private var _todayPendingOrderNo = MutableStateFlow(0)
+    var todayPendingOrderNo :StateFlow<Int> = _todayPendingOrderNo.asStateFlow()
+    private var _todayAcceptedOrderNo = MutableStateFlow(0)
+    var todayAcceptedOrderNo :StateFlow<Int> = _todayAcceptedOrderNo.asStateFlow()
 
-    private val _averageRating = mutableDoubleStateOf(0.0)
-    val averageRating: State<Double> = _averageRating
+    private val _reviewList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
+    val reviewList: StateFlow<MutableList<OrderModel>> = _reviewList
 
 
-    private val _acceptedOrderList = mutableStateOf<List<OrderModel>>(emptyList())
-    val acceptedOrderList: State<List<OrderModel>> = _acceptedOrderList
-
-    private val _pendingOrderList = mutableStateOf<List<OrderModel>>(emptyList())
-    val pendingOrderList: State<List<OrderModel>> = _pendingOrderList
-
-    private val _completeOrderList = mutableStateOf<List<OrderModel>>(emptyList())
-    val completeOrderList: State<List<OrderModel>> = _completeOrderList
-
-    private val _cancelledOrderList = mutableStateOf<List<OrderModel>>(emptyList())
-    val cancelledOrderList: State<List<OrderModel>> = _cancelledOrderList
-
-    var todayPendingOrderNo = mutableIntStateOf(0)
-    var todayAcceptedOrderNo = mutableIntStateOf(0)
     var isLoading = mutableStateOf(false)
-
+    var isUpdating = mutableStateOf(false)
     init {
         viewModelScope.launch {
             getOrders()
@@ -62,64 +64,127 @@ class OrderViewModel @Inject constructor(
     }
 
     private suspend fun getOrders() {
-        val localDate = LocalDate.now().toString()
-        isLoading.value = true
-        repo.getOrders { orders ->
-            _orderList.value = orders
-            _acceptedOrderList.value = orders.filter { it.orderStatus == OrderStatus.ACCEPTED&&it.date >= localDate }
-            _pendingOrderList.value = orders.filter { it.orderStatus == OrderStatus.PENDING &&it.date >= localDate}
-            _completeOrderList.value = orders.filter { it.orderStatus == OrderStatus.COMPLETED }
-            _cancelledOrderList.value = orders.filter { it.orderStatus == OrderStatus.DECLINED||it.date < localDate }
-            todayPendingOrderNo.intValue = 0
-            todayAcceptedOrderNo.intValue = 0
-            for (pendingOrder in _pendingOrderList.value) {
-                if (pendingOrder.date == localDate) {
-                    todayPendingOrderNo.intValue++
-                }
-            }
-            for (acceptedOrder in _acceptedOrderList.value) {
-                if (acceptedOrder.date == localDate) {
-                    todayAcceptedOrderNo.intValue++
-                }
-            }
-            isLoading.value = false
-//            viewModelScope.launch{
-//                getReviews()
-//            }
-        }
-    }
-    private suspend fun getReviews() {
-        repo.getReviews{reviews ->
-            _reviewList.value = reviews
-            Log.d("reviewViewModel", "getReviews: ${_reviewList.value}")
-            getAverageRating()
-        }
-    }
+        val today = LocalDate.now().toString()
+        viewModelScope.launch {
+            repo.getOrder().collect { orders ->
+                _orderList.emit(orders.toMutableList())
+                _pendingOrderList.update { it.toMutableList().apply { clear() } }
+                _acceptedOrderList.update { it.toMutableList().apply { clear() } }
+                _completedOrderList.update { it.toMutableList().apply { clear() } }
+                _cancelledOrderList.update { it.toMutableList().apply { clear() } }
+                _todayPendingOrderNo.update { 0 }
+                _todayAcceptedOrderNo.update { 0 }
+                orders.forEach { order ->
+                    Log.d("OrderViewModel", "getOrders: ${order.orderStatus}")
 
-    private fun getAverageRating() {
-        var totalRating = 0.0
-        var totalReview = 0
-        for (review in _reviewList.value) {
-            totalRating += review.rating
-            totalReview++
-        }
-        _averageRating.doubleValue = totalRating / totalReview
-    }
-    suspend fun updateOrderStatus(orderId: String, status: String) {
-        isLoading.value=true
-        repo.updateOrderStatus(orderId, status).collect(){
-            when(it){
-                is Resource.Success -> {
-                    Log.d("OrderViewModel", "updateOrderStatus: Success")
-                    isLoading.value=false
+                    when (order.orderStatus) {
+                        OrderStatus.PENDING -> {
+                            if (order.date >= today) {
+                                _pendingOrderList.update {
+                                    it.toMutableList().apply {
+                                        add(order)
+                                    }
+                                }
+                                if(order.date==today){
+                                    _todayPendingOrderNo.update { it.inc() }
+                                }
+                            } else {
+                                order.orderStatus = OrderStatus.CANCELLED
+                                _cancelledOrderList.update {
+                                    it.toMutableList().apply {
+                                        add(order)
+                                    }
+                                }
+                                updateOrderStatus(order, OrderStatus.CANCELLED.status)
+                            }
+                        }
+
+                        OrderStatus.ACCEPTED -> {
+                            if (order.date >= today) {
+                                _acceptedOrderList.update {
+                                    it.toMutableList().apply {
+                                        add(order)
+                                    }
+                                }
+                                if(order.date==today){
+                                    _todayAcceptedOrderNo.update { it.inc() }
+                                }
+                            } else {
+                                order.orderStatus = OrderStatus.CANCELLED
+                                _cancelledOrderList.update {
+                                    it.toMutableList().apply {
+                                        add(order)
+                                    }
+                                }
+                                updateOrderStatus(order, OrderStatus.CANCELLED.status)
+                            }
+                        }
+
+                        OrderStatus.COMPLETED -> {
+                            _completedOrderList.update {
+                                it.toMutableList().apply {
+                                    add(order)
+                                }
+                            }
+                            if(order.review.reviewText.isNotEmpty()&&order.review.reviewTime.isNotEmpty()){
+                                _reviewList.update { it.toMutableList().apply { add(order) } }
+                            }
+                        }
+
+                        OrderStatus.CANCELLED -> {
+                            _cancelledOrderList.update {
+                                it.toMutableList().apply {
+                                    add(order)
+                                }
+                            }
+                        }
+                    }
                 }
-                is Resource.Failure -> {
-                    Log.d("OrderViewModel", "updateOrderStatus: Error")
-                    isLoading.value=false
-                }
-                else -> {isLoading.value=false}
             }
+
         }
+
+    }
+//    private suspend fun getReviews() {
+//        repo.getReviews{reviews ->
+//            _reviewList.value = reviews
+//            Log.d("reviewViewModel", "getReviews: ${_reviewList.value}")
+//            getAverageRating()
+//        }
+//    }
+
+//    private fun getAverageRating() {
+//        var totalRating = 0.0
+//        var totalReview = 0
+//        for (review in _reviewList.value) {
+//            totalRating += review.rating
+//            totalReview++
+//        }
+//        _averageRating.doubleValue = totalRating / totalReview
+//    }
+    suspend fun updateOrderStatus(order: OrderModel, status: String) {
+        viewModelScope.launch {
+            isUpdating.value=true
+            repo.updateOrderStatus(order, status).collect {
+                when (it) {
+                    is Resource.Success -> {
+                        Log.d("OrderViewModel", "updateOrderStatus: Success")
+                        Log.d("OrderViewModel", "updateOrderStatus: ${LocalDate.now()}")
+                        isUpdating.value=false
+//                        getOrders()
+                    }
+
+                    is Resource.Failure -> {
+                        Log.d("OrderViewModel", "updateOrderStatus: Error")
+                        isUpdating.value=false
+                    }
+
+                    else -> {}
+                }
+            }
+
+        }
+
     }
 }
 
@@ -129,9 +194,10 @@ sealed class OrderEvent {
     data object GetPendingOrderList : OrderEvent()
 }
 
-enum class OrderStatus(val status: String) {
+@Parcelize
+enum class OrderStatus(val status: String) : Parcelable {
     PENDING("pending"),
     ACCEPTED("accepted"),
-    DECLINED("declined"),
     COMPLETED("completed"),
+    CANCELLED("cancelled"),
 }

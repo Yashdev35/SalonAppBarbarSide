@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,30 +44,29 @@ import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.NavigationItem
 import com.example.sallonappbarbar.appUi.viewModel.MessageEvent
 import com.example.sallonappbarbar.appUi.viewModel.MessageViewModel
+import com.example.sallonappbarbar.data.model.ChatModel
 import com.example.sallonappbarbar.data.model.LastMessage
 import com.example.sallonappbarbar.data.model.Message
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun ChatScreen(
-    image: String,
-    name: String,
-    uid: String,
+    barber: ChatModel,
     navController: NavController,
-    phoneNumber: String,
-    viewModel: MessageViewModel = hiltViewModel()
+    messageViewModel: MessageViewModel= hiltViewModel()
 ) {
     BackHandler {
         navController.popBackStack()
     }
     LaunchedEffect(Unit) {
-        viewModel.onEvent(MessageEvent.MessageList(uid))
+        messageViewModel.onEvent(MessageEvent.MessageList(barber.uid))
     }
     Box(
         modifier = Modifier
@@ -78,10 +78,10 @@ fun ChatScreen(
                 .fillMaxSize()
                 .background(purple_200)
         ) {
-            TopBar(image, name,phoneNumber)
-            ChatMessages(modifier = Modifier.weight(1f), viewModel)
+            TopBar(barber.image, barber.name,barber.phoneNumber)
+            ChatMessages(modifier = Modifier.weight(1f), messageViewModel)
         }
-        MessageInput(uid)
+        MessageInput(barber.uid)
     }
 }
 
@@ -148,13 +148,14 @@ fun TopBar(image: String, name: String,phoneNumber: String) {
 }
 
 @Composable
-fun ChatMessages(modifier: Modifier = Modifier, viewModel: MessageViewModel) {
+fun ChatMessages(modifier: Modifier = Modifier, messageViewModel: MessageViewModel) {
     val scrollState = rememberScrollState()
+    val messageList by messageViewModel.messageList.collectAsState()
 
-    LaunchedEffect(viewModel.messageList) {
+    LaunchedEffect(messageList) {
         scrollState.animateScrollTo(scrollState.maxValue)
     }
-    if (viewModel.messageList.isNotEmpty()) {
+    if (messageList.isNotEmpty()) {
         Column(
             modifier = modifier
                 .padding(top = 18.dp)
@@ -164,7 +165,7 @@ fun ChatMessages(modifier: Modifier = Modifier, viewModel: MessageViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             var lastDate = ""
-            viewModel.messageList.forEach { message ->
+            messageList.forEach { message ->
                 val currentDate = parseDate(message.time)
                 if (currentDate != lastDate) {
                     DateSeparator(date = currentDate)

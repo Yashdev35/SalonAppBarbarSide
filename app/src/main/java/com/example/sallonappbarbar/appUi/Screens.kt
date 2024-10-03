@@ -17,4 +17,6 @@ sealed class Screens(
     object MainScreen:Screens("main_screen")
     object ChatScreen:Screens("chat_screen")
     object UpdateProfile:Screens("update_profile")
+    object BookingHistory:Screens("booking_history_screen")
+
 }

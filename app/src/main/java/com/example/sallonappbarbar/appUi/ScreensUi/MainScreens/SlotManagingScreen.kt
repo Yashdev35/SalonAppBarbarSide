@@ -65,10 +65,10 @@ fun ScheduleScreen(
         },
         navController = navController,
         topAppBar = {
-            androidx.compose.material3.Text(
-                text = "Slots",
+           Text(
+                text = "Update Slots",
                 modifier = Modifier
-                    .padding(40.dp, 26.dp),
+                    .padding(40.dp, 16.dp),
                 textAlign = TextAlign.Center,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,

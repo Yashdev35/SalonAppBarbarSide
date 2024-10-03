@@ -2,6 +2,7 @@ package com.example.sallonappbarbar.data.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 //@Parcelize
 //data class ServiceLevel(
@@ -47,12 +48,13 @@ data class ServiceCat(
     val type: String,
     var services: List<ServiceModel> = emptyList()
 ): Parcelable
+@Serializable
 @Parcelize
 data class Service(
-    val serviceName: String,
+    val serviceName: String="",
     var count: Int = 0,
-    var price: String="0",
-    val time :String="00:00",
-    val id: String,
-    val type:String
+    var price: String="",
+    val time :String="",
+    val id: String="",
+    val type:String=""
 ): Parcelable

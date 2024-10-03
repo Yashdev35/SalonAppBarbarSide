@@ -11,6 +11,7 @@ import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -103,30 +104,26 @@ fun MessageScreen(navHostController: NavController,viewModel: MessageViewModel,b
 }
 
 @Composable
-fun MessageList(navHostController: NavController,viewModel: MessageViewModel ){
+fun MessageList(navHostController: NavController,messageViewModel: MessageViewModel ){
     var refresh by remember {
         mutableStateOf(true)
     }
-    val user by remember {
-        mutableStateOf(viewModel.barberChat.value)
-    }
+    val barberChat by messageViewModel.barberChat.collectAsState()
+
 
 //    LaunchedEffect(refresh) {
 //viewModel.onEvent(MessageEvent.GetChatBarber)
 //    }
-    if (viewModel.barberChat.value.isNotEmpty()) {
+    if (barberChat.isNotEmpty()) {
         Column(modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)) {
-            viewModel.barberChat.value.forEach { chatModel ->
+            barberChat.reversed().forEach { chatModel ->
                 MessageItemBox(
                     navHostController = navHostController,
-                    message = chatModel.message,
-                    image = chatModel.image,
-                    name = chatModel.name,
-                    uid = chatModel.uid,
-                    phoneNumber = chatModel.phoneNumber,
-                    viewModel = viewModel
+
+                    barber = chatModel,
+                    messageViewModel = messageViewModel
                 )
             }
         }

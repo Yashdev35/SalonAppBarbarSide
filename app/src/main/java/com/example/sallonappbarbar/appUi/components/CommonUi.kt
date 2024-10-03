@@ -457,8 +457,8 @@ fun RatingBar(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AdvancedSignUpScreenPreview() {
-    ReviewCard(imageUri = "", reviewRating = 4.0, username = "Adolf Hitler", reviewText = "Gas the jews", orderID = "sd")
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AdvancedSignUpScreenPreview() {
+//    ReviewCard(imageUri = "", reviewRating = 4.0, username = "Adolf Hitler", reviewText = "Gas the jews", orderID = "sd")
+//}

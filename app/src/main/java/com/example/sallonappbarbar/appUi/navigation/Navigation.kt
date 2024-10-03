@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.BookingHistoryScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.ChatScreen
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.MainScreen1
 import com.example.sallonappbarbar.appUi.ScreensUi.MainScreens.UpdateBarberInfoScreen
@@ -24,6 +25,8 @@ import com.example.sallonappbarbar.appUi.ScreensUi.initiators.ServiceSelectorScr
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.HeadingText
 import com.example.sallonappbarbar.appUi.components.NavigationItem
+import com.example.sallonappbarbar.data.model.ChatModel
+import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ServiceModel
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 import com.practicecoding.sallonapp.screens.initiatorScreens.LogoScreen
@@ -211,21 +214,28 @@ fun AppNavigation(
             exitTransition = { exitTransition },
             popEnterTransition = { popEnterTransition },
             popExitTransition = { popExitTransition }) {
-            val image =
-                navController.previousBackStackEntry?.savedStateHandle?.get<String>("image").toString()
-            val name =
-                navController.previousBackStackEntry?.savedStateHandle?.get<String>("name").toString()
-            val uid =
-                navController.previousBackStackEntry?.savedStateHandle?.get<String>("uid").toString()
-            val phoneNumber =
-                navController.previousBackStackEntry?.savedStateHandle?.get<String>("phoneNumber").toString()
-            ChatScreen(image, name,uid,navController,phoneNumber)
+            val barber =
+                navController.previousBackStackEntry?.savedStateHandle?.get<ChatModel>("barber")
+            if (barber != null) {
+                ChatScreen(barber, navController)
+            }
         }
         composable(Screens.UpdateProfile.route, enterTransition = { enterTransition },
             exitTransition = { exitTransition },
             popEnterTransition = { popEnterTransition },
             popExitTransition = { popExitTransition }) {
             UpdateBarberInfoScreen(navController = navController)
+        }
+        composable(Screens.BookingHistory.route, enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }) {
+            val completedOrderList = navController.previousBackStackEntry?.savedStateHandle?.get<MutableList<OrderModel>>("completedOrderList")
+            if (completedOrderList != null) {
+                BookingHistoryScreen(navController = navController,
+                    completedOrderList = completedOrderList
+                )
+            }
         }
         }
 }

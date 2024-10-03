@@ -14,19 +14,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
@@ -45,21 +49,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
+import com.example.sallonappbarbar.data.model.OrderModel
+import com.example.sallonappbarbar.data.model.ReviewModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.RatingBar
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun OrderCard(
-    imageUrl: String,
-    orderType: List<String>,
-    date: String,
-    timeSlot: List<String>,
-    phoneNumber: String,
-    customerName: String,
-    paymentMethod: String = "Cash",
+    order:OrderModel,
     onAccept: () -> Unit,
     onDecline: () -> Unit,
     onComplete: () -> Unit,
@@ -67,6 +71,9 @@ fun OrderCard(
 ) {
     val showInfoDialog = rememberMaterialDialogState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
+    val totalTime = order.listOfService.sumOf { it.time.toInt() * it.count }
+    val totalPrice = order.listOfService.sumOf { it.price.toInt() * it.count }
     Card(
         shape = RoundedCornerShape(12),
         elevation = CardDefaults.cardElevation(4.dp),
@@ -93,7 +100,7 @@ fun OrderCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = rememberAsyncImagePainter(model = imageUrl),
+                        painter = rememberAsyncImagePainter(model = order.userImageUrl),
                         contentDescription = null,
                         modifier = Modifier
                             .size(64.dp)
@@ -113,7 +120,7 @@ fun OrderCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = customerName,
+                                text = order.userName,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold
@@ -134,32 +141,32 @@ fun OrderCard(
                             }
                         }
                         Text(
-                            text = "Order: ${orderType.joinToString()}",
+                            text = "Order: ${order.listOfService.joinToString { it.serviceName }}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
                             fontFamily = FontFamily.Serif
                         )
                         Text(
-                            text = "Date: $date",
+                            text = "Date: ${order.date}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
                             fontFamily = FontFamily.Serif
                         )
                         Text(
-                            text = "Time Slot: ${timeSlot.joinToString()}",
+                            text = "Time Slot: ${order.timeSlot.joinToString { it.time }}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
                             fontFamily = FontFamily.Serif
                         )
                         Text(
-                            text = "Payment Method: $paymentMethod",
+                            text = "Payment Method: ${order.paymentMethod}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
                             fontFamily = FontFamily.Serif
                         )
                     }
                 }
-                if (!accepted) {
+                if (order.orderStatus==OrderStatus.PENDING) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -184,7 +191,7 @@ fun OrderCard(
                             Text("Decline", color = Color.Black)
                         }
                     }
-                } else {
+                } else if(order.orderStatus==OrderStatus.ACCEPTED) {
                     Button(
                         onClick = onComplete,
                         colors = ButtonDefaults.buttonColors(
@@ -194,30 +201,190 @@ fun OrderCard(
                     ) {
                         Text("Completed", color = Color.Black)
                     }
+                }else if(order.orderStatus==OrderStatus.CANCELLED){
+                    Text(
+                        "Cancelled", color = Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }else{
+                    if(order.review.reviewTime.isNotEmpty()&&order.review.reviewText.toString().isNotEmpty()){
+                        ReviewText(order.review)
+                    }else {
+                        Text(
+                            "No review yet!", color = sallonColor,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                 }
                 MaterialDialog(
                     dialogState = showInfoDialog,
                     buttons = {
                         positiveButton(text = "OK") { showInfoDialog.hide() }
-                    }
+                    },
+                    border = BorderStroke(1.dp, sallonColor),
+                    shape = RoundedCornerShape(15.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Customer Phone Number: $phoneNumber")
-                        Text(text = "Customer Name: $customerName")
-                        Text(text = "Order Type: ${orderType.joinToString()}")
+                        Card(
+                            colors = CardColors(Color.White, Color.White, Color.White, Color.White),
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .border(1.dp, sallonColor, RoundedCornerShape(10.dp))
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                androidx.compose.material3.Text(
+                                    text = "Date:",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+
+                                    )
+                                androidx.compose.material3.Text(
+                                    text = order.date,
+                                    color = Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(
+                                    text = "Time Slots:",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+
+                                    )
+
+                                Text(
+                                    text = order.timeSlot.joinToString { it.time },
+                                    color = Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                            }
+
+                        }
+                        Spacer(modifier = Modifier.height(5.dp))
+                        Card(
+                            colors = CardColors(Color.White, Color.White, Color.White, Color.White),
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .border(1.dp, sallonColor, RoundedCornerShape(10.dp))
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(
+                                    text = "Gender Type:",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "${if (order.genderCounter[0] > 0) "Male  " else ""}${if (order.genderCounter[1] > 0) "Female  " else ""}${if (order.genderCounter[2] > 0) "Other" else ""}",
+                                    color = Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(15.dp))
+
+                        ExpandableCard(title = "Service List", expanded = true) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.Top,
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                order.listOfService.forEach { service ->
+
+                                    ServiceNameAndPriceCard(
+                                        serviceName = service.serviceName,
+                                        serviceTime = service.time,
+                                        servicePrice = service.price,
+                                        count = service.count
+                                    )
+
+                                }
+                            }
+                        }
+                        Spacer(
+                            modifier = Modifier.height(5.dp),
+                        )
+                        Card(
+                            colors = CardColors(Color.White, Color.White, Color.White, Color.White),
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .border(1.dp, sallonColor, RoundedCornerShape(10.dp))
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(
+                                    text = "Total Time:",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
+
+
+                                )
+                                Text(
+                                    text = "$totalTime Minutes",
+                                    color = Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(
+                                    text = "Total Price:",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = "Rs.$totalPrice",
+                                    color = sallonColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-
 @Composable
-fun PendingNoCard(pendingOrderToday: MutableState<Int>, acceptedOrderToday: MutableState<Int>) {
+fun ReviewText(
+    review: ReviewModel
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        RatingBar(onRatingChanged = { }, rating = review.rating)
+        Text(text = review.reviewText, color = sallonColor, fontSize = 16.sp)
+    }
+}
+@Composable
+fun PendingNoCard(pendingOrderToday: Int, acceptedOrderToday: Int) {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -256,7 +423,7 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>, acceptedOrderToday: Muta
                         fontSize = 16.sp
                     )
                     Text(
-                        text = pendingOrderToday.value.toString(),
+                        text = pendingOrderToday.toString(),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = Color.Black,
                             fontWeight = FontWeight.Bold
@@ -274,7 +441,7 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>, acceptedOrderToday: Muta
 
                     )
                     Text(
-                        text = acceptedOrderToday.value.toString(),
+                        text = acceptedOrderToday.toString(),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = Color.Black,
                             fontWeight = FontWeight.Bold
@@ -291,98 +458,96 @@ fun PendingNoCard(pendingOrderToday: MutableState<Int>, acceptedOrderToday: Muta
 
 @Composable
 fun ReviewCard(
-    imageUri: String,
-    reviewRating: Double,
-    username: String,
-    reviewText: String,
-    orderID: String
+    review : ReviewModel
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .border(
-                BorderStroke(2.dp, Color(sallonColor.toArgb())),  // Purple border color
-                shape = RoundedCornerShape(8.dp)
-            ),
-        colors = CardColors(
-            contentColor = Color.Black,
-            containerColor = Color.White,
-            disabledContentColor = Color.Black,
-            disabledContainerColor = Color.White
-        ),
-        shape = RoundedCornerShape(8.dp),
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = 4.dp
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        val currentTime = LocalDateTime.now()
+        val reviewTime =
+            LocalDateTime.parse(review.reviewTime, DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+        val duration = Duration.between(reviewTime, currentTime)
+        val timePassed = when {
+            duration.toDays() > 0 -> "${duration.toDays()} days ago"
+            duration.toHours() > 0 -> "${duration.toHours()} hours ago"
+            duration.toMinutes() > 0 -> "${duration.toMinutes()} minutes ago"
+            else -> "Just now"}
+        Column {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, start = 16.dp, end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = rememberAsyncImagePainter(imageUri),
-                    contentDescription = "Profile Picture",
+                Surface(
+                    shape = CircleShape,
+                    color = Color.LightGray,
                     modifier = Modifier
                         .size(50.dp)
-                        .clip(CircleShape)
-                        .border(1.5.dp, Color.Black, CircleShape),  // Border around the image
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    /*TODO profile picture*/
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Row {
                         Text(
-                            text = username,
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
+                            text = review.userName,
+                            fontSize = 18.sp,
+                            maxLines = 1
                         )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-                        RatingBar(
-                            rating = reviewRating,
-                            onRatingChanged = { /* Do nothing */ }
+                        Spacer(modifier = Modifier.weight(0.5f))
+                        Text(
+                            text = timePassed,
+                            fontSize = 14.sp,
+                            color = Color.Gray
                         )
-
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row {
+                        repeat((Math. round(review.rating * 10.0) / 10.0).toInt()) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Star Icon",
+                                tint = Color.Yellow,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = reviewText,
-                color = Color.Black,
-                style = MaterialTheme.typography.bodyLarge,
+                text = review.reviewText,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(top = 4.dp)
+                maxLines = 3,
+                modifier = Modifier
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .fillMaxWidth()
             )
         }
+
     }
 }
 
-@Preview
-@Composable
-fun OrderCardPreview() {
-    OrderCard(
-        imageUrl = "",
-        orderType = listOf("Haircut"),
-        date = "2021-09-12",
-        timeSlot = listOf("10:00 AM - 11:00 AM"),
-        phoneNumber = "1234567890",
-        customerName = "John Doe",
-        onAccept = { /*TODO*/ },
-        onDecline = { /*TODO*/ },
-        onComplete = { /*TODO*/ },
-        accepted = false,
-        paymentMethod = "Cash"
-    )
-}
+//@Preview
+//@Composable
+//fun OrderCardPreview() {
+//    OrderCard(
+//        imageUrl = "",
+//        orderType = listOf("Haircut"),
+//        date = "2021-09-12",
+//        timeSlot = listOf("10:00 AM - 11:00 AM"),
+//        phoneNumber = "1234567890",
+//        customerName = "John Doe",
+//        onAccept = { /*TODO*/ },
+//        onDecline = { /*TODO*/ },
+//        onComplete = { /*TODO*/ },
+//        accepted = false,
+//        paymentMethod = "Cash"
+//    )
+//}

@@ -23,6 +23,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,22 +65,21 @@ import java.time.Duration
 @Composable
 fun MainScreen1(
     orderViewModel: OrderViewModel = hiltViewModel(),
-    chatViewModel: MessageViewModel = hiltViewModel(),
+    messageViewModel: MessageViewModel = hiltViewModel(),
     navHostController: NavController,
     barberDataViewModel: GetBarberDataViewModel = hiltViewModel(),
     context: Context,
 ) {
 //    var selectedScreen by remember { mutableStateOf(barberDataViewModel.navigationItem.value) }
-    var count by remember {
-        mutableIntStateOf(0)
-    }
+    val newChat by messageViewModel.newChat.collectAsState()
+
 
     Scaffold(
         bottomBar = {
             BottomAppNavigationBar(
                 selectedItem = barberDataViewModel.navigationItem.value,
                 onItemSelected = { barberDataViewModel.navigationItem.value = it },
-                messageCount = chatViewModel._count.intValue
+                messageCount = newChat
             )
         }
     ) { paddingValues ->
@@ -93,21 +93,6 @@ fun MainScreen1(
                         TopScreen(
                             orderViewModel,
                         )
-                        LaunchedEffect(chatViewModel.barberChat.value.size) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                if (chatViewModel.barberChat.value.isNotEmpty()) {
-                                    count = 0
-                                    for (i in chatViewModel.barberChat.value) {
-                                        if (!i.message.seenbybarber) {
-                                            count++
-                                        }
-                                        if (count > 1) {
-                                            break
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
 
@@ -117,15 +102,15 @@ fun MainScreen1(
                 }
                 NavigationItem.Message -> {
                     barberDataViewModel.navigationItem.value=NavigationItem.Message
-                    MessageScreen(navHostController, chatViewModel,barberDataViewModel)
+                    MessageScreen(navHostController, messageViewModel,barberDataViewModel)
                 }
                 NavigationItem.Profile -> {
                     barberDataViewModel.navigationItem.value=NavigationItem.Profile
-                    ProfileScreen(navHostController,barberDataViewModel)
+                    ProfileScreen(navHostController,barberDataViewModel,orderViewModel)
                 }
                 NavigationItem.Review -> {
                     barberDataViewModel.navigationItem.value=NavigationItem.Review
-                    ReviewScreen(barberDataViewModel)
+                    ReviewScreen(barberDataViewModel,orderViewModel)
                 }
             }
         }
@@ -136,16 +121,15 @@ fun MainScreen1(
 fun TopScreen(
     orderViewModel: OrderViewModel,
 ) {
-
+val todayPendingOrderNo by orderViewModel.todayPendingOrderNo.collectAsState()
+val todayAcceptedOrderNo by orderViewModel.todayAcceptedOrderNo.collectAsState()
     DoubleCard(
         midCarBody = {
-            PendingNoCard(pendingOrderToday = orderViewModel.todayPendingOrderNo,
-                acceptedOrderToday = orderViewModel.todayAcceptedOrderNo)
+            PendingNoCard(pendingOrderToday = todayPendingOrderNo,
+                acceptedOrderToday =todayAcceptedOrderNo)
         },
         mainScreen = {
             HomeScreen(
-                pendingOrders = orderViewModel.pendingOrderList.value.toMutableList(),
-                acceptedOrders = orderViewModel.acceptedOrderList.value.toMutableList(),
                 orderViewModel = orderViewModel
             )
         },
@@ -172,29 +156,24 @@ fun OrderList(
         items(orders.size) { index ->
             val order = orders[index]
             OrderCard(
-                imageUrl = order.imageUrl,
-                orderType = order.orderType,
-                timeSlot = order.timeSlot,
-                phoneNumber = order.phoneNumber,
-                customerName = order.customerName,
-                date = order.date,
+                order=order,
                 onAccept = {
                     order.orderStatus = OrderStatus.ACCEPTED
                     scope.launch {
-                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.ACCEPTED.status)
+                        orderViewModel.updateOrderStatus(order, OrderStatus.ACCEPTED.status)
                     }
                 },
                 onDecline = {
-                    order.orderStatus = OrderStatus.DECLINED
+                    order.orderStatus = OrderStatus.CANCELLED
                     scope.launch {
-                        orderViewModel.updateOrderStatus(order.orderId, OrderStatus.DECLINED.status)
+                        orderViewModel.updateOrderStatus(order, OrderStatus.CANCELLED.status)
                     }
                 },
                 accepted = isAccepted,
                 onComplete = {
                     scope.launch {
                         orderViewModel.updateOrderStatus(
-                            order.orderId,
+                            order,
                             OrderStatus.COMPLETED.status
                         )
                     }
@@ -208,15 +187,16 @@ fun OrderList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    pendingOrders: MutableList<OrderModel>,
-    acceptedOrders: MutableList<OrderModel>,
     orderViewModel: OrderViewModel
 ) {
-    if(orderViewModel.isLoading.value){
+    if(orderViewModel.isUpdating.value){
         CommonDialog("Updating")
     }
+    val pendingOrders by orderViewModel.pendingOrderList.collectAsState()
+    val acceptedOrders by orderViewModel.acceptedOrderList.collectAsState()
+    val cancelledOrders by orderViewModel.cancelledOrderList.collectAsState()
     val screenHeight = LocalContext.current.resources.displayMetrics.heightPixels
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
 
     Box(
@@ -237,7 +217,7 @@ fun HomeScreen(
             ) {
                 Tab(
                     text = {
-                        Text("Pending Orders", color = Color.White)
+                        Text("Pending", color = Color.White)
                     },
                     selected = pagerState.currentPage == 0,
                     onClick = {
@@ -248,11 +228,20 @@ fun HomeScreen(
                     modifier = Modifier.clip(CircleShape)
                 )
                 Tab(
-                    text = { Text("Accepted Orders", color = Color.White) },
+                    text = { Text("Accepted", color = Color.White) },
                     selected = pagerState.currentPage == 1,
                     onClick = {
                         coroutineScope.launch {
                             pagerState.animateScrollToPage(1)
+                        }
+                    },
+                )
+                Tab(
+                    text = { Text("Cancelled", color = Color.White) },
+                    selected = pagerState.currentPage == 2,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(2)
                         }
                     },
                 )
@@ -269,6 +258,7 @@ fun HomeScreen(
                 when (page) {
                     0 -> OrderList(orders = pendingOrders, isAccepted = false,orderViewModel)
                     1 -> OrderList(orders = acceptedOrders, isAccepted = true,orderViewModel)
+                    2-> OrderList(orders = cancelledOrders, isAccepted = false, orderViewModel = orderViewModel)
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,8 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,12 +42,13 @@ fun ReviewScreen(
     BackHandler {
         barberDataViewModel.navigationItem.value= NavigationItem.Home
     }
+    val reviewList by orderViewModel.reviewList.collectAsState()
     DoubleCard(
         midCarBody = {
+            Log.d("averageRating", reviewList.map { it.review.rating }.average().toString())
             ReviewMidCard(
-                rating = remember {
-                    mutableDoubleStateOf(orderViewModel.averageRating.value)
-                }
+                rating =
+                    reviewList.map { it.review.rating }.average()
             )
         },
         mainScreen = {
@@ -54,7 +58,7 @@ fun ReviewScreen(
             Text(
                 text = "Review",
                 modifier = Modifier
-                    .padding(40.dp, 26.dp),
+                    .padding(40.dp, 16.dp),
                 textAlign = TextAlign.Center,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
@@ -66,13 +70,14 @@ fun ReviewScreen(
 
 @Composable
 fun ReviewList(
-    orderViewModel: OrderViewModel = hiltViewModel()
+    orderViewModel: OrderViewModel
 ) {
     val scrollState = rememberScrollState()
+    val reviewList by orderViewModel.reviewList.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(vertical = 10.dp, horizontal = 4.dp)
             .background(Color.White)
     ) {
         Column(
@@ -80,17 +85,14 @@ fun ReviewList(
                 .fillMaxWidth()
                 .verticalScroll(scrollState)
         ) {
-            orderViewModel.reviewList.value.forEach { review ->
+            reviewList.forEach { review ->
                 ReviewCard(
-                    imageUri = review.userDp,
-                    reviewRating = review.rating,
-                    username = review.userName,
-                    reviewText = review.reviewText,
-                    orderID = review.orderId
+                    review = review.review
                 )
                 Divider(
                     color = Color.Gray,
-                    thickness = 1.dp
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(horizontal = 30.dp)
                 )
             }
         }
@@ -99,21 +101,21 @@ fun ReviewList(
 
 @Composable
 fun ReviewMidCard(
-    rating: MutableState<Double>,
+    rating: Double,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "Your Average Rating",
-            color = Color.Black,
+            color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
+//            modifier = Modifier.padding(16.dp)
         )
-        RatingBar(onRatingChanged = { /*Do nothing*/ }, rating = rating.value)
+        RatingBar(onRatingChanged = { /*Do nothing*/ }, rating = rating)
     }
 }

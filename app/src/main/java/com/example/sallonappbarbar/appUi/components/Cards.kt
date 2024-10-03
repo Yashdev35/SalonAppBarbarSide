@@ -1,9 +1,13 @@
 package com.example.sallonappbarbar.appUi.components
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,13 +32,19 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +67,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.ui.theme.purple_200
+import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.screens.initiatorScreens.OnBoardingPageText
 import com.practicecoding.sallonapp.screens.initiatorScreens.OnBoardingText
 import kotlinx.coroutines.launch
@@ -256,7 +267,7 @@ fun DoubleCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 20.dp),
+                    .padding(top = 10.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -265,7 +276,7 @@ fun DoubleCard(
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 20.dp)
+                        .padding(top = 10.dp)
 //                        .verticalScroll(scrollState)
                     ,
                     shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
@@ -369,6 +380,106 @@ fun ProfileWithNotification(
 //                    modifier = Modifier
 //                        .size(22.dp)
 //                        .clickable { onNotificationClick() })
+            }
+        }
+    }
+}
+
+@Composable
+fun ServiceNameAndPriceCard(
+    serviceName: String,
+    serviceTime: String,
+    servicePrice: String,
+    count: Int
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = serviceName,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = serviceTime + "mins",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Text(
+            text = "Rs. $servicePrice",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        if (count > 0) {
+            Text(
+                text = "×${count}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ExpandableCard(
+    title: String,
+    expanded: Boolean,
+    content: @Composable () -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(expanded) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, sallonColor, RoundedCornerShape(10.dp)),
+            elevation = 4.dp,
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+                        .clickable { isExpanded = !isExpanded }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = title, fontWeight = FontWeight.Bold)
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Expand",
+                        tint = Color.Black
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(1.dp))
+        if (isExpanded) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    .border(1.dp, sallonColor, RoundedCornerShape(10.dp))
+                ,
+                elevation = 4.dp,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                content()
             }
         }
     }
