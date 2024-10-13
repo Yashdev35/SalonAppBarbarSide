@@ -236,68 +236,7 @@ fun OnBoardingBottomTextCardPreview() {
     )
 }
 
-@Composable
-fun DoubleCard(
-//    title: String, *Instead using topApp bar composable to add any thing at top
-//    onBackClick: () -> Unit,
-    midCarBody: @Composable () -> Unit,
-    navController: NavController = rememberNavController(),
-    mainScreen: @Composable () -> Unit,
-    topAppBar: @Composable () -> Unit = {},
-    bottomAppBar: @Composable () -> Unit = {}
-) {
-    val scrollState = rememberScrollState()
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = colorResource(id = R.color.purple_200)),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        topAppBar()
-        Card(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 30.dp),
-            shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
-            backgroundColor = colorResource(id = R.color.sallon_color)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 10.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
 
-                midCarBody()
-                Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 10.dp)
-//                        .verticalScroll(scrollState)
-                    ,
-                    shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
-                    backgroundColor = colorResource(id = R.color.white)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        mainScreen()
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .zIndex(1f) // Ensure the BottomAppBar is on top
-                        ) {
-                            bottomAppBar()
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun HeadingText(
@@ -317,71 +256,6 @@ fun HeadingText(
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(20.dp))
-    }
-}
-@Composable
-fun ProfileWithNotification(
-    onProfileClick: () -> Unit,
-    onNotificationClick: () -> Unit,
-    viewModel: GetBarberDataViewModel = hiltViewModel(),
-) {
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(key1 = true) {
-        viewModel.getCurrentBarber()
-    }
-    val barber = viewModel.barber.value
-    if (barber.name=="") {
-        ShimmerEffectProfile()
-    } else {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp)
-                .wrapContentHeight(),
-            color = purple_200,
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(vertical = 16.dp, horizontal = 8.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(shape = CircleShape,
-                    color = Color.LightGray,
-                    modifier = Modifier
-                        .size(35.dp)
-                        .clickable { onProfileClick() }) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model =barber.imageUri
-                        ),
-                        contentDescription = "User Profile Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = barber.name!!,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        color = Color.Black,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-//                Image(
-//                    painter = painterResource(id = R.drawable.notificationbell),
-//                    contentDescription = "notification bell",
-//                    modifier = Modifier
-//                        .size(22.dp)
-//                        .clickable { onNotificationClick() })
-            }
-        }
     }
 }
 

@@ -1,6 +1,5 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.MainScreens
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,11 +13,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +33,7 @@ import com.practicecoding.sallonapp.appui.components.RatingBar
 @Composable
 fun ReviewScreen(
     barberDataViewModel: GetBarberDataViewModel,
-    orderViewModel: OrderViewModel = hiltViewModel(),
+    orderViewModel: OrderViewModel ,
 ) {
     BackHandler {
         barberDataViewModel.navigationItem.value= NavigationItem.Home
@@ -45,7 +41,6 @@ fun ReviewScreen(
     val reviewList by orderViewModel.reviewList.collectAsState()
     DoubleCard(
         midCarBody = {
-            Log.d("averageRating", reviewList.map { it.review.rating }.average().toString())
             ReviewMidCard(
                 rating =
                     reviewList.map { it.review.rating }.average()
@@ -106,7 +101,7 @@ fun ReviewMidCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

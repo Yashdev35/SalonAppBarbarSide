@@ -45,6 +45,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.CommonDialog
 import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
@@ -52,7 +53,6 @@ import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -87,7 +87,7 @@ fun SlotAdderScreen(
                             navController.navigate(Screens.Home.route) {
                                 popUpTo(Screens.SlotAdderScr.route) { inclusive = true }
                             }
-                     } else {
+                        } else {
                             viewModel.onEvent(SlotsEvent.SetSlots(navController, context))
                         }
                     }
@@ -116,7 +116,8 @@ fun SlotAdderScreen(
             title = { Text("Confirmation", color = Color.Black) },
             text = {
                 Column {
-                    val message = if (isUpdating) "Do you want to update the slots?" else "Are you sure you want to add these slots. If any slots are empty then default time is added and you can change the slot later."
+                    val message =
+                        if (isUpdating) "Do you want to update the slots?" else "Are you sure you want to add these slots. If any slots are empty then default time is added and you can change the slot later."
                     Text(
                         text = message,
                         color = Color.Black
@@ -152,7 +153,12 @@ fun SlotAdderScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 allBarberInfoViewModel.openCloseTime.forEach { weekDay ->
-                    DayCard(slot = weekDay, viewModel, isUpdating = isUpdating, allBarberInfoViewModel = allBarberInfoViewModel)
+                    DayCard(
+                        slot = weekDay,
+                        viewModel,
+                        isUpdating = isUpdating,
+                        allBarberInfoViewModel = allBarberInfoViewModel
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 Spacer(modifier = Modifier.height(80.dp))
@@ -263,32 +269,50 @@ fun DayCard(
                     val closeTimeParts = closeTime.split(":").map { it.toInt() }
 
                     val normalizedOpenTime = openTimeParts[0] * 60 + openTimeParts[1]
-                    val normalizedCloseTime = if (closeTimeParts[0] == 0 && closeTimeParts[1] == 0) {
-                        1440 // Midnight
-                    } else {
-                        closeTimeParts[0] * 60 + closeTimeParts[1]
-                    }
+                    val normalizedCloseTime =
+                        if (closeTimeParts[0] == 0 && closeTimeParts[1] == 0) {
+                            1440 // Midnight
+                        } else {
+                            closeTimeParts[0] * 60 + closeTimeParts[1]
+                        }
 
                     if (normalizedOpenTime < normalizedCloseTime) {
                         if ((openTimeParts[1] == 0 || openTimeParts[1] == 30) && (closeTimeParts[1] == 0 || closeTimeParts[1] == 30)) {
                             if (!isUpdating) {
-                                val index = viewModel.openCloseTime.indexOfFirst { it.day == slot.day }
+                                val index =
+                                    viewModel.openCloseTime.indexOfFirst { it.day == slot.day }
                                 if (index != -1) {
                                     viewModel.openCloseTime[index].startTime = openTime
                                     viewModel.openCloseTime[index].endTime = closeTime
-                                    Toast.makeText(context, "Times Updated", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Times Updated", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             } else {
                                 scope.launch {
-                                    viewModel.onEvent(SlotsEvent.updateSlotTimes(slot.day, openTime, closeTime, context))
+                                    viewModel.onEvent(
+                                        SlotsEvent.updateSlotTimes(
+                                            slot.day,
+                                            openTime,
+                                            closeTime,
+                                            context
+                                        )
+                                    )
                                 }
                             }
                         } else {
-                            Toast.makeText(context, "Please select only 30 or 00 in minutes", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Please select only 30 or 00 in minutes",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             openTimeDialog.show()
                         }
                     } else {
-                        Toast.makeText(context, "Close time should be greater than open time", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Close time should be greater than open time",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         openTimeDialog.show()
                     }
                 }

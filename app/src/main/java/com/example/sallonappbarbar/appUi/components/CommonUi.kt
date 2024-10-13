@@ -73,53 +73,12 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.components.ReviewCard
+import com.example.sallonappbarbar.appUi.components.SaloonColorText
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import kotlinx.coroutines.delay
 
-@Composable
-fun CommonDialog(text:String="Loading") {
-    Dialog(
-        onDismissRequest = { },
-        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
-    ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .padding(horizontal = 20.dp)
-                .clip(
-                    RoundedCornerShape(10.dp)
-                )
-                .border(2.dp, sallonColor, RoundedCornerShape(10.dp))
-                .background(Color.White)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = text,
-                    modifier = Modifier,
-                    fontSize = 24.sp,
-                    color = sallonColor
-                )
-                Spacer(modifier = Modifier.width(40.dp))
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .width(50.dp),
-                    color = Color(sallonColor.toArgb()),
-                    trackColor = Color(purple_200.toArgb()),
-                )
-            }
-        }
-    }
-
-}
 @Composable
 fun SuccessfulDialog() {
     val showDialog= remember { mutableStateOf(true) }
@@ -448,12 +407,6 @@ fun RatingBar(
                     .clickable { onRatingChanged(index.toDouble()) }
             )
         }
-        Text(
-            text = rating.toString(),
-            modifier = Modifier.padding(start = 8.dp),
-            color = Color.Black,
-            fontSize = 16.sp
-        )
     }
 }
 

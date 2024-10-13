@@ -1,7 +1,9 @@
 package com.example.sallonappbarbar.appUi.viewModel
 
+import android.app.Application
 import android.os.Parcelable
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -13,6 +15,7 @@ import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.OrderModel
 import com.example.sallonappbarbar.data.model.ReviewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,11 +46,10 @@ class OrderViewModel @Inject constructor(
     var todayAcceptedOrderNo :StateFlow<Int> = _todayAcceptedOrderNo.asStateFlow()
 
     private val _reviewList = MutableStateFlow(emptyList<OrderModel>().toMutableList())
-    val reviewList: StateFlow<MutableList<OrderModel>> = _reviewList
+    val reviewList: StateFlow<MutableList<OrderModel>> = _reviewList.asStateFlow()
 
 
-    var isLoading = mutableStateOf(false)
-    var isUpdating = mutableStateOf(false)
+
     init {
         viewModelScope.launch {
             getOrders()
@@ -72,11 +74,10 @@ class OrderViewModel @Inject constructor(
                 _acceptedOrderList.update { it.toMutableList().apply { clear() } }
                 _completedOrderList.update { it.toMutableList().apply { clear() } }
                 _cancelledOrderList.update { it.toMutableList().apply { clear() } }
+                _reviewList.update { it.toMutableList().apply { clear() } }
                 _todayPendingOrderNo.update { 0 }
                 _todayAcceptedOrderNo.update { 0 }
                 orders.forEach { order ->
-                    Log.d("OrderViewModel", "getOrders: ${order.orderStatus}")
-
                     when (order.orderStatus) {
                         OrderStatus.PENDING -> {
                             if (order.date >= today) {
@@ -145,38 +146,14 @@ class OrderViewModel @Inject constructor(
         }
 
     }
-//    private suspend fun getReviews() {
-//        repo.getReviews{reviews ->
-//            _reviewList.value = reviews
-//            Log.d("reviewViewModel", "getReviews: ${_reviewList.value}")
-//            getAverageRating()
-//        }
-//    }
-
-//    private fun getAverageRating() {
-//        var totalRating = 0.0
-//        var totalReview = 0
-//        for (review in _reviewList.value) {
-//            totalRating += review.rating
-//            totalReview++
-//        }
-//        _averageRating.doubleValue = totalRating / totalReview
-//    }
     suspend fun updateOrderStatus(order: OrderModel, status: String) {
         viewModelScope.launch {
-            isUpdating.value=true
             repo.updateOrderStatus(order, status).collect {
                 when (it) {
                     is Resource.Success -> {
-                        Log.d("OrderViewModel", "updateOrderStatus: Success")
-                        Log.d("OrderViewModel", "updateOrderStatus: ${LocalDate.now()}")
-                        isUpdating.value=false
-//                        getOrders()
                     }
 
                     is Resource.Failure -> {
-                        Log.d("OrderViewModel", "updateOrderStatus: Error")
-                        isUpdating.value=false
                     }
 
                     else -> {}

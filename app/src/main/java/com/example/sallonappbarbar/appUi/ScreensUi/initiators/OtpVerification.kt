@@ -1,28 +1,35 @@
 package com.practicecoding.sallonapp.screens.initiatorScreens
 
 import android.app.Activity
+import android.app.Activity.RESULT_OK
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,22 +52,27 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.CommonDialog
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.AuthViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.ui.theme.sallonColor
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun PhoneNumberScreen(
+    navController: NavController,
     activity: Activity,
     viewModel: AuthViewModel = hiltViewModel(),
-    navigateToVerification: (String) -> Unit) {
+    navigateToVerification: (String) -> Unit
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     var phoneNumber by remember { mutableStateOf("") }
     var onVerificationCode by remember {
         mutableStateOf("")
@@ -70,6 +82,40 @@ fun PhoneNumberScreen(
     var isDialog by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = { result ->
+            if(result.resultCode == RESULT_OK) {
+                viewModel.signInWithIntent(context,result){
+                    viewModel.onSignInResult(it)
+                }
+            }
+        }
+    )
+
+    LaunchedEffect(key1 = state.signInError) {
+        state.signInError?.let { error ->
+            Toast.makeText(
+                context,
+                error,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    LaunchedEffect(key1 = state.isSignInSuccessful) {
+        if(state.isSignInSuccessful) {
+            Toast.makeText(
+                context,
+                "Sign in successful",
+                Toast.LENGTH_LONG
+            ).show()
+
+            navController.navigate(Screens.BarbarsSignUp.route)
+            viewModel.resetState()
+        }
+    }
 
     if (isDialog)
         CommonDialog()
@@ -153,6 +199,18 @@ fun PhoneNumberScreen(
                     .show()
             }
         }
+        Text(text = "Or")
+        Spacer(modifier = Modifier.height(10.dp))
+        GeneralButton(text = "Sign in with google", width = 250, height = 60, modifier = Modifier) {
+            isDialog = true
+            viewModel.signIn(context){
+                launcher.launch(
+                    IntentSenderRequest.Builder(
+                        it?: return@signIn
+                    ).build()
+                )
+            }
+        }
 
     }
 }
@@ -163,7 +221,7 @@ fun OtpVerificationScreen(
     activity: Activity,
     navController: NavController,
     viewModel: AuthViewModel = hiltViewModel()
-){
+) {
     var otpText by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -177,8 +235,7 @@ fun OtpVerificationScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            ,
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -259,7 +316,11 @@ fun OtpVerificationScreen(
                             is Resource.Success -> {
                                 isDialog = false
                                 activity.showMsg(it.result)
-                                navController.navigate(Screens.BarbarsSignUp.route )
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    key = "phoneNumber",
+                                    value = phoneNumber
+                                )
+                                navController.navigate(Screens.BarbarsSignUp.route)
                             }
 
                             is Resource.Failure -> {
@@ -280,6 +341,7 @@ fun OtpVerificationScreen(
 
     }
 }
+
 @Composable
 fun ClickableTextWithUnderline(text: String, onClick: () -> Unit) {
     val annotatedText = buildAnnotatedString {
@@ -326,7 +388,6 @@ fun ClickableTextWithUnderline(text: String, onClick: () -> Unit) {
         modifier = Modifier.padding(end = 16.dp)
     )
 }
-
 
 
 //@Preview(showBackground = true)

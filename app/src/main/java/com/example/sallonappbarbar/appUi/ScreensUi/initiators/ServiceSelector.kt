@@ -59,10 +59,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.CommonDialog
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
-import com.example.sallonappbarbar.appUi.viewModel.DisplayBarberEvent
 import com.example.sallonappbarbar.appUi.viewModel.ServiceViewModel
 import com.example.sallonappbarbar.data.Resource
 import com.example.sallonappbarbar.data.model.ServiceCat
@@ -70,45 +70,44 @@ import com.example.sallonappbarbar.data.model.ServiceModel
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun ServiceStandardAndPriceList(service : ServiceModel) {
+fun ServiceStandardAndPriceList(service: ServiceModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
         Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Price",
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = "Rs."+service.price,
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp
-                )
-            }
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = CenterVertically
+        ) {
+            Text(
+                text = "Price",
+                color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
+            )
+            Text(
+                text = "Rs." + service.price,
+                color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 4.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = CenterVertically
         ) {
             Text(
                 text = "Time",
@@ -117,19 +116,19 @@ fun ServiceStandardAndPriceList(service : ServiceModel) {
                 fontSize = 18.sp
             )
             Text(
-                text = service.time+" mins",
+                text = service.time + " mins",
                 color = Color.Black,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp
             )
         }
-        }
     }
+}
 
 @Composable
 fun ServiceCard(
     service: ServiceModel,
-    ) {
+) {
     val showPriceAndTimeInputDialog = remember { mutableStateOf(false) }
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
@@ -158,13 +157,13 @@ fun ServiceCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
-                        IconButton(
-                            onClick = {
-                                showPriceAndTimeInputDialog.value = true
-                            }
-                        ) {
-                            Icon(Icons.Default.Edit, contentDescription = "edit",tint= sallonColor)
+                    IconButton(
+                        onClick = {
+                            showPriceAndTimeInputDialog.value = true
                         }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "edit", tint = sallonColor)
+                    }
                 }
             }
         }
@@ -173,12 +172,12 @@ fun ServiceCard(
             colors = CardDefaults.cardColors(
                 contentColor = Color.White,
                 containerColor = Color.White,
-            ),border = BorderStroke(2.dp, sallonColor)
+            ), border = BorderStroke(2.dp, sallonColor)
         ) {
             ServiceStandardAndPriceList(service)
         }
     }
-    if(showPriceAndTimeInputDialog.value){
+    if (showPriceAndTimeInputDialog.value) {
         TimeAndPriceEditorDialog(
             service = service,
             showPriceAndTimeInputDialog = showPriceAndTimeInputDialog
@@ -190,7 +189,7 @@ fun ServiceCard(
 fun TimeAndPriceEditorDialog(
     service: ServiceModel,
     showPriceAndTimeInputDialog: MutableState<Boolean>,
-){
+) {
     var servicePrice by remember { mutableStateOf("") }
     var serviceTime by remember { mutableStateOf("") }
     AlertDialog(
@@ -201,32 +200,36 @@ fun TimeAndPriceEditorDialog(
         onDismissRequest = { showPriceAndTimeInputDialog.value = false },
         confirmButton = {
             Button(onClick = {
-                if(servicePrice.isNotEmpty()) {
+                if (servicePrice.isNotEmpty()) {
                     service.price = servicePrice.trim()
                     service.time = serviceTime.trim()
                     servicePrice = ""
                     serviceTime = ""
                     showPriceAndTimeInputDialog.value = false
                 }
-            },colors = ButtonDefaults.buttonColors(containerColor = sallonColor)) {
-                Text("Add",color = Color.White,
+            }, colors = ButtonDefaults.buttonColors(containerColor = sallonColor)) {
+                Text(
+                    "Add", color = Color.White,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp)
+                    fontSize = 18.sp
+                )
             }
         },
         dismissButton = {
             Button(
                 onClick = {
                     showPriceAndTimeInputDialog.value = false
-                },colors = ButtonDefaults.buttonColors(containerColor = sallonColor)
+                }, colors = ButtonDefaults.buttonColors(containerColor = sallonColor)
             ) {
-                Text("Cancel",color = Color.White,
+                Text(
+                    "Cancel", color = Color.White,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp)
+                    fontSize = 18.sp
+                )
             }
         },
         containerColor = Color.White,
-        title = { Text("Add Service Price and Time", color = Color.Black)},
+        title = { Text("Add Service Price and Time", color = Color.Black) },
         text = {
             Column {
                 OutlinedTextField(
@@ -245,8 +248,7 @@ fun TimeAndPriceEditorDialog(
                         focusedBorderColor = sallonColor,
                         unfocusedBorderColor = Color.Gray,
                         focusedLabelColor = sallonColor,
-                        focusedTextColor = Color.Black
-                        , unfocusedLabelColor = Color.Gray,
+                        focusedTextColor = Color.Black, unfocusedLabelColor = Color.Gray,
                         cursorColor = sallonColor,
                         unfocusedTextColor = Color.Gray
                     )
@@ -267,8 +269,7 @@ fun TimeAndPriceEditorDialog(
                         focusedBorderColor = sallonColor,
                         unfocusedBorderColor = Color.Gray,
                         focusedLabelColor = sallonColor,
-                        focusedTextColor = Color.Black
-                        , unfocusedLabelColor = Color.Gray,
+                        focusedTextColor = Color.Black, unfocusedLabelColor = Color.Gray,
                         cursorColor = sallonColor,
                         unfocusedTextColor = Color.Gray
                     )
@@ -277,6 +278,7 @@ fun TimeAndPriceEditorDialog(
         }
     )
 }
+
 @Composable
 fun ServiceSelectorScreen(
     navController: NavController,
@@ -297,25 +299,70 @@ fun ServiceSelectorScreen(
         ServiceCat(
             type = "Hair Services",
             services = listOf(
-                ServiceModel(isServiceSelected = false, id = 1, type = "Hair Service", serviceName = "Hair Cut"),
-                ServiceModel(isServiceSelected = false, id = 2, type = "Hair Service", serviceName = "Hair Color"),
-                ServiceModel(isServiceSelected = false, id = 3, type = "Hair Service", serviceName = "Hair Style"),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 1,
+                    type = "Hair Service",
+                    serviceName = "Hair Cut"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 2,
+                    type = "Hair Service",
+                    serviceName = "Hair Color"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 3,
+                    type = "Hair Service",
+                    serviceName = "Hair Style"
+                ),
             )
         ),
         ServiceCat(
             type = "Nail Services",
             services = listOf(
-                ServiceModel(isServiceSelected = false, id = 4, type = "Nail Service", serviceName = "Manicure"),
-                ServiceModel(isServiceSelected = false, id = 5, type = "Nail Service", serviceName = "Pedicure"),
-                ServiceModel(isServiceSelected = false, id = 6, type = "Nail Service", serviceName = "Nail Art"),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 4,
+                    type = "Nail Service",
+                    serviceName = "Manicure"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 5,
+                    type = "Nail Service",
+                    serviceName = "Pedicure"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 6,
+                    type = "Nail Service",
+                    serviceName = "Nail Art"
+                ),
             )
         ),
         ServiceCat(
             type = "Facial Services",
             services = listOf(
-                ServiceModel(isServiceSelected = false, id = 7, type = "Facial Service", serviceName = "Clean Up"),
-                ServiceModel(isServiceSelected = false, id = 8, type = "Facial Service", serviceName = "Facial"),
-                ServiceModel(isServiceSelected = false, id = 9, type = "Facial Service", serviceName = "Bleach"),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 7,
+                    type = "Facial Service",
+                    serviceName = "Clean Up"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 8,
+                    type = "Facial Service",
+                    serviceName = "Facial"
+                ),
+                ServiceModel(
+                    isServiceSelected = false,
+                    id = 9,
+                    type = "Facial Service",
+                    serviceName = "Bleach"
+                ),
             )
         )
     )
@@ -414,7 +461,8 @@ fun ServiceTypeItem(
         }
     }
 }
-fun aServiceSorter(services : List<ServiceModel>) : List<ServiceCat> {
+
+fun aServiceSorter(services: List<ServiceModel>): List<ServiceCat> {
     val serviceTypes = mutableListOf<ServiceCat>()
     services.forEach { service ->
         val serviceType = serviceTypes.find { it.type == service.type }
@@ -438,8 +486,8 @@ fun PriceSelector(
     serviceViewModel: ServiceViewModel = hiltViewModel()
 ) {
     BackHandler {
-        if(isUpdatingService){
-                navController.popBackStack()
+        if (isUpdatingService) {
+            navController.popBackStack()
         }
     }
     val tempServiceList = mutableListOf<ServiceModel>()
@@ -469,7 +517,7 @@ fun PriceSelector(
             item {
                 BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Price Selector")
             }
-            if(isUpdatingService){
+            if (isUpdatingService) {
                 items(tempServiceList) { service ->
                     ServiceCard(service = service)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -477,7 +525,7 @@ fun PriceSelector(
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
                 }
-            }else {
+            } else {
                 items(services) { service ->
                     ServiceCard(service = service)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -502,9 +550,9 @@ fun PriceSelector(
             )
         ) {
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
-                if(isUpdatingService){
+                if (isUpdatingService) {
                     Log.d("Barber", "PriceSelector: $tempServiceList")
-                }else{
+                } else {
                     Log.d("Barber", "PriceSelector: $services")
                 }
                 scope.launch(Dispatchers.Main) {
@@ -515,14 +563,16 @@ fun PriceSelector(
                                 is Resource.Success -> {
                                     isDialogVisible = false
                                     activity.showMsg(it.result)
-                                        navController.navigate(Screens.Home.route) {
-                                            navController.popBackStack()
-                                        }
+                                    navController.navigate(Screens.Home.route) {
+                                        navController.popBackStack()
+                                    }
                                 }
+
                                 is Resource.Failure -> {
                                     isDialogVisible = false
                                     activity.showMsg(it.exception.toString())
                                 }
+
                                 Resource.Loading -> {
                                     isDialogVisible = true
                                 }
@@ -530,28 +580,30 @@ fun PriceSelector(
                         }
                     } else {
                         val serviceTypes = aServiceSorter(services)
-                    viewModel.addServiceData(serviceTypes, activity).collect {
-                        when (it) {
-                            is Resource.Success -> {
-                                isDialogVisible = false
-                                activity.showMsg(it.result)
-                                if(isUpdatingServiceFSSScr) {
-                                    navController.navigate(Screens.Home.route) {
-                                        navController.popBackStack()
+                        viewModel.addServiceData(serviceTypes, activity).collect {
+                            when (it) {
+                                is Resource.Success -> {
+                                    isDialogVisible = false
+                                    activity.showMsg(it.result)
+                                    if (isUpdatingServiceFSSScr) {
+                                        navController.navigate(Screens.Home.route) {
+                                            navController.popBackStack()
+                                        }
+                                    } else {
+                                        navController.navigate(Screens.SlotAdderScr.route)
                                     }
-                                }else{
-                                    navController.navigate(Screens.SlotAdderScr.route)
+                                }
+
+                                is Resource.Failure -> {
+                                    isDialogVisible = false
+                                    activity.showMsg(it.exception.toString())
+                                }
+
+                                Resource.Loading -> {
+                                    isDialogVisible = true
                                 }
                             }
-                            is Resource.Failure -> {
-                                isDialogVisible = false
-                                activity.showMsg(it.exception.toString())
-                            }
-                            Resource.Loading -> {
-                                isDialogVisible = true
-                            }
                         }
-                    }
                     }
                 }
             }

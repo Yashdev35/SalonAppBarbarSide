@@ -13,6 +13,7 @@ import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.data.model.Slots
 import com.example.sallonappbarbar.data.model.SlotsDay
 import com.example.sallonappbarbar.data.model.TimeSlot
@@ -100,6 +101,7 @@ class SlotsViewModel @Inject constructor(
             }
             is Resource.Success -> {
                 isLoading.value = false
+                navController.navigate(Screens.MainScreen.route)
             }
             is Resource.Failure -> {
                 isLoading.value = false

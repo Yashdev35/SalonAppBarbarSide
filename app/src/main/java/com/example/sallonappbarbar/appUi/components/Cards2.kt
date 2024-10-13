@@ -383,78 +383,7 @@ fun ReviewText(
         Text(text = review.reviewText, color = sallonColor, fontSize = 16.sp)
     }
 }
-@Composable
-fun PendingNoCard(pendingOrderToday: Int, acceptedOrderToday: Int) {
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .height(80.dp),
-        elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardColors(
-            contentColor = Color.Black,
-            containerColor = Color.White,
-            disabledContentColor = Color.Black,
-            disabledContainerColor = Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.salon_app_logo), // replace with your logo resource
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Row {
-                    Text(
-                        text = "Today's Pending Orders: ",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = pendingOrderToday.toString(),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold
-                        ), fontSize = 20.sp
 
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    Text(
-                        text = "Today's Accepted Orders: ",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(top=0.5.dp)
-
-                    )
-                    Text(
-                        text = acceptedOrderToday.toString(),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold
-                        ), fontSize = 20.sp,
-
-
-                    )
-                }
-            }
-
-        }
-    }
-}
 
 @Composable
 fun ReviewCard(

@@ -43,12 +43,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.components.AlertDialogBox
+import com.example.sallonappbarbar.appUi.components.CommonDialog
 import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.model.TimeSlot
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import com.practicecoding.sallonapp.appui.components.Purple200Button
 import com.practicecoding.sallonapp.appui.components.SuccessfulDialog

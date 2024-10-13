@@ -2,6 +2,7 @@ package com.example.sallonappbarbar.appUi.components
 
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,11 +10,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -27,10 +31,13 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -38,11 +45,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.sallonappbarbar.R
+import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
+import com.example.sallonappbarbar.ui.theme.purple_200
 import com.example.sallonappbarbar.ui.theme.sallonColor
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
@@ -51,7 +64,7 @@ import com.exyte.animatednavbar.animation.indendshape.Height
 
 enum class NavigationItem(var icon: ImageVector, val iconName: String) {
     Home(Icons.Default.Home, "Home"),
-    Book(Icons.AutoMirrored.TwoTone.List, "Booking"),
+    Book(Icons.AutoMirrored.TwoTone.List, "Slots"),
     Message(Icons.AutoMirrored.Filled.Send, "Chats"),
     Review(Icons.Default.Favorite, "Review"),
     Profile(Icons.Default.Person, "Profile")
@@ -65,6 +78,67 @@ fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
         onClick()
     }
 }
+
+@Composable
+fun Profile(
+    onProfileClick: () -> Unit,
+    onNotificationClick: () -> Unit,
+    viewModel: GetBarberDataViewModel = hiltViewModel(),
+) {
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(key1 = true) {
+        viewModel.getCurrentBarber()
+    }
+    val barber = viewModel.barber.value
+    if (barber.name=="") {
+        ShimmerEffectProfile()
+    } else {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .wrapContentHeight(),
+            color = purple_200,
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(shape = CircleShape,
+                    color = Color.LightGray,
+                    modifier = Modifier
+                        .size(35.dp)
+                        .clickable { onProfileClick() }) {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            model =barber.imageUri
+                        ),
+                        contentDescription = "User Profile Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    androidx.compose.material.Text(
+                        text = barber.name!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        color = Color.Black,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+            }
+        }
+    }
+}
+
 
 @Composable
 fun BottomAppNavigationBar(

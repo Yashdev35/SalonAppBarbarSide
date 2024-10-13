@@ -61,16 +61,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
+import com.example.sallonappbarbar.appUi.components.CommonDialog
 import com.example.sallonappbarbar.appUi.utils.showMsg
 import com.example.sallonappbarbar.appUi.viewModel.BarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.LocationViewModel
@@ -80,9 +79,6 @@ import com.example.sallonappbarbar.data.model.LocationModel
 import com.example.sallonappbarbar.ui.theme.Purple80
 import com.example.sallonappbarbar.ui.theme.purple_200
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.practicecoding.sallonapp.appui.components.CommonDialog
 import com.practicecoding.sallonapp.appui.components.GeneralButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -92,13 +88,12 @@ import java.util.Locale
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AdvancedSignUpScreen(
+    phoneNumber:String,
     navController: NavController,
     activity: Activity,
     viewModel: BarberDataViewModel = hiltViewModel(),
     locationViewModel: LocationViewModel = hiltViewModel()
 ) {
-    val phone = FirebaseAuth.getInstance().currentUser?.phoneNumber.toString()
-
     val context = LocalContext.current
     locationViewModel.startLocationUpdates()
     val location by locationViewModel.getLocationLiveData().observeAsState()
@@ -124,9 +119,12 @@ fun AdvancedSignUpScreen(
     }
     val auth = FirebaseAuth.getInstance()
     var name by remember { mutableStateOf("") }
+    var barberPhoneNumber by remember {
+        mutableStateOf(phoneNumber)
+    }
     var mExpanded by remember { mutableStateOf(false) }
     var mSelectedText by remember { mutableStateOf("") }
-    var mTextFieldSize by remember { mutableStateOf(Size.Zero)}
+    var mTextFieldSize by remember { mutableStateOf(Size.Zero) }
     val icon = if (mExpanded)
         Icons.Filled.KeyboardArrowUp
     else
@@ -154,7 +152,7 @@ fun AdvancedSignUpScreen(
             selectedImageUri = imageUri
         }
 
-    val mCities = listOf("Male Salon" , "Female Salon" , "Unisex Salon")
+    val mCities = listOf("Male Salon", "Female Salon", "Unisex Salon")
 
     if (isDialog)
         CommonDialog()
@@ -174,7 +172,8 @@ fun AdvancedSignUpScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize().verticalScroll(scrollState),
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -214,9 +213,9 @@ fun AdvancedSignUpScreen(
                     )
                 }
                 OutlinedTextField(
-                    value = phone,
-                    enabled = false,
-                    onValueChange = { },
+                    value = barberPhoneNumber,
+                    enabled = true,
+                    onValueChange = {barberPhoneNumber=it },
                     label = { Text("Phone Number") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -232,6 +231,19 @@ fun AdvancedSignUpScreen(
                             tint = Color.Black
 
                         )
+                    },
+                    trailingIcon = {
+                        if (barberPhoneNumber.isNotEmpty()) {
+                            IconButton(onClick = { barberPhoneNumber = "" }) {
+                                Icon(
+                                    Icons.Filled.Clear,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+
+                                    )
+                            }
+                        }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
@@ -456,19 +468,20 @@ fun AdvancedSignUpScreen(
                     maxLines = 5
                 )
 
-                    GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
+                GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
                     if (name.isNotBlank() && selectedSalonType != null && city.isNotBlank() && state.isNotBlank() && streetAddress.isNotBlank() &&
                         shopName.isNotBlank() && aboutUs.isNotBlank() && locationDetails.latitude != null && locationDetails.longitude != null && selectedImageUri != null
                     ) {
                         val barberModel = BarberModel(
                             name = name.trim(),
                             shopName = shopName.trim(),
-                            phoneNumber = phone.toString(),
+                            phoneNumber = barberPhoneNumber.toString(),
                             saloonType = mSelectedText,
                             imageUri = selectedImageUri.toString(),
                             shopStreetAddress = streetAddress,
                             city = city.trim().replace(" ", "").replaceFirstChar { it.uppercase() },
-                            state = state.trim().replace(" ", "").replaceFirstChar { it.uppercase() },
+                            state = state.trim().replace(" ", "")
+                                .replaceFirstChar { it.uppercase() },
                             aboutUs = aboutUs,
                             noOfReviews = "0",
                             open = false,
@@ -501,19 +514,19 @@ fun AdvancedSignUpScreen(
                                 }
                             }
                         }
-                    } else if(selectedImageUri == null) {
+                    } else if (selectedImageUri == null) {
                         Toast.makeText(
                             context,
                             "Please select an image",
                             Toast.LENGTH_SHORT
                         ).show()
-                    }else if(locationDetails.latitude == null || locationDetails.longitude == null){
+                    } else if (locationDetails.latitude == null || locationDetails.longitude == null) {
                         Toast.makeText(
                             context,
                             "Turn on your location",
                             Toast.LENGTH_SHORT
                         ).show()
-                    }else {
+                    } else {
                         Toast.makeText(
                             context,
                             "Please fill all the fields",
@@ -524,10 +537,7 @@ fun AdvancedSignUpScreen(
             }
         }
     }
-            }
-
-
-
+}
 
 
 enum class SalonType(val label: String) {

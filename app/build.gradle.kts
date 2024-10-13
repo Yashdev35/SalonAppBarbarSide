@@ -7,6 +7,8 @@ plugins {
     id("dagger.hilt.android.plugin")
 //    kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
 }
 
 android {
@@ -44,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -63,6 +66,10 @@ dependencies {
     implementation("androidx.compose.material3:material3-android:1.2.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation ("com.google.android.gms:play-services-auth:21.2.0")
+    implementation ("com.google.firebase:firebase-messaging-ktx:24.0.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose-android:2.8.6")
+
 //    implementation("com.google.firebase:firebase-perf-ktx:21.0.0")
     //this is the code for navigation between screens
     val nav_version = "2.7.7"
