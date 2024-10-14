@@ -403,7 +403,7 @@ delay(500)
 
     override suspend fun addChat(message: LastMessage, useruid: String, status: Boolean) {
         try {
-            Firebase.firestore.collection("Chats").document("$useruid${auth.currentUser?.uid}")
+            Firebase.firestore.collection("Chats").document("${auth.currentUser?.uid}${useruid}")
                 .set(
                     mapOf(
                         "barberuid" to auth.currentUser?.uid.toString(),
@@ -468,7 +468,7 @@ delay(500)
 
     override suspend fun messageList(userUid: String): Flow<MutableList<Message>> = callbackFlow {
         val messageRef = Firebase.firestore.collection("Chats")
-            .document("$userUid${auth.currentUser?.uid}")
+            .document("${auth.currentUser?.uid}${userUid}")
             .collection("Messages")
 
         val subscription =
