@@ -118,7 +118,7 @@ fun MessageList(navHostController: NavController,messageViewModel: MessageViewMo
         Column(modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)) {
-            barberChat.reversed().forEach { chatModel ->
+            barberChat.sortedByDescending { it.message.time }.forEach { chatModel ->
                 MessageItemBox(
                     navHostController = navHostController,
 

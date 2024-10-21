@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sallon App (barbar)</string>
+    <string name="google_maps_key">${BuildConfig.googlemapAPiKey}</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.sallonappbarbar.appUi.ScreensUi.initiators
 
 import android.app.Activity
+import android.content.Intent
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
@@ -85,7 +86,6 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AdvancedSignUpScreen(
     phoneNumber:String,
@@ -98,7 +98,7 @@ fun AdvancedSignUpScreen(
     locationViewModel.startLocationUpdates()
     val location by locationViewModel.getLocationLiveData().observeAsState()
     var locationDetails by remember {
-        mutableStateOf(LocationModel(null, null, null, null, null))
+        mutableStateOf(LocationModel(null, null, null, null, null,null,null))
     }
     val geocoder = Geocoder(context, Locale.getDefault())
     val addresses: List<Address>? = location?.latitude?.let {
@@ -111,6 +111,8 @@ fun AdvancedSignUpScreen(
         locationDetails = LocationModel(
             location!!.latitude,
             location!!.longitude,
+            address.subLocality,
+            address.subThoroughfare,
             address.locality,
             address.adminArea,
             address.countryName
@@ -364,81 +366,7 @@ fun AdvancedSignUpScreen(
                         }
                     }
                 )
-                OutlinedTextField(
-                    value = streetAddress,
-                    onValueChange = { streetAddress = it },
-                    label = { Text("Enter local street address") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Purple80, // Change the outline color when focused
-                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                        errorBorderColor = purple_200
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    trailingIcon = {
-                        if (name.isNotEmpty()) {
-                            IconButton(onClick = { name = "" }) {
-                                Icon(
-                                    Icons.Filled.Clear,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.Black,
 
-                                    )
-                            }
-                        }
-                    }
-                )
-                OutlinedTextField(
-                    value = city,
-                    onValueChange = { city = it },
-                    label = { Text("City") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Purple80, // Change the outline color when focused
-                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                        errorBorderColor = purple_200
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    trailingIcon = {
-                        if (name.isNotEmpty()) {
-                            IconButton(onClick = { name = "" }) {
-                                Icon(
-                                    Icons.Filled.Clear,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.Black,
-
-                                    )
-                            }
-                        }
-                    }
-                )
-                OutlinedTextField(
-                    value = state,
-                    onValueChange = { state = it },
-                    label = { Text("State") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = Purple80, // Change the outline color when focused
-                        unfocusedBorderColor = purple_200, // Change the outline color when unfocused
-                        errorBorderColor = purple_200
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    trailingIcon = {
-                        if (name.isNotEmpty()) {
-                            IconButton(onClick = { name = "" }) {
-                                Icon(
-                                    Icons.Filled.Clear,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.Black,
-
-                                    )
-                            }
-                        }
-                    }
-                )
                 OutlinedTextField(
                     value = aboutUs,
                     onValueChange = { aboutUs = it },
@@ -469,8 +397,7 @@ fun AdvancedSignUpScreen(
                 )
 
                 GeneralButton(text = "Sign In", width = 350, height = 80, modifier = Modifier) {
-                    if (name.isNotBlank() && selectedSalonType != null && city.isNotBlank() && state.isNotBlank() && streetAddress.isNotBlank() &&
-                        shopName.isNotBlank() && aboutUs.isNotBlank() && locationDetails.latitude != null && locationDetails.longitude != null && selectedImageUri != null
+                    if (name.isNotBlank()   && shopName.isNotBlank() && aboutUs.isNotBlank() && locationDetails.latitude != null && locationDetails.longitude != null && selectedImageUri != null
                     ) {
                         val barberModel = BarberModel(
                             name = name.trim(),
@@ -478,10 +405,11 @@ fun AdvancedSignUpScreen(
                             phoneNumber = barberPhoneNumber.toString(),
                             saloonType = mSelectedText,
                             imageUri = selectedImageUri.toString(),
-                            shopStreetAddress = streetAddress,
-                            city = city.trim().replace(" ", "").replaceFirstChar { it.uppercase() },
-                            state = state.trim().replace(" ", "")
-                                .replaceFirstChar { it.uppercase() },
+                            shopStreetAddress = if (locationDetails.streetAddress==null){""}else {
+                                locationDetails.streetNumber + locationDetails.streetAddress
+                            },
+                            city = locationDetails.city,
+                            state = locationDetails.state,
                             aboutUs = aboutUs,
                             noOfReviews = "0",
                             open = false,
@@ -537,13 +465,6 @@ fun AdvancedSignUpScreen(
             }
         }
     }
-}
-
-
-enum class SalonType(val label: String) {
-    MALE("Male salon"),
-    FEMALE("Female salon"),
-    HYBRID("Hybrid salon"),
 }
 
 //@RequiresApi(Build.VERSION_CODES.O)

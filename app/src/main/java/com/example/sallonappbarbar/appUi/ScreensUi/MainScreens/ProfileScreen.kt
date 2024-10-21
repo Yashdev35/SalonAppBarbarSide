@@ -36,10 +36,8 @@ import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.Screens
 import com.example.sallonappbarbar.appUi.components.DoubleCard
 import com.example.sallonappbarbar.appUi.components.NavigationItem
-import com.example.sallonappbarbar.appUi.viewModel.AllBarberInfoViewModel
 import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
-import com.practicecoding.sallonapp.appui.components.BackButtonTopAppBar
 
 @Composable
 fun ProfileScreen(
@@ -47,6 +45,7 @@ fun ProfileScreen(
     barberDataViewModel: GetBarberDataViewModel,
     orderViewModel: OrderViewModel,
     viewModel: GetBarberDataViewModel = hiltViewModel(),
+
 ) {
     BackHandler {
         barberDataViewModel.navigationItem.value= NavigationItem.Home
@@ -84,17 +83,17 @@ fun ProfileScreenList(
             .verticalScroll(rememberScrollState())
     ) {
 
-        ShowingList(image = R.drawable.salon_app_logo, text = "Update Profile") {
+        ShowingList(image = R.drawable.editprofile, text = "Update Profile") {
             navController.navigate(Screens.UpdateProfile.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Booking History") {
+        ShowingList(image = R.drawable.bookinghistory, text = "Booking History") {
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 "completedOrderList",
                 completedOrderList
             )
             navController.navigate(Screens.BookingHistory.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Services") {
+        ShowingList(image = R.drawable.editservice, text = "Edit Services") {
             val isUpdatingService = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingService",
@@ -102,7 +101,7 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.SelecterScr.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Service Prices") {
+        ShowingList(image = R.drawable.editprice, text = "Edit Service Prices") {
             val isUpdatingService = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingService",
@@ -110,7 +109,7 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.PriceSelector.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "Edit Slot Timings") {
+        ShowingList(image = R.drawable.editservice, text = "Edit Slot Timings") {
             val isUpdatingSlotTime = true
             navController.currentBackStackEntry?.savedStateHandle?.set(
                 key = "isUpdatingSlotTime",
@@ -118,8 +117,9 @@ fun ProfileScreenList(
             )
             navController.navigate(Screens.SlotAdderScr.route)
         }
-        ShowingList(image = R.drawable.salon_app_logo, text = "About Us") {}
-        ShowingList(image = R.drawable.salon_app_logo, text = "Log Out") {}
+        ShowingList(image = R.drawable.aboutus, text = "About Us") {}
+        ShowingList(image = R.drawable.privacypolicy, text = "Privacy Policy") {}
+        ShowingList(image = R.drawable.logout, text = "Log Out") {}
     }
 
 }
@@ -153,8 +153,10 @@ fun ShowingList(image:Int,text:String,onClick:()->Unit){
         modifier = Modifier.clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically){
         Image(painter = painterResource(id =  image), contentDescription = text, modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape))
+            .size(35.dp)
+            .clip(CircleShape),
+            contentScale = ContentScale.FillBounds
+            )
         Spacer(modifier = Modifier.width(8.dp))
         Text(text=text, color = Color.Black)
     }

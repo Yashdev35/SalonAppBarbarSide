@@ -45,8 +45,7 @@ class GetBarberDataViewModel @Inject constructor(
        viewModelScope.launch{ repo.getBarber(uid) }
     }
 
-    private suspend fun updateBarber(barber: BarberModel,imageUri: Uri,context: Context,navController: NavController) {
-        _isLoading.value = true
+    private suspend fun updateBarber(barber: BarberModel,imageUri: Uri?,context: Context,navController: NavController) {
         viewModelScope.launch {
             repo.updateBarberInfo(barber, imageUri).collect {
                     resource ->
@@ -57,14 +56,12 @@ class GetBarberDataViewModel @Inject constructor(
                         navController.navigate(Screens.Home.route) {
                             navController.popBackStack()
                         }
-                        _isLoading.value = false
                     }
                     is Resource.Failure -> {
                         getCurrentBarber()
                         navController.navigate(Screens.Home.route) {
                             navController.popBackStack()
                         }
-                        _isLoading.value = false
                         Toast.makeText(context, "Failed to Update Info", Toast.LENGTH_SHORT).show()
                     }
                     else -> {}
@@ -106,7 +103,7 @@ class GetBarberDataViewModel @Inject constructor(
     }
 sealed class BarberEvent {
     data class getBarberById(val barberId : String) : BarberEvent()
-    data class updateBarber(val barber: BarberModel,val imageUri: Uri,
+    data class updateBarber(val barber: BarberModel,val imageUri: Uri?,
                             var context: Context,
                             val navController: NavController) : BarberEvent()
     data class getBarberPopular(val city: String, val limit: Long) : BarberEvent()

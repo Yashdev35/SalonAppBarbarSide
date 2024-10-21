@@ -47,7 +47,7 @@ fun DoubleCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 30.dp),
-            shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
+            shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
             backgroundColor = colorResource(id = R.color.sallon_color)
         ) {
             Column(
@@ -65,7 +65,7 @@ fun DoubleCard(
                         .padding(top = 10.dp)
 //                        .verticalScroll(scrollState)
                     ,
-                    shape = RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp),
+                    shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
                     backgroundColor = colorResource(id = R.color.white)
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {

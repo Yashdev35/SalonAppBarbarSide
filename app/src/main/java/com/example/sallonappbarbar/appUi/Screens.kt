@@ -19,4 +19,5 @@ sealed class Screens(
     object UpdateProfile:Screens("update_profile")
     object BookingHistory:Screens("booking_history_screen")
 
+
 }

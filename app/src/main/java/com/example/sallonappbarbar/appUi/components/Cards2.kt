@@ -413,14 +413,14 @@ fun ReviewCard(
                     .padding(top = 16.dp, start = 16.dp, end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color.LightGray,
+                Image(
+                    painter = rememberAsyncImagePainter(model = review.userDp),
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
-                ) {
-                    /*TODO profile picture*/
-                }
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.Gray, CircleShape)
+                )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Row {
@@ -438,20 +438,21 @@ fun ReviewCard(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Row {
-                        repeat((Math. round(review.rating * 10.0) / 10.0).toInt()) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Star Icon",
-                                tint = Color.Yellow,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+//                        repeat((Math. round(review.rating * 10.0) / 10.0).toInt()) {
+//                            Icon(
+//                                imageVector = Icons.Default.Star,
+//                                contentDescription = "Star Icon",
+//                                tint = Color.Yellow,
+//                                modifier = Modifier.size(18.dp)
+//                            )
+//                        }
+                        RatingBar(onRatingChanged = {}, rating = review.rating)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
             Text(
-                text = review.reviewText,
+                text = review.reviewText.ifEmpty { "No description" },
                 fontSize = 16.sp,
                 maxLines = 3,
                 modifier = Modifier

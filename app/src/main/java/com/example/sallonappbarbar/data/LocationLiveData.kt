@@ -81,7 +81,9 @@ class LocationLiveData(private var context: Context) : LiveData<LocationModel>()
                         longitude = location.longitude.toString(),
                         city = address.locality ?: "", // Fallback to empty strings if unavailable
                         state = address.adminArea ?: "", // Fallback to empty strings if unavailable
-                        country = address.countryName?:""
+                        country = address.countryName?:"",
+                        streetNumber = address.subLocality,
+                        streetAddress = address.subThoroughfare
                     )
 //                    Toast.makeText(context, address.locality+address.adminArea+address.countryName,Toast.LENGTH_LONG).show()
 

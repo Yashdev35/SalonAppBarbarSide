@@ -30,9 +30,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.StarHalf
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarOutline
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -156,7 +158,7 @@ fun LoadingAnimation(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.White, shape = RoundedCornerShape(16.dp)),
+            .background(color = Color.White),
         color = Color.White,
         tonalElevation = 20.dp,
         shape = RoundedCornerShape(16.dp)
@@ -382,12 +384,7 @@ fun RatingBar(
 
     var isHalfStar = (rating % 1) != 0.0
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         for (index in 1..stars) {
             Icon(
                 imageVector =
@@ -396,15 +393,16 @@ fun RatingBar(
                 } else {
                     if (isHalfStar) {
                         isHalfStar = false
-                        Icons.Rounded.Star
+                        Icons.AutoMirrored.Rounded.StarHalf
                     } else {
-                        Icons.Rounded.Star
+                        Icons.Rounded.StarOutline
                     }
                 },
                 contentDescription = null,
                 tint = starsColor,
                 modifier = modifier
                     .clickable { onRatingChanged(index.toDouble()) }
+                    .size(30.dp)
             )
         }
     }

@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -44,6 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sallonappbarbar.appUi.components.AlertDialogBox
 import com.example.sallonappbarbar.appUi.components.CommonDialog
+import com.example.sallonappbarbar.appUi.components.NavigationItem
+import com.example.sallonappbarbar.appUi.viewModel.GetBarberDataViewModel
 import com.example.sallonappbarbar.appUi.viewModel.SlotsEvent
 import com.example.sallonappbarbar.appUi.viewModel.SlotsViewModel
 import com.example.sallonappbarbar.data.model.TimeSlot
@@ -71,11 +72,12 @@ enum class SlotStatus {
 fun TimeSelection(
     date: LocalDate,
     navController: NavController,
-    slotsViewModel: SlotsViewModel = hiltViewModel()
+    barberDataViewModel: GetBarberDataViewModel,
+    slotsViewModel: SlotsViewModel = hiltViewModel(),
 ) {
     BackHandler {
-        navController.popBackStack()
-    }
+        barberDataViewModel.navigationItem.value= NavigationItem.Home    }
+
     LaunchedEffect(Unit) {
         slotsViewModel.onEvent(SlotsEvent.GetSlots)
     }
@@ -126,11 +128,9 @@ fun TimeSelection(
         val slots = generateTimeSlots(date, startTime, endTime, 30L, bookedTimes, notAvailableTimes)
         var showDialog by remember { mutableStateOf(false) }
         var dialogName by remember { mutableStateOf("") }
-        var dialogMessage by remember { mutableStateOf("") }
         val addSlotDialog = rememberMaterialDialogState()
-        val removeSlotDialog = rememberMaterialDialogState()
         if (slotsViewModel.isLoading.value) {
-            CommonDialog()
+            CommonDialog("Updating")
         }
         if (slotsViewModel.isSuccessfulDialog.value) {
             SuccessfulDialog()
@@ -304,13 +304,7 @@ fun TimeSelection(
                 ) {
                     title(text = "Add Slot to")
                 }
-                Text(
-                    text = "Tap the respective day above to edit the slots of that day.",
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold,
-                    textDecoration = TextDecoration.Underline,
-                    fontSize = 16.sp
-                )
+
                 Spacer(modifier = Modifier.height(65.dp))
             }
             Row(
@@ -321,6 +315,7 @@ fun TimeSelection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 GeneralButton(text = "Update", width = 150, height = 50, modifier = Modifier) {
+
                     scope.launch {
                         slotsViewModel.onEvent(SlotsEvent.SetSlots(navController, context))
                     }

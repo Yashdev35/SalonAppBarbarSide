@@ -90,7 +90,8 @@ fun ScheduleScreen(
         mainScreen = {
             TimeSelection(
                 selectedDate,
-                navController
+                navController,
+                barberDataViewModel
             )
         }
     )

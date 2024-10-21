@@ -78,7 +78,7 @@ fun ChatScreen(
                 .fillMaxSize()
                 .background(purple_200)
         ) {
-            TopBar(barber.image, barber.name,barber.phoneNumber)
+            TopBar(barber.image, barber.name,barber.phoneNumber){navController.popBackStack()}
             ChatMessages(modifier = Modifier.weight(1f), messageViewModel)
         }
         MessageInput(barber.uid)
@@ -86,7 +86,7 @@ fun ChatScreen(
 }
 
 @Composable
-fun TopBar(image: String, name: String,phoneNumber: String) {
+fun TopBar(image: String, name: String,phoneNumber: String,onBackClick: () -> Unit ) {
     val context = LocalContext.current
     Row(
         modifier = Modifier
@@ -101,6 +101,7 @@ fun TopBar(image: String, name: String,phoneNumber: String) {
                 .clip(CircleShape)
                 .background(Color.White)
                 .padding(4.dp)
+                .clickable { onBackClick() }
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,

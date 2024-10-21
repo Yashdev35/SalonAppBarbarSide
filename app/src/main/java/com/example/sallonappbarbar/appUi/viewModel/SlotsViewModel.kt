@@ -101,7 +101,6 @@ class SlotsViewModel @Inject constructor(
             }
             is Resource.Success -> {
                 isLoading.value = false
-                navController.navigate(Screens.MainScreen.route)
             }
             is Resource.Failure -> {
                 isLoading.value = false

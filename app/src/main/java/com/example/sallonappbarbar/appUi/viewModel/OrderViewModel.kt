@@ -127,7 +127,7 @@ class OrderViewModel @Inject constructor(
                                     add(order)
                                 }
                             }
-                            if(order.review.reviewText.isNotEmpty()&&order.review.reviewTime.isNotEmpty()){
+                            if(order.review.reviewTime.isNotEmpty()){
                                 _reviewList.update { it.toMutableList().apply { add(order) } }
                             }
                         }

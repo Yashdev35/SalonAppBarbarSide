@@ -41,16 +41,15 @@ fun AppNavigation(
         slideInHorizontally(
             initialOffsetX = { it },
             animationSpec = spring(
-                stiffness = Spring.StiffnessVeryLow,
+                stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioLowBouncy
             )
         )
-
     val exitTransition =
         slideOutHorizontally(
             targetOffsetX = { -it },
             animationSpec = spring(
-                stiffness = Spring.StiffnessVeryLow,
+                stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
             )
         )
@@ -59,7 +58,7 @@ fun AppNavigation(
         slideInHorizontally(
             initialOffsetX = { -it },
             animationSpec = spring(
-                stiffness = Spring.StiffnessVeryLow,
+                stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioLowBouncy
             )
         )
@@ -68,7 +67,7 @@ fun AppNavigation(
         slideOutHorizontally(
             targetOffsetX = { it },
             animationSpec = spring(
-                stiffness = Spring.StiffnessVeryLow,
+                stiffness = Spring.StiffnessLow,
                 dampingRatio = Spring.DampingRatioNoBouncy
             )
         )
@@ -241,6 +240,7 @@ phoneNumber = phoneNumber,
                 )
             }
         }
+
     }
 }
 
