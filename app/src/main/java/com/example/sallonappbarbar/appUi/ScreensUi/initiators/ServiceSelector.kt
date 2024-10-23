@@ -3,6 +3,7 @@ package com.example.sallonappbarbar.appUi.ScreensUi.initiators
 
 import android.app.Activity
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -51,6 +52,7 @@ import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -190,6 +192,7 @@ fun TimeAndPriceEditorDialog(
     service: ServiceModel,
     showPriceAndTimeInputDialog: MutableState<Boolean>,
 ) {
+    val context = LocalContext.current
     var servicePrice by remember { mutableStateOf("") }
     var serviceTime by remember { mutableStateOf("") }
     AlertDialog(
@@ -200,12 +203,22 @@ fun TimeAndPriceEditorDialog(
         onDismissRequest = { showPriceAndTimeInputDialog.value = false },
         confirmButton = {
             Button(onClick = {
-                if (servicePrice.isNotEmpty()) {
-                    service.price = servicePrice.trim()
-                    service.time = serviceTime.trim()
-                    servicePrice = ""
-                    serviceTime = ""
-                    showPriceAndTimeInputDialog.value = false
+                if (servicePrice.isNotEmpty() && serviceTime.isNotEmpty()) {
+                    servicePrice = servicePrice.trim()
+                    serviceTime = serviceTime.trim()
+                    if (servicePrice.toInt() > 0 && serviceTime.toInt() > 0) {
+                        service.price = servicePrice
+                        service.time = serviceTime
+                        servicePrice = ""
+                        serviceTime = ""
+                        showPriceAndTimeInputDialog.value = false
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Price and Time must be greater than 0",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }, colors = ButtonDefaults.buttonColors(containerColor = sallonColor)) {
                 Text(
@@ -285,6 +298,10 @@ fun ServiceSelectorScreen(
     isUpdatingService: Boolean = false,
     viewModel: AllBarberInfoViewModel = hiltViewModel()
 ) {
+    BackHandler {
+        navController.popBackStack()
+    }
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     var selectedServices by remember { mutableStateOf(emptyList<ServiceModel>()) }
 
@@ -375,7 +392,7 @@ fun ServiceSelectorScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Service Available")
+            BackButtonTopAppBar(onBackClick = { navController.popBackStack() }, title = "Service Available")
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -399,15 +416,19 @@ fun ServiceSelectorScreen(
                 }
             }
             GeneralButton(text = "Next", width = 350, height = 80, modifier = Modifier) {
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    key = "services",
-                    value = selectedServices
-                )
-                navController.currentBackStackEntry?.savedStateHandle?.set(
-                    key = "isUpdatingServiceFSSScr",
-                    value = isUpdatingService
-                )
-                navController.navigate(Screens.PriceSelector.route)
+                if(selectedServices.size > 2 && !isUpdatingService){
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        key = "services",
+                        value = selectedServices
+                    )
+                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                        key = "isUpdatingServiceFSSScr",
+                        value = isUpdatingService
+                    )
+                    navController.navigate(Screens.PriceSelector.route)
+                }else{
+                    Toast.makeText(context, "Please select at least 3 services", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -486,9 +507,7 @@ fun PriceSelector(
     serviceViewModel: ServiceViewModel = hiltViewModel()
 ) {
     BackHandler {
-        if (isUpdatingService) {
             navController.popBackStack()
-        }
     }
     val tempServiceList = mutableListOf<ServiceModel>()
     serviceViewModel.serviceList.value.forEach { serviceCat ->
@@ -515,7 +534,7 @@ fun PriceSelector(
                 .fillMaxSize()
         ) {
             item {
-                BackButtonTopAppBar(onBackClick = { /*TODO*/ }, title = "Price Selector")
+                BackButtonTopAppBar(onBackClick = {navController.popBackStack()}, title = "Price Selector")
             }
             if (isUpdatingService) {
                 items(tempServiceList) { service ->

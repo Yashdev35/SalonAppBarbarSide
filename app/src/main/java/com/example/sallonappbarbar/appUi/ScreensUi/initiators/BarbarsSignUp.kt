@@ -6,6 +6,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -95,30 +96,50 @@ fun AdvancedSignUpScreen(
     locationViewModel: LocationViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    locationViewModel.startLocationUpdates()
     val location by locationViewModel.getLocationLiveData().observeAsState()
-    var locationDetails by remember {
-        mutableStateOf(LocationModel(null, null, null, null, null,null,null))
-    }
+
+// Initialize Geocoder
     val geocoder = Geocoder(context, Locale.getDefault())
-    val addresses: List<Address>? = location?.latitude?.let {
-        geocoder.getFromLocation(
-            it.toDouble(), location!!.longitude!!.toDouble(), 1
-        )
+
+// Initialize locationDetails with default values (nulls)
+    var locationDetails by remember {
+        mutableStateOf(LocationModel(null, null, null, null, null, null, null))
     }
-    if (!addresses.isNullOrEmpty()) {
-        val address = addresses[0]
-        locationDetails = LocationModel(
-            location!!.latitude,
-            location!!.longitude,
-            address.subLocality,
-            address.subThoroughfare,
-            address.locality,
-            address.adminArea,
-            address.countryName
-        )
-//        Toast.makeText(context,locationDetails.latitude,Toast.LENGTH_SHORT).show()
+
+// Check if location is not null
+    if (location != null) {
+        // Get the latitude and longitude values
+        val latitude = location?.latitude
+        val longitude = location?.longitude
+
+        if (latitude != null && longitude != null) {
+            // Use Geocoder to get the address from latitude and longitude
+            val addresses: List<Address>? = geocoder.getFromLocation(latitude.toDouble(), longitude.toDouble(), 1)
+
+            if (!addresses.isNullOrEmpty()) {
+                val address = addresses[0]
+                // Update locationDetails with the retrieved address and location data
+                locationDetails = LocationModel(
+                    location!!.latitude,
+                    location!!.longitude,
+                    address.subLocality,
+                    address.subThoroughfare,
+                    address.locality,
+                    address.adminArea,
+                    address.countryName
+                )
+                // Uncomment to see the latitude in a Toast for debugging
+                // Toast.makeText(context, "Lat: $latitude, Long: $longitude", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            // Handle cases where latitude or longitude is null
+            Log.e("LocationError", "Latitude or Longitude is null")
+        }
+    } else {
+        // Handle cases where location is null (waiting for location updates)
+        Log.e("LocationError", "Location data is not available yet")
     }
+
     val auth = FirebaseAuth.getInstance()
     var name by remember { mutableStateOf("") }
     var barberPhoneNumber by remember {
