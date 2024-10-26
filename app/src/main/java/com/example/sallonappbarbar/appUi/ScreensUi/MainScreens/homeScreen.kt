@@ -140,10 +140,10 @@ fun OrderStatusScreen(
                     )
             ) { page ->
                 when (page) {
-                    0 -> OrderList(orders = pendingOrders, isAccepted = false, orderViewModel)
-                    1 -> OrderList(orders = acceptedOrders, isAccepted = true, orderViewModel)
+                    0 -> OrderList(ordersList = pendingOrders,  isAccepted = false, orderViewModel)
+                    1 -> OrderList(ordersList = acceptedOrders, isAccepted = true, orderViewModel)
                     2 -> OrderList(
-                        orders = cancelledOrders,
+                        ordersList = cancelledOrders,
                         isAccepted = false,
                         orderViewModel = orderViewModel
                     )

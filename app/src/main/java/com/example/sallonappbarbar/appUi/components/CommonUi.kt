@@ -153,73 +153,86 @@ fun LoadingAnimation(
     circleSize: Dp = 25.dp,
     circleColor: Color = sallonColor,
     spaceBetween: Dp = 10.dp,
-    travelDistance: Dp = 20.dp
+    travelDistance: Dp = 20.dp,
+    text:String = "Loading"
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White),
-        color = Color.White,
-        tonalElevation = 20.dp,
-        shape = RoundedCornerShape(16.dp)
+    Dialog(
+        onDismissRequest = { },
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     ) {
-
-        Column(
-            modifier = Modifier,
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Surface(
+            modifier = Modifier
+                .wrapContentSize()
+                .background(color = Color.White, shape = RoundedCornerShape(16.dp)),
+            color = Color.White,
+            tonalElevation = 20.dp,
+            shape = RoundedCornerShape(16.dp)
         ) {
 
-
-            val circles = listOf(
-                remember { Animatable(initialValue = 0f) },
-                remember { Animatable(initialValue = 0f) },
-                remember { Animatable(initialValue = 0f) }
-            )
-
-            circles.forEachIndexed { index, animatable ->
-
-                LaunchedEffect(key1 = animatable) {
-                    delay(index * 100L)
-                    animatable.animateTo(
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = keyframes {
-                                durationMillis = 1200
-                                0.0f at 0 using LinearOutSlowInEasing
-                                1.0f at 300 using LinearOutSlowInEasing
-                                0.0f at 600 using LinearOutSlowInEasing
-                                0.0f at 1200 using LinearOutSlowInEasing
-                            },
-                            repeatMode = RepeatMode.Restart
-                        )
-                    )
-                }
-            }
-
-            val circleValues = circles.map { it.value }
-            val distance = with(LocalDensity.current) { travelDistance.toPx() }
-
-            Row(
-                modifier = modifier,
-                horizontalArrangement = Arrangement.spacedBy(spaceBetween)
+            Column(
+                modifier = Modifier.padding(vertical = 40.dp, horizontal = 45.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                circleValues.forEach { value ->
-                    Box(
-                        modifier = Modifier
-                            .size(circleSize)
-                            .graphicsLayer {
-                                translationY = -value * distance
-                            }
-                            .background(
-                                color = circleColor,
-                                shape = CircleShape
-                            )
-                    )
-                }
-            }
-        }
 
+
+                val circles = listOf(
+                    remember { Animatable(initialValue = 0f) },
+                    remember { Animatable(initialValue = 0f) },
+                    remember { Animatable(initialValue = 0f) }
+                )
+
+                circles.forEachIndexed { index, animatable ->
+
+                    LaunchedEffect(key1 = animatable) {
+                        delay(index * 100L)
+                        animatable.animateTo(
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = keyframes {
+                                    durationMillis = 1200
+                                    0.0f at 0 using LinearOutSlowInEasing
+                                    1.0f at 300 using LinearOutSlowInEasing
+                                    0.0f at 600 using LinearOutSlowInEasing
+                                    0.0f at 1200 using LinearOutSlowInEasing
+                                },
+                                repeatMode = RepeatMode.Restart
+                            )
+                        )
+                    }
+                }
+
+                val circleValues = circles.map { it.value }
+                val distance = with(LocalDensity.current) { travelDistance.toPx() }
+
+                Row(
+                    modifier = modifier,
+                    horizontalArrangement = Arrangement.spacedBy(spaceBetween)
+                ) {
+                    circleValues.forEach { value ->
+                        Box(
+                            modifier = Modifier
+                                .size(circleSize)
+                                .graphicsLayer {
+                                    translationY = -value * distance
+                                }
+                                .background(
+                                    color = circleColor,
+                                    shape = CircleShape
+                                )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = text,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+            }
+
+        }
     }
 }
 

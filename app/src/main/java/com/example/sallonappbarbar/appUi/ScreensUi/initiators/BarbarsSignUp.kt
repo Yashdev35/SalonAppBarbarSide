@@ -108,13 +108,9 @@ fun AdvancedSignUpScreen(
 
 // Check if location is not null
     if (location != null) {
-        // Get the latitude and longitude values
-        val latitude = location?.latitude
-        val longitude = location?.longitude
-
-        if (latitude != null && longitude != null) {
+        if (location?.latitude != null && location?.longitude != null) {
             // Use Geocoder to get the address from latitude and longitude
-            val addresses: List<Address>? = geocoder.getFromLocation(latitude.toDouble(), longitude.toDouble(), 1)
+            val addresses: List<Address>? = geocoder.getFromLocation(location?.latitude!!.toDouble(), location?.longitude!!.toDouble(), 1)
 
             if (!addresses.isNullOrEmpty()) {
                 val address = addresses[0]
@@ -128,15 +124,14 @@ fun AdvancedSignUpScreen(
                     address.adminArea,
                     address.countryName
                 )
-                // Uncomment to see the latitude in a Toast for debugging
-                // Toast.makeText(context, "Lat: $latitude, Long: $longitude", Toast.LENGTH_SHORT).show()
             }
         } else {
             // Handle cases where latitude or longitude is null
-            Log.e("LocationError", "Latitude or Longitude is null")
+            CommonDialog(text = "Error getting current Location")
         }
     } else {
         // Handle cases where location is null (waiting for location updates)
+        CommonDialog(text = "Error getting current Location")
         Log.e("LocationError", "Location data is not available yet")
     }
 
@@ -152,13 +147,9 @@ fun AdvancedSignUpScreen(
         Icons.Filled.KeyboardArrowUp
     else
         Icons.Filled.KeyboardArrowDown
-    var selectedSalonType by remember { mutableStateOf(" ") }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     var shopName by remember { mutableStateOf(" ") }
-    var streetAddress by remember { mutableStateOf("") }
-    var state by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
     var aboutUs by remember { mutableStateOf("") }
     var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
@@ -433,7 +424,7 @@ fun AdvancedSignUpScreen(
                             state = locationDetails.state,
                             aboutUs = aboutUs,
                             noOfReviews = "0",
-                            open = false,
+                            open = true,
                             rating = 0.0,
                             lat = locationDetails.latitude!!.toDouble(),
                             long = locationDetails.longitude!!.toDouble(),
@@ -472,7 +463,7 @@ fun AdvancedSignUpScreen(
                     } else if (locationDetails.latitude == null || locationDetails.longitude == null) {
                         Toast.makeText(
                             context,
-                            "Turn on your location",
+                            "Error getting Current Location.Please turn on Location",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {

@@ -317,45 +317,29 @@ fun ServiceSelectorScreen(
             type = "Hair Services",
             services = listOf(
                 ServiceModel(
-                    isServiceSelected = false,
                     id = 1,
                     type = "Hair Service",
                     serviceName = "Hair Cut"
                 ),
                 ServiceModel(
-                    isServiceSelected = false,
                     id = 2,
                     type = "Hair Service",
                     serviceName = "Hair Color"
                 ),
                 ServiceModel(
-                    isServiceSelected = false,
                     id = 3,
                     type = "Hair Service",
                     serviceName = "Hair Style"
                 ),
-            )
-        ),
-        ServiceCat(
-            type = "Nail Services",
-            services = listOf(
                 ServiceModel(
-                    isServiceSelected = false,
                     id = 4,
-                    type = "Nail Service",
-                    serviceName = "Manicure"
+                    type = "Hair Service",
+                    serviceName = "Hair Wash"
                 ),
                 ServiceModel(
-                    isServiceSelected = false,
                     id = 5,
-                    type = "Nail Service",
-                    serviceName = "Pedicure"
-                ),
-                ServiceModel(
-                    isServiceSelected = false,
-                    id = 6,
-                    type = "Nail Service",
-                    serviceName = "Nail Art"
+                    type = "Hair Service",
+                    serviceName = "Conditioning"
                 ),
             )
         ),
@@ -363,25 +347,38 @@ fun ServiceSelectorScreen(
             type = "Facial Services",
             services = listOf(
                 ServiceModel(
-                    isServiceSelected = false,
-                    id = 7,
+                    id = 6,
                     type = "Facial Service",
-                    serviceName = "Clean Up"
+                    serviceName = "Make Up"
                 ),
                 ServiceModel(
-                    isServiceSelected = false,
-                    id = 8,
+                    id = 7,
                     type = "Facial Service",
                     serviceName = "Facial"
                 ),
                 ServiceModel(
-                    isServiceSelected = false,
-                    id = 9,
+                    id = 8,
                     type = "Facial Service",
-                    serviceName = "Bleach"
+                    serviceName = "Shaving"
                 ),
             )
-        )
+        ),
+        ServiceCat(
+            type = "Nail Services",
+            services = listOf(
+                ServiceModel(
+                    id = 9,
+                    type = "Nail Service",
+                    serviceName = "Manicure"
+                ),
+                ServiceModel(
+                    id = 10,
+                    type = "Nail Service",
+                    serviceName = "Nail Polish"
+                ),
+            )
+        ),
+
     )
 
     Surface(color = purple_200) {

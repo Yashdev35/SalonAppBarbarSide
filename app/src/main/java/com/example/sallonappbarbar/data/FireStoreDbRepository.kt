@@ -44,6 +44,7 @@ interface FireStoreDbRepository {
     suspend fun getChatBarber(): Flow<MutableList<ChatModel>>
     suspend fun messageList(barberUid: String): Flow<MutableList<Message>>
     suspend fun getOrder(): Flow<List<OrderModel>>
+//    suspend fun getOrders(onOrdersUpdated: (List<OrderModel>) -> Unit)
     suspend fun updateOrderStatus(order: OrderModel, status: String): Flow<Resource<String>>
     suspend fun getReview(barberuid:String):Flow<List<ReviewModel>>
     suspend fun updateSlotTimes(

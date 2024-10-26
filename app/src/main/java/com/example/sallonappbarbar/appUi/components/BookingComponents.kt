@@ -1,5 +1,7 @@
 package com.example.sallonappbarbar.appUi.components
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +24,12 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,53 +43,148 @@ import com.example.sallonappbarbar.R
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.appUi.viewModel.OrderViewModel
 import com.example.sallonappbarbar.data.model.OrderModel
+import com.practicecoding.sallonapp.appui.components.LoadingAnimation
+import com.practicecoding.sallonapp.appui.components.Purple200Button
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun OrderList(
-    orders: List<OrderModel>, isAccepted: Boolean,
+    ordersList: List<OrderModel>, isAccepted: Boolean,
     orderViewModel: OrderViewModel
 ) {
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    var showAlertDialogBox = remember { mutableStateOf(false) }
+    var phoneNumber by remember {
+        mutableStateOf("")
+    }
+    var message by remember {
+        mutableStateOf("")
+    }
+    var showLoadingBox by remember {
+        mutableStateOf(false)
+    }
+    if (showLoadingBox){
+        LoadingAnimation(text = "Updating...")
+    }
+
+    if (showAlertDialogBox.value) {
+        AlertDialogBox(
+            title = "Want to send whatsapp message",
+            message = "",
+            onConfirmButton = {
+                Purple200Button(text = "Yes", onClick = {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(
+                                String.format(
+                                    "https://api.whatsapp.com/send?phone=%s&text=%s",
+                                    "+91$phoneNumber",
+                                    message
+                                )
+                            )
+                        )
+                    )
+                    showAlertDialogBox.value=false
+                })
+            },
+            onDismissButton = {
+                Purple200Button(
+                    text = "No",
+                    onClick = { showAlertDialogBox.value = false })
+            }, onDismissRequest = { showAlertDialogBox.value = false })
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        items(orders.size) { index ->
-            val order = orders[index]
+        items(ordersList.size) { index ->
+            val order = ordersList[index]
             OrderCard(
                 order = order,
                 onAccept = {
-//                    order.orderStatus = OrderStatus.ACCEPTED
-                   val job= scope.launch {
+                    val job = scope.launch(Dispatchers.Main) {
                         orderViewModel.updateOrderStatus(order, OrderStatus.ACCEPTED.status)
+                        showLoadingBox = true
+                        delay(1000)
                     }
                     job.invokeOnCompletion {
-                        Toast.makeText(context,"Booking Status updated Successfully👍",Toast.LENGTH_SHORT).show()
+                        showLoadingBox = false
+                        phoneNumber = order.userPhoneNumber
+                        message = "Hello, I am accepting your booking.\n" +
+                                "Thank you!"
+                        showAlertDialogBox.value = true
+                        sendSms(
+                            order = order,
+                            context,
+                            message = "Hello, I am accepting your booking.\n" +
+                                    "Thank you!"
+                        )
+                        Toast.makeText(
+                            context,
+                            "Booking Status updated Successfully👍",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 onDecline = {
-//                    order.orderStatus = OrderStatus.CANCELLED
-                    val job= scope.launch {
+                    val job = scope.launch(Dispatchers.Main) {
                         orderViewModel.updateOrderStatus(order, OrderStatus.CANCELLED.status)
+                        showLoadingBox = true
+                        delay(1000)
                     }
                     job.invokeOnCompletion {
-                        Toast.makeText(context,"Booking Status updated Successfully👍",Toast.LENGTH_SHORT).show()
+                        showLoadingBox = false
+                        phoneNumber = order.userPhoneNumber
+                        message = "Hello, I am cancelling your booking.\n" +
+                                "Sorry for any inconvenience caused.\n" +
+                                "Thank you!"
+                        showAlertDialogBox.value = true
+                        sendSms(
+                            order = order,
+                            context,
+                            message = "Hello, I am cancelling your booking.\n" +
+                                    "Sorry for any inconvenience caused.\n" +
+                                    "Thank you!"
+                        )
+                        Toast.makeText(
+                            context,
+                            "Booking Status updated Successfully👍",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
                     }
                 },
                 accepted = isAccepted,
                 onComplete = {
-                    val job=   scope.launch {
+                    val job = scope.launch(Dispatchers.Main) {
                         orderViewModel.updateOrderStatus(
                             order,
                             OrderStatus.COMPLETED.status
                         )
+                        showLoadingBox = true
+                        delay(1000)
                     }
                     job.invokeOnCompletion {
-                        Toast.makeText(context,"Booking Status updated Successfully👍",Toast.LENGTH_SHORT).show()
+                        showLoadingBox = false
+                        phoneNumber = order.userPhoneNumber
+                        message = "Your booking has been completed."+"\nThank you!"
+                        showAlertDialogBox.value = true
+                        sendSms(
+                            order = order,
+                            context,
+                            message ="Your booking has been completed."+"\nThank you!"
+                        )
+                        Toast.makeText(
+                            context,
+                            "Booking Status updated Successfully👍",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             )
@@ -115,15 +217,6 @@ fun PendingNoCard(pendingOrderToday: Int, acceptedOrderToday: Int) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.salon_app_logo), // replace with your logo resource
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Row {
                     Text(
@@ -146,7 +239,7 @@ fun PendingNoCard(pendingOrderToday: Int, acceptedOrderToday: Int) {
                         text = "Today's Accepted Orders: ",
                         style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(top=0.5.dp)
+                        modifier = Modifier.padding(top = 0.5.dp)
 
                     )
                     Text(
@@ -154,7 +247,8 @@ fun PendingNoCard(pendingOrderToday: Int, acceptedOrderToday: Int) {
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = Color.Black,
                             fontWeight = FontWeight.Bold
-                        ), fontSize = 20.sp,
+                        ),
+                        fontSize = 20.sp,
 
 
                         )

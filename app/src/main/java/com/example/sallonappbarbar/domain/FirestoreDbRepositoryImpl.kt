@@ -4,6 +4,7 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import com.example.sallonappbarbar.appUi.viewModel.OrderStatus
 import com.example.sallonappbarbar.data.FireStoreDbRepository
 import com.example.sallonappbarbar.data.Resource
@@ -28,6 +29,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -35,6 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.internal.synchronized
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -42,6 +45,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -507,16 +511,10 @@ class FirestoreDbRepositoryImpl @Inject constructor(
         awaitClose { subscription.remove() }
     }.flowOn(Dispatchers.IO)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getOrder(): Flow<List<OrderModel>> = callbackFlow {
-        val calendar = Calendar.getInstance().apply {
-            add(Calendar.DAY_OF_YEAR, -8) // Subtract 8 days from today
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val eightDaysAgo = calendar.time
+
+        val eightDaysAgo = calender(8).time
+        val fourteenDaysAgo = calender(14).time
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val _result = mutableListOf<OrderModel>()
 
@@ -548,7 +546,9 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
                                                 if (orderDate != null && (orderDate.after(
                                                         eightDaysAgo
-                                                    ) || orderDoc.getString("status") == "completed")
+                                                    ) || (orderDoc.getString("status") == "completed" && orderDate.after(
+                                                        fourteenDaysAgo
+                                                    )))
                                                 ) {
                                                     val bookedModel =
                                                         orderDoc.toObject(BookedModel::class.java)
@@ -592,22 +592,18 @@ class FirestoreDbRepositoryImpl @Inject constructor(
                                                         review = review,
                                                         genderCounter = bookedModel.genderCounter
                                                     )
-                                                    val existingOrderIndex = _result.indexOfFirst {
-                                                        it.orderId == bookedModel.dateandtime
-                                                                && it.useruid==newOrder.useruid
-                                                    }
-
-                                                    // Add or update the order based on orderId and orderStatus
-                                                    if (existingOrderIndex != -1) {
-                                                        _result.removeAt(existingOrderIndex)
-
-                                                    }
+                                                        val existingOrderIndex = _result.indexOfFirst  {
+                                                            it.orderId == bookedModel.dateandtime
+                                                                    && it.useruid == newOrder.useruid
+                                                        }
+                                                        // Add or update the order based on orderId and orderStatus
+                                                        if (existingOrderIndex != -1&&existingOrderIndex<_result.size) {
+                                                            _result.removeAt(existingOrderIndex)
+                                                        }
                                                     newOrder
+
                                                 } else {
-                                                    val status = orderDoc.getString("status")
-                                                    if (status == "cancelled" || status == "pending" || status == "accepted") {
-                                                        orderDoc.reference.delete()
-                                                    }
+                                                    orderDoc.reference.delete()
                                                     null
                                                 }
                                             }
@@ -615,7 +611,8 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
                                         // Wait for all jobs to finish and collect results
                                         val orders = jobs.awaitAll().filterNotNull()
-                                        _result.addAll(orders)
+                                            _result.addAll(orders)
+                                        Log.d("_result",_result.size.toString())
                                         trySend(_result.sortedByDescending { it.orderId }).isSuccess
                                     }
                                 }
@@ -626,6 +623,105 @@ class FirestoreDbRepositoryImpl @Inject constructor(
 
         awaitClose { listenerRegistration.remove() }
     }
+
+//    override suspend fun getOrders(onOrdersUpdated: (List<OrderModel>) -> Unit) {
+//
+//        val eightDaysAgo = calender(8).time
+//        val fourteenDaysAgo = calender(14).time
+//        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+//        val _result = mutableListOf<OrderModel>()
+//
+//        val listenerRegistration = Firebase.firestore.collection("Booking")
+//            .whereEqualTo("barberuid", auth.currentUser?.uid.toString())
+//            .addSnapshotListener { bookingsSnapshot, e ->
+//                if (e != null) {
+//                    Log.e("getOrdersRealtime", "Error listening to bookings", e)
+//                    return@addSnapshotListener
+//                }
+//
+//                if (bookingsSnapshot != null && !bookingsSnapshot.isEmpty) {
+//                    bookingsSnapshot.documents.forEach { bookingDoc ->
+//                        bookingDoc.reference.collection("Order")
+//                            .addSnapshotListener { orderSnapshot, error ->
+//                                if (error != null) {
+//                                    Log.e("getOrdersRealtime", "Error listening to orders", error)
+//                                    return@addSnapshotListener
+//                                }
+//
+//                                if (orderSnapshot != null && !orderSnapshot.isEmpty) {
+//                                    CoroutineScope(Dispatchers.IO).launch {
+//                                        val orders = orderSnapshot.documents.mapNotNull { orderDoc ->
+//                                            val timeString = orderDoc.get("selectedDate").toString()
+//                                            val orderDate = timeString.let { dateFormat.parse(it) }
+//
+//                                            if (orderDate != null && (orderDate.after(eightDaysAgo)
+//                                                        || (orderDoc.getString("status") == "completed" && orderDate.after(
+//                                                    fourteenDaysAgo)))) {
+//
+//                                                val bookedModel = orderDoc.toObject(BookedModel::class.java)
+//                                                val userDocument = bookedModel?.let {
+//                                                    usersDb.document(it.useruid).get().await()
+//                                                }
+//
+//                                                val name = userDocument?.getString("name").toString()
+//                                                val image = userDocument?.getString("imageUri").toString()
+//                                                val phoneNo = userDocument?.getString("phoneNumber").toString()
+//                                                val listOfService = bookedModel?.listOfService ?: listOf()
+//                                                val timeSlots = bookedModel?.selectedSlots ?: listOf()
+//                                                val review = bookedModel?.review as ReviewModel
+//
+//                                                val orderStatus = when (bookedModel.status) {
+//                                                    "completed" -> OrderStatus.COMPLETED
+//                                                    "accepted" -> OrderStatus.ACCEPTED
+//                                                    "cancelled" -> OrderStatus.CANCELLED
+//                                                    else -> OrderStatus.PENDING
+//                                                }
+//
+//                                                val newOrder = OrderModel(
+//                                                    userImageUrl = image,
+//                                                    listOfService = listOfService,
+//                                                    timeSlot = timeSlots,
+//                                                    userPhoneNumber = phoneNo,
+//                                                    userName = name,
+//                                                    paymentMethod = "Cash",
+//                                                    orderStatus = orderStatus,
+//                                                    orderId = bookedModel.dateandtime,
+//                                                    date = bookedModel.selectedDate,
+//                                                    barberuid = bookedModel.barberuid,
+//                                                    useruid = bookedModel.useruid,
+//                                                    review = review,
+//                                                    genderCounter = bookedModel.genderCounter
+//                                                )
+//
+//                                                val existingOrderIndex = _result.indexOfFirst {
+//                                                    it.orderId == newOrder.orderId && it.useruid == newOrder.useruid
+//                                                }
+//
+//                                                if (existingOrderIndex != -1) {
+//                                                    // Replace the existing order with the new one
+//                                                    _result[existingOrderIndex] = newOrder
+//                                                } else {
+//                                                    // Add the new order if it’s not already present
+//                                                    _result.add(newOrder)
+//                                                }
+//                                                newOrder
+//                                            } else {
+//                                                orderDoc.reference.delete()
+//                                                null
+//                                            }
+//                                        }
+//
+//                                        withContext(Dispatchers.Main) {
+//                                            onOrdersUpdated(_result.sortedByDescending { it.orderId })
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                    }
+//                }
+//            }
+//    }
+
 
     override suspend fun updateOrderStatus(order: OrderModel, status: String)
             : Flow<Resource<String>> = callbackFlow {
@@ -734,4 +830,15 @@ class FirestoreDbRepositoryImpl @Inject constructor(
             }
             awaitClose { close() }
         }
+
+    fun calender(days: Int): Calendar {
+        return Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -days) // Subtract 8 days from today
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
+
 }

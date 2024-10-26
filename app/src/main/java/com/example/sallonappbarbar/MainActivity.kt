@@ -104,9 +104,15 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 requestLocationUpdates() // If permission is granted, start location updates
+                requestSmsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
             } else {
                 Toast.makeText(this, "GPS Unavailable", Toast.LENGTH_LONG).show()
             }
+        }
+
+    private val requestSmsPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+
         }
 
     // Request location updates (to be implemented)

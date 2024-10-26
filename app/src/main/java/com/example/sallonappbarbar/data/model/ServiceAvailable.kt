@@ -36,7 +36,7 @@ data class ServiceUploaded(
 @Parcelize
 data class ServiceModel(
     val serviceName: String,
-    var isServiceSelected: Boolean,
+    var isServiceSelected: Boolean=false,
     var price: String="0",
     var time :String="00:00",
     val id: Int = 0,

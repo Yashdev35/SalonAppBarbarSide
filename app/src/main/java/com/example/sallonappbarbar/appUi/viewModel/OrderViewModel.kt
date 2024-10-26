@@ -69,7 +69,9 @@ class OrderViewModel @Inject constructor(
         val today = LocalDate.now().toString()
         viewModelScope.launch {
             repo.getOrder().collect { orders ->
-                _orderList.emit(orders.toMutableList())
+                _orderList.update { it.apply {
+                    clear()
+                    addAll(orders.distinctBy { order->order.orderId }.toMutableList()) } }
                 _pendingOrderList.update { it.toMutableList().apply { clear() } }
                 _acceptedOrderList.update { it.toMutableList().apply { clear() } }
                 _completedOrderList.update { it.toMutableList().apply { clear() } }
@@ -77,7 +79,7 @@ class OrderViewModel @Inject constructor(
                 _reviewList.update { it.toMutableList().apply { clear() } }
                 _todayPendingOrderNo.update { 0 }
                 _todayAcceptedOrderNo.update { 0 }
-                orders.forEach { order ->
+                orderList.value.forEach { order ->
                     when (order.orderStatus) {
                         OrderStatus.PENDING -> {
                             if (order.date >= today) {
@@ -86,7 +88,7 @@ class OrderViewModel @Inject constructor(
                                         add(order)
                                     }
                                 }
-                                if(order.date==today){
+                                if (order.date == today) {
                                     _todayPendingOrderNo.update { it.inc() }
                                 }
                             } else {
@@ -94,6 +96,8 @@ class OrderViewModel @Inject constructor(
                                 _cancelledOrderList.update {
                                     it.toMutableList().apply {
                                         add(order)
+                                        distinct()
+
                                     }
                                 }
                                 updateOrderStatus(order, OrderStatus.CANCELLED.status)
@@ -107,7 +111,7 @@ class OrderViewModel @Inject constructor(
                                         add(order)
                                     }
                                 }
-                                if(order.date==today){
+                                if (order.date == today) {
                                     _todayAcceptedOrderNo.update { it.inc() }
                                 }
                             } else {
@@ -115,6 +119,7 @@ class OrderViewModel @Inject constructor(
                                 _cancelledOrderList.update {
                                     it.toMutableList().apply {
                                         add(order)
+                                        distinct()
                                     }
                                 }
                                 updateOrderStatus(order, OrderStatus.CANCELLED.status)
@@ -125,10 +130,13 @@ class OrderViewModel @Inject constructor(
                             _completedOrderList.update {
                                 it.toMutableList().apply {
                                     add(order)
+                                    distinct()
                                 }
                             }
-                            if(order.review.reviewTime.isNotEmpty()){
-                                _reviewList.update { it.toMutableList().apply { add(order) } }
+                            if (order.review.reviewTime.isNotEmpty()) {
+                                _reviewList.update { it.toMutableList().apply { add(order)
+                                    distinct()
+                                } }
                             }
                         }
 
@@ -136,17 +144,18 @@ class OrderViewModel @Inject constructor(
                             _cancelledOrderList.update {
                                 it.toMutableList().apply {
                                     add(order)
+                                    distinct()
                                 }
                             }
                         }
                     }
                 }
-            }
 
+            }
         }
 
     }
-    suspend fun updateOrderStatus(order: OrderModel, status: String) {
+     suspend fun updateOrderStatus(order: OrderModel, status: String) {
         viewModelScope.launch {
             repo.updateOrderStatus(order, status).collect {
                 when (it) {
